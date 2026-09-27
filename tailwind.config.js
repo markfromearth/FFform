@@ -45,6 +45,10 @@ export default {
           container: '#ffdad6',
           'on-container': '#410002',
         },
+        accent: {
+          DEFAULT: '#e8893d',
+          soft: 'color-mix(in srgb, #e8893d 24%, transparent)'
+        },
         surface: {
           DEFAULT: '#fdfcff',
           on: '#1a1c1e',

@@ -78,14 +78,14 @@ export const TextInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
   };
 
   const baseInputStyles = clsx(
-    'w-full block transition-colors duration-150 text-slate-900 placeholder:text-slate-400 border rounded-lg',
-    'focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
+    'w-full block transition-colors duration-150 text-slate-900 placeholder:text-slate-400 border rounded-xl',
+    'focus:outline-none focus:ring-4 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
     error
       ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200 bg-rose-50/20'
       : isPrepopulated
       ? 'border-emerald-300 bg-emerald-50/50 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-400'
-      : 'border-slate-300 bg-white focus:border-brand-600 focus:ring-brand-100 hover:border-slate-400',
-    multiline ? 'p-3 text-sm' : 'px-3.5 py-2.5 text-sm',
+      : 'border-slate-300 bg-white focus:border-accent focus:ring-accent-soft hover:border-slate-400',
+    multiline ? 'p-3 text-base min-h-[92px]' : 'px-[13px] py-[11px] text-base min-h-[48px]',
     leftAddon ? 'pl-10' : '',
     rightAddon ? 'pr-10' : '',
     className

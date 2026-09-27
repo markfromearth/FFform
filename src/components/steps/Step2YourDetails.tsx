@@ -23,7 +23,7 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="name"
               aria-invalid={!!errors.contact_full_name}
               aria-describedby={errors.contact_full_name ? "contact_full_name_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.contact_full_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.contact_full_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.contact_full_name || ''}
               placeholder="e.g. Jane Doe"
               onChange={(e) => { updateContact({ contact_full_name: e.target.value }); clearError('contact_full_name'); }}
@@ -42,7 +42,7 @@ export const Step2YourDetails: React.FC = () => {
               id="contact_role"
               aria-invalid={!!errors.contact_role}
               aria-describedby={errors.contact_role ? "contact_role_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.contact_role ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.contact_role ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.contact_role || ''}
               onChange={(e) => { updateContact({ contact_role: e.target.value }); clearError('contact_role'); }}
               onBlur={() => validateField(1, 'contact_role')}
@@ -72,7 +72,7 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="tel"
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? "phone_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.phone ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.phone ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.phone || ''}
               placeholder="e.g. 07700 900000"
               onChange={(e) => { updateContact({ phone: e.target.value }); clearError('phone'); }}
@@ -93,7 +93,7 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="email"
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.email ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.email ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.email || ''}
               placeholder="e.g. name@company.com"
               onChange={(e) => { updateContact({ email: e.target.value }); clearError('email'); }}
@@ -122,7 +122,7 @@ export const Step2YourDetails: React.FC = () => {
                 <input
                   type="radio"
                   name="timing"
-                  className="h-5 w-5 text-primary focus:ring-primary border-outline"
+                  className="h-5 w-5 text-primary focus:ring-accent border-outline"
                   checked={data.contact?.funding_timescale === option.id}
                   onChange={() => { updateContact({ funding_timescale: option.id }); clearError('funding_timescale'); }}
                 />

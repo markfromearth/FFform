@@ -133,11 +133,11 @@ export const Step1YourBusiness: React.FC = () => {
           <legend className="block text-title-s text-on-surface mb-2">Does your business invoice other businesses for goods or services already supplied?</legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label htmlFor="b2b_yes" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'yes' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
-              <input id="b2b_yes" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-primary border-outline" checked={data.business?.b2b_completed_supply === 'yes'} onChange={() => { updateBusiness({ b2b_completed_supply: 'yes' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
+              <input id="b2b_yes" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'yes'} onChange={() => { updateBusiness({ b2b_completed_supply: 'yes' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
               <span className="ml-3 text-label-m text-on-surface">Yes</span>
             </label>
             <label htmlFor="b2b_mixture" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'mixture' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
-              <input id="b2b_mixture" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-primary border-outline" checked={data.business?.b2b_completed_supply === 'mixture'} onChange={() => { updateBusiness({ b2b_completed_supply: 'mixture' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
+              <input id="b2b_mixture" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'mixture'} onChange={() => { updateBusiness({ b2b_completed_supply: 'mixture' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
               <span className="ml-3 text-label-m text-on-surface">A mixture of businesses and consumers</span>
             </label>
           </div>
@@ -162,7 +162,7 @@ export const Step1YourBusiness: React.FC = () => {
                 <input
                   id="company_search"
                   type="text"
-                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                   placeholder="e.g. Acme Corp or 12345678"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -282,7 +282,7 @@ export const Step1YourBusiness: React.FC = () => {
                   <input
                     id="manual_company_name"
                     type="text"
-                    className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                    className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                     placeholder="e.g. Acme Corp"
                     value={data.business?.company_name || ''}
                     onChange={(e) => { updateBusiness({ company_name: e.target.value }); clearError('company_name'); }}
@@ -302,7 +302,7 @@ export const Step1YourBusiness: React.FC = () => {
                     <label htmlFor="entity_type" className="block text-label-m text-on-surface mb-1">Entity Type</label>
                     <select
                       id="entity_type"
-                      className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.entity_type ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                      className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.entity_type ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                       value={data.business?.entity_type || ''}
                       onChange={(e) => { updateBusiness({ entity_type: e.target.value }); clearError('entity_type'); }}
                       onBlur={() => validateField(0, 'entity_type')}
@@ -328,7 +328,7 @@ export const Step1YourBusiness: React.FC = () => {
                     <input
                       id="postal_code"
                       type="text"
-                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                       placeholder="e.g. SW1A 1AA"
                       value={data.business?.registered_address?.postal_code || ''}
                       onChange={(e) => updateBusiness({ registered_address: { ...data.business?.registered_address, postal_code: e.target.value }})}
@@ -345,11 +345,11 @@ export const Step1YourBusiness: React.FC = () => {
             <legend className="block text-title-s text-on-surface mb-2">Is your trading address the same as your registered office?</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label htmlFor="same-address-yes" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === true ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
-                <input id="same-address-yes" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-primary border-outline" checked={data.business?.trading_address_same_as_registered === true} onChange={() => updateBusiness({ trading_address_same_as_registered: true })} />
+                <input id="same-address-yes" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.trading_address_same_as_registered === true} onChange={() => updateBusiness({ trading_address_same_as_registered: true })} />
                 <span className="ml-3 text-label-m text-on-surface">Yes</span>
               </label>
               <label htmlFor="same-address-no" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === false ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
-                <input id="same-address-no" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-primary border-outline" checked={data.business?.trading_address_same_as_registered === false} onChange={() => updateBusiness({ trading_address_same_as_registered: false })} />
+                <input id="same-address-no" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.trading_address_same_as_registered === false} onChange={() => updateBusiness({ trading_address_same_as_registered: false })} />
                 <span className="ml-3 text-label-m text-on-surface">No</span>
               </label>
             </div>
@@ -360,7 +360,7 @@ export const Step1YourBusiness: React.FC = () => {
                 <input
                   id="trading_address_line_1"
                   type="text"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                   placeholder="e.g. 123 High Street"
                   value={data.business?.trading_address?.address_line_1 || ''}
                   onChange={(e) => updateBusiness({ trading_address: { ...data.business?.trading_address, address_line_1: e.target.value }})}
@@ -379,7 +379,7 @@ export const Step1YourBusiness: React.FC = () => {
              ) : (
                <select
                  id="selected_officer_name"
-                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                  value={data.business?.selected_officer_name || ''}
                  onChange={(e) => updateBusiness({ selected_officer_name: e.target.value })}
                >
@@ -400,7 +400,7 @@ export const Step1YourBusiness: React.FC = () => {
             <label htmlFor="industry" className="block text-title-s text-on-surface mb-2">Industry</label>
             <select
               id="industry"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.industry ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.industry ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
               value={data.business?.industry || ''}
               onChange={(e) => { updateBusiness({ industry: e.target.value }); clearError('industry'); }}
               onBlur={() => validateField(0, 'industry')}
@@ -430,7 +430,7 @@ export const Step1YourBusiness: React.FC = () => {
               <input
                 id="annual_turnover"
                 type="number"
-                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.annual_turnover ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.annual_turnover ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                 placeholder="e.g. 500000"
                 value={data.business?.annual_turnover || ''}
                 onChange={(e) => { updateBusiness({ annual_turnover: parseInt(e.target.value) || undefined }); clearError('annual_turnover'); }}
@@ -457,7 +457,7 @@ export const Step1YourBusiness: React.FC = () => {
             <input
               id="gross_debtor_book"
               type="number"
-              className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.gross_debtor_book ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.gross_debtor_book ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
               placeholder="e.g. 50000"
               value={data.business?.gross_debtor_book || ''}
               onChange={(e) => { updateBusiness({ gross_debtor_book: parseInt(e.target.value) || undefined }); clearError('gross_debtor_book'); }}

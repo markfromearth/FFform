@@ -68,7 +68,7 @@ export const Step4FinalDetails: React.FC = () => {
                   id="current_provider"
                   type="text"
                   placeholder="e.g. Acme Corp"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                   value={data.invoices?.current_provider || ''}
                   onChange={(e) => updateInvoices({ current_provider: e.target.value })}
                 />
@@ -83,7 +83,7 @@ export const Step4FinalDetails: React.FC = () => {
                     id="current_facility_limit"
                     type="number"
                     placeholder="e.g. 50000"
-                    className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                    className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                     value={data.invoices?.current_facility_limit || ''}
                     onChange={(e) => updateInvoices({ current_facility_limit: parseInt(e.target.value) || undefined })}
                   />
@@ -106,7 +106,7 @@ export const Step4FinalDetails: React.FC = () => {
                     <input
                       id={`switch_reason_${option.id}`}
                       type="checkbox"
-                      className="h-4 w-4 text-primary focus:ring-primary border-outline rounded"
+                      className="h-4 w-4 text-primary focus:ring-accent border-outline rounded"
                       checked={data.invoices?.reason_for_switch?.includes(option.id)}
                       onChange={() => handleSwitchReasonToggle(option.id)}
                     />
@@ -122,7 +122,7 @@ export const Step4FinalDetails: React.FC = () => {
                 id="notice_or_exit_date"
                 type="text"
                 placeholder="e.g. Notice expires 31st Oct"
-                className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                 value={data.invoices?.notice_or_exit_date || ''}
                 onChange={(e) => updateInvoices({ notice_or_exit_date: e.target.value })}
               />
@@ -134,7 +134,7 @@ export const Step4FinalDetails: React.FC = () => {
           <label htmlFor="hmrc_status" className="block text-title-s text-on-surface mb-2">Is the business up to date with HMRC?</label>
           <select
             id="hmrc_status"
-            className={`w-full sm:w-2/3 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.hmrc_status ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+            className={`w-full sm:w-2/3 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.hmrc_status ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
             value={data.invoices?.hmrc_status || ''}
             onChange={(e) => { updateInvoices({ hmrc_status: e.target.value }); clearError('hmrc_status'); }}
             onBlur={() => validateField(3, 'hmrc_status')}
@@ -166,7 +166,7 @@ export const Step4FinalDetails: React.FC = () => {
                 id="hmrc_arrears_amount"
                 type="number"
                 placeholder="e.g. 10000"
-                className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                 value={data.invoices?.hmrc_arrears_amount || ''}
                 onChange={(e) => updateInvoices({ hmrc_arrears_amount: parseInt(e.target.value) || undefined })}
               />
@@ -190,7 +190,7 @@ export const Step4FinalDetails: React.FC = () => {
                 <input
                   id={`funding_purpose_${option.id}`}
                   type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-outline rounded"
+                  className="h-4 w-4 text-primary focus:ring-accent border-outline rounded"
                   checked={data.invoices?.funding_purpose?.includes(option.id)}
                   onChange={() => handlePurposeToggle(option.id)}
                   aria-invalid={!!errors.funding_purpose}
@@ -214,7 +214,7 @@ export const Step4FinalDetails: React.FC = () => {
           </label>
           <textarea
             id="additional_context"
-            className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline resize-y min-h-[100px]"
+            className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline resize-y min-h-[100px]"
             placeholder="e.g. growth plans, a recent loss, poor credit, disputed invoices, or a major new contract."
             value={data.invoices?.additional_context || ''}
             onChange={(e) => updateInvoices({ additional_context: e.target.value })}

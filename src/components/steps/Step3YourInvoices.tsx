@@ -50,7 +50,7 @@ export const Step3YourInvoices: React.FC = () => {
                   id={`outcome_${option.id}`}
                   type="radio"
                   name="outcome"
-                  className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                  className="mt-0.5 h-4 w-4 text-primary focus:ring-accent border-outline"
                   checked={data.invoices?.desired_outcome === option.id}
                   onChange={() => { updateInvoices({ desired_outcome: option.id }); clearError('desired_outcome'); }}
                   aria-invalid={!!errors.desired_outcome}
@@ -78,7 +78,7 @@ export const Step3YourInvoices: React.FC = () => {
               <input
                 id="requested_facility"
                 type="number"
-                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                 placeholder="e.g. 150000"
                 value={data.invoices?.requested_facility || ''}
                 onChange={(e) => { updateInvoices({ requested_facility: parseInt(e.target.value) || undefined }); clearError('requested_facility'); }}
@@ -98,7 +98,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="payment_terms_days" className="block text-title-s text-on-surface mb-2">Usual customer payment terms</label>
             <select
               id="payment_terms_days"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.payment_terms_days ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.payment_terms_days ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
               value={data.invoices?.payment_terms_days || ''}
               onChange={(e) => { updateInvoices({ payment_terms_days: e.target.value }); clearError('payment_terms_days'); }}
               onBlur={() => validateField(2, 'payment_terms_days')}
@@ -126,7 +126,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="largest_debtor_concentration_pct" className="block text-title-s text-on-surface mb-2">Largest customer share of debtor book</label>
             <select
               id="largest_debtor_concentration_pct"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.largest_debtor_concentration_pct ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.largest_debtor_concentration_pct ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
               value={data.invoices?.largest_debtor_concentration_pct || ''}
               onChange={(e) => { updateInvoices({ largest_debtor_concentration_pct: e.target.value }); clearError('largest_debtor_concentration_pct'); }}
               onBlur={() => validateField(2, 'largest_debtor_concentration_pct')}
@@ -164,7 +164,7 @@ export const Step3YourInvoices: React.FC = () => {
                       <input
                         id={`geo_${option.id}`}
                         type="checkbox"
-                        className="h-4 w-4 text-primary focus:ring-primary border-outline rounded"
+                        className="h-4 w-4 text-primary focus:ring-accent border-outline rounded"
                         checked={data.invoices?.debtor_geography?.includes(option.id)}
                         onChange={() => handleGeographyToggle(option.id)}
                         aria-invalid={!!errors.debtor_geography}
@@ -189,7 +189,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="export_sales_pct" className="block text-title-s text-on-surface mb-2">Approximately what percentage of sales is to customers outside the UK?</label>
             <select
               id="export_sales_pct"
-              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
               value={data.invoices?.export_sales_pct || ''}
               onChange={(e) => updateInvoices({ export_sales_pct: e.target.value })}
             >
@@ -222,7 +222,7 @@ export const Step3YourInvoices: React.FC = () => {
                       id={`const_inv_${option.id}`}
                       type="radio"
                       name="construction_invoicing"
-                      className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                      className="mt-0.5 h-4 w-4 text-primary focus:ring-accent border-outline"
                       checked={data.invoices?.construction_invoicing_type === option.id}
                       onChange={() => updateInvoices({ construction_invoicing_type: option.id })}
                     />
@@ -237,7 +237,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_main_contract_or" className="block text-title-s text-on-surface mb-2">How does the business normally work?</label>
                 <select
                   id="construction_main_contract_or"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                   value={data.invoices?.construction_main_contract_or || ''}
                   onChange={(e) => updateInvoices({ construction_main_contract_or: e.target.value })}
                 >
@@ -251,7 +251,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_retention" className="block text-title-s text-on-surface mb-2">Are retentions normally deducted?</label>
                 <select
                   id="construction_retention"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
                   value={data.invoices?.construction_retention || ''}
                   onChange={(e) => updateInvoices({ construction_retention: e.target.value })}
                 >
@@ -284,7 +284,7 @@ export const Step3YourInvoices: React.FC = () => {
                       id={`recruit_type_${option.id}`}
                       type="radio"
                       name="recruitment_type"
-                      className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                      className="mt-0.5 h-4 w-4 text-primary focus:ring-accent border-outline"
                       checked={data.invoices?.recruitment_type === option.id}
                       onChange={() => updateInvoices({ recruitment_type: option.id })}
                     />

@@ -61,6 +61,13 @@ export const Step6Uploads: React.FC = () => {
             description="PDF format preferred. Please provide the main trading account."
             onFilesSelected={(files) => console.log('Bank Statements:', files)}
           />
+          {data.business?.industry === 'construction' && (
+            <FileUploadZone 
+              label="Sample application for payment or certified valuation (construction only)" 
+              description="Please provide a recent example."
+              onFilesSelected={(files) => console.log('Construction Sample:', files)}
+            />
+          )}
         </div>
 
         <div className="mt-8 flex justify-center border-t border-outline-variant pt-8">
