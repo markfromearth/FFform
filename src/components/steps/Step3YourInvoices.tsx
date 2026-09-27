@@ -185,6 +185,7 @@ export const Step3YourInvoices: React.FC = () => {
         </div>
 
         {hasExport && (
+        <>
           <div className="animate-in fade-in slide-in-from-top-4 duration-300 pt-4 border-t border-outline-variant">
             <label htmlFor="export_sales_pct" className="block text-title-s text-on-surface mb-2">Approximately what percentage of sales is to customers outside the UK?</label>
             <select
@@ -200,6 +201,21 @@ export const Step3YourInvoices: React.FC = () => {
               <option value="over_50">Over 50%</option>
             </select>
           </div>
+          <div className="mt-6">
+            <label htmlFor="invoice_currency" className="block text-title-s text-on-surface mb-2">What currencies do you normally invoice in?</label>
+            <select
+              id="invoice_currency"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+              value={data.invoices?.invoice_currency || ''}
+              onChange={(e) => updateInvoices({ invoice_currency: e.target.value })}
+            >
+              <option value="">Select currency</option>
+              <option value="gbp_only">GBP only</option>
+              <option value="gbp_and_foreign">GBP and foreign currencies</option>
+              <option value="mainly_foreign">Mainly foreign currencies</option>
+            </select>
+          </div>
+        </>
         )}
 
         {isConstruction && (

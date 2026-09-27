@@ -7,6 +7,25 @@ import { sendApplicationNotificationEmail } from './lib/emailService';
 const mockSubmittedApplications = new Map<string, any>();
 const mockRetryQueue: any[] = [];
 
+const fsQueue = require('fs');
+const path = require('path');
+
+function saveToDurableQueue(payload) {
+  try {
+    const queueFile = path.resolve('/tmp', 'ff_retry_queue.json');
+    let queue = [];
+    if (fsQueue.existsSync(queueFile)) {
+      queue = JSON.parse(fsQueue.readFileSync(queueFile, 'utf8'));
+    }
+    queue.push({ timestamp: new Date().toISOString(), payload });
+    fsQueue.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
+    console.log('[SubmitAPI] Saved payload to durable local queue at /tmp/ff_retry_queue.json');
+  } catch (e) {
+    console.error('[SubmitAPI] Failed to write to durable queue', e);
+  }
+}
+
+
 /**
  * Normalizes email for deduplication
  */
@@ -80,15 +99,21 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // 1. Strict Server-Side Zod Validation
-    const validationResult = serverValidationSchema.safeParse(payload);
+    // If this is a partial save, skip full schema validation
+    const isPartial = payload.status === 'contact_captured';
+    
+    let validationResult;
+    if (!isPartial) {
+      // 1. Strict Server-Side Zod Validation for full submission
+      validationResult = serverValidationSchema.safeParse(payload);
 
-    if (!validationResult.success) {
-      res.status(400).json({
-        error: 'Server-side validation failed.',
-        details: validationResult.error.format(),
-      });
-      return;
+      if (!validationResult.success) {
+        res.status(400).json({
+          error: 'Server-side validation failed.',
+          details: validationResult.error.format(),
+        });
+        return;
+      }
     }
 
     const { application, id } = validationResult.data;
@@ -158,6 +183,7 @@ export default async function handler(req: any, res: any) {
       } catch (crmError: any) {
         console.error('[SubmitAPI] Monday.com routing failed. Queuing for retry.', crmError.message);
         crmStatus = 'queued_for_retry';
+        saveToDurableQueue({ event: 'new_factoring_enquiry', reference: submissionRef, data: docToSave });
         
         // Push to retry queue for a background worker to pick up
         mockRetryQueue.push({
@@ -177,13 +203,15 @@ export default async function handler(req: any, res: any) {
     mockSubmittedApplications.get(dedupKey).crmStatus = crmStatus;
 
     // 4. Decoupled Secondary Task: Email Summary Dispatch
-    try {
+    if (!isPartial) {
+      try {
       await sendApplicationNotificationEmail({
         application,
         applicationRef: submissionRef,
       });
     } catch (emailErr: any) {
       console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
+      }
     }
 
     // 5. Return 200 OK

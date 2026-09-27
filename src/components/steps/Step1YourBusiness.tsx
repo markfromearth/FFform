@@ -78,9 +78,9 @@ export const Step1YourBusiness: React.FC = () => {
       company_status: selectedCompany.company_status,
       entity_type: selectedCompany.company_type,
       incorporation_date: selectedCompany.date_of_creation,
-      sic_codes: selectedCompany.sic_codes || [],
       companies_house_source: 'public_data_api',
       companies_house_retrieved_at: new Date().toISOString(),
+      sic_codes: selectedCompany.sic_codes || [],
       registered_address: {
         address_line_1: selectedCompany.registered_office_address.address_line_1 || selectedCompany.registered_office_address.premises,
         locality: selectedCompany.registered_office_address.locality,
@@ -439,6 +439,26 @@ export const Step1YourBusiness: React.FC = () => {
                 aria-describedby={errors.annual_turnover ? "annual_turnover_error" : undefined}
               />
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { label: 'Under £100k', val: 50000 },
+                { label: '£100k–£250k', val: 175000 },
+                { label: '£250k–£500k', val: 375000 },
+                { label: '£500k–£1m', val: 750000 },
+                { label: '£1m–£5m', val: 2500000 },
+                { label: '£5m+', val: 5000000 }
+              ].map((btn) => (
+                <button
+                  key={btn.label}
+                  type="button"
+                  onClick={() => { updateBusiness({ annual_turnover: btn.val }); clearError('annual_turnover'); }}
+                  className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-on-surface-variant"
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
             {errors.annual_turnover && (
               <p className="mt-1 text-label-s text-error flex items-center gap-1" id="annual_turnover_error">
                 <AlertCircle className="w-4 h-4" />
@@ -466,6 +486,26 @@ export const Step1YourBusiness: React.FC = () => {
               aria-describedby={errors.gross_debtor_book ? "gross_debtor_book_error" : undefined}
             />
           </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {[
+              { label: 'Under £10k', val: 5000 },
+              { label: '£10k–£50k', val: 30000 },
+              { label: '£50k–£100k', val: 75000 },
+              { label: '£100k–£250k', val: 175000 },
+              { label: '£250k–£500k', val: 375000 },
+              { label: '£500k+', val: 750000 }
+            ].map((btn) => (
+              <button
+                key={btn.label}
+                type="button"
+                onClick={() => { updateBusiness({ gross_debtor_book: btn.val }); clearError('gross_debtor_book'); }}
+                className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-on-surface-variant"
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+
           {errors.gross_debtor_book ? (
              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="gross_debtor_book_error">
                <AlertCircle className="w-4 h-4" />

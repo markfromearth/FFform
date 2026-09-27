@@ -3,7 +3,7 @@ import { useApplication } from '../../context/ApplicationContext';
 import { ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export const Step5Review: React.FC = () => {
-  const { data, prevStep, updateConsents, validateStep, clearError, errors } = useApplication();
+  const { data, prevStep, updateConsents, validateStep, clearError, errors, applicationId } = useApplication();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -18,15 +18,15 @@ export const Step5Review: React.FC = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      // Generate a UUID-like id for the application
-      const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const id = applicationId;
       
       const response = await fetch('/api/submit-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           application: data,
-          id
+          id,
+          status: 'introduction_ready'
         })
       });
 

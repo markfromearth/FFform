@@ -20,6 +20,7 @@ interface PartialApplicationData {
 }
 
 interface ApplicationContextType {
+  applicationId: string;
   data: PartialApplicationData;
   updateBusiness: (data: Partial<BusinessDetails>) => void;
   updateContact: (data: Partial<ContactDetails>) => void;
@@ -38,6 +39,7 @@ interface ApplicationContextType {
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
 export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [applicationId] = useState(() => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36));
   const [data, setData] = useState<PartialApplicationData>({
     business: {
       trading_address_same_as_registered: true
@@ -156,9 +158,25 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     // Only allow navigating forward if the current step is valid
     if (validateStep(currentStep)) {
+      
+      // Partial Save Logic: Save after Step 2 (index 1) is completed
+      if (currentStep === 1) {
+        try {
+          fetch('/api/submit-application', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: applicationId,
+              status: 'contact_captured',
+              application: data
+            })
+          }).catch(err => console.error('Partial save failed', err));
+        } catch (e) {}
+      }
+
       setCurrentStep((prev) => prev + 1);
       window.scrollTo(0, 0);
     }
@@ -173,6 +191,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
   return (
     <ApplicationContext.Provider
       value={{
+        applicationId,
         data,
         updateBusiness,
         updateContact,
