@@ -86,8 +86,23 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
         businessDetailsSchema.parse(data.business);
       } else if (step === 1) {
         contactDetailsSchema.parse(data.contact);
-      } else if (step === 2 || step === 3) {
-        // Step 3 and 4 in UI map to the invoices schema
+      } else if (step === 2) {
+        // Step 3 in UI (Your Invoices) - Only validate fields collected in this step
+        invoicesSchema.pick({
+          desired_outcome: true,
+          requested_facility: true,
+          payment_terms_days: true,
+          largest_debtor_concentration_pct: true,
+          debtor_geography: true,
+          export_sales_pct: true,
+          construction_invoicing_type: true,
+          construction_main_contract_or: true,
+          construction_retention: true,
+          recruitment_type: true,
+          payroll_support_required: true,
+        }).parse(data.invoices);
+      } else if (step === 3) {
+        // Step 4 in UI (Final Details) - Validate everything including the final questions
         invoicesSchema.parse(data.invoices);
       } else if (step === 4) {
         // Step 5 Review (and consents)
