@@ -7,8 +7,8 @@ import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail }
 const mockSubmittedApplications = new Map<string, any>();
 const mockRetryQueue: any[] = [];
 
-const fsQueue = require('fs');
-const path = require('path');
+import * as fsQueue from 'fs';
+import * as path from 'path';
 
 function saveToDurableQueue(payload) {
   try {
