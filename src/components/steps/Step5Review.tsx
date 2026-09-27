@@ -30,10 +30,17 @@ export const Step5Review: React.FC = () => {
         })
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type");
+      let result;
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Server Error: ${text.slice(0, 50)}`);
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Something went wrong');
+        throw new Error(result?.error || 'Something went wrong processing your application');
       }
 
       setIsSuccess(true);

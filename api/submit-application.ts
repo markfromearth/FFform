@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
+import { sendApplicationNotificationEmail } from './lib/emailService';
 
 // In-memory mock storage for local testing and deduplication
 // In a real environment, this would be a Redis cache or Database table
@@ -177,7 +178,6 @@ export default async function handler(req: any, res: any) {
 
     // 4. Decoupled Secondary Task: Email Summary Dispatch
     try {
-      const { sendApplicationNotificationEmail } = await import('./lib/emailService.js');
       await sendApplicationNotificationEmail({
         application,
         applicationRef: submissionRef,
