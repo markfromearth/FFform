@@ -1,0 +1,845 @@
+/**
+ * Official UK Authorized Mortgage Lenders & Administrators Dataset & Service
+ * Sourced from:
+ * 1. Financial Conduct Authority (FCA) Financial Services Register
+ * 2. UK Finance Commercial & Residential Mortgage Lenders Directory
+ * 3. Building Societies Association (BSA) Official Register
+ */
+
+import { searchCompaniesHouse } from './companiesHouseService';
+
+export type LenderCategory =
+  | 'High Street Bank'
+  | 'Specialist Commercial Lender'
+  | 'Building Society'
+  | 'Challenger Bank'
+  | 'Private Bank'
+  | 'UK Registered Company';
+
+export interface MortgageLender {
+  id: string;
+  name: string;
+  shortName?: string;
+  category: LenderCategory;
+  phone: string;
+  fcaNumber?: string;
+  department?: string;
+  aliases: string[];
+}
+
+export const UK_AUTHORIZED_MORTGAGE_LENDERS: MortgageLender[] = [
+  // --- High Street Banks ---
+  {
+    id: 'barclays',
+    name: 'Barclays Commercial Mortgages',
+    shortName: 'Barclays',
+    category: 'High Street Bank',
+    phone: '0800 028 1111',
+    fcaNumber: '759676',
+    department: 'Commercial Lending Operations',
+    aliases: ['barclays', 'barclays bank', 'barclays business', 'barclays corporate'],
+  },
+  {
+    id: 'natwest',
+    name: 'NatWest Commercial Mortgages',
+    shortName: 'NatWest',
+    category: 'High Street Bank',
+    phone: '0345 711 4477',
+    fcaNumber: '121878',
+    department: 'Commercial Mortgages & Real Estate',
+    aliases: ['natwest', 'national westminster', 'nat west', 'natwest business'],
+  },
+  {
+    id: 'lloyds',
+    name: 'Lloyds Bank Commercial Banking',
+    shortName: 'Lloyds Bank',
+    category: 'High Street Bank',
+    phone: '0345 072 5555',
+    fcaNumber: '119278',
+    department: 'Commercial Real Estate Finance',
+    aliases: ['lloyds', 'lloyds tsb', 'lloyds bank', 'lloyds commercial'],
+  },
+  {
+    id: 'hsbc',
+    name: 'HSBC Commercial Banking',
+    shortName: 'HSBC UK',
+    category: 'High Street Bank',
+    phone: '0345 760 6060',
+    fcaNumber: '765112',
+    department: 'Business & Commercial Real Estate',
+    aliases: ['hsbc', 'hsbc uk', 'midland bank', 'hsbc commercial'],
+  },
+  {
+    id: 'santander',
+    name: 'Santander Corporate & Commercial',
+    shortName: 'Santander',
+    category: 'High Street Bank',
+    phone: '0800 085 2050',
+    fcaNumber: '106054',
+    department: 'Commercial Mortgages Team',
+    aliases: ['santander', 'abbey national', 'alliance and leicester', 'santander uk'],
+  },
+  {
+    id: 'bank-of-scotland',
+    name: 'Bank of Scotland Commercial',
+    shortName: 'Bank of Scotland',
+    category: 'High Street Bank',
+    phone: '0345 300 0268',
+    fcaNumber: '169628',
+    department: 'Commercial Banking Operations',
+    aliases: ['bank of scotland', 'bos', 'bank of scotland commercial'],
+  },
+  {
+    id: 'rbs',
+    name: 'Royal Bank of Scotland Commercial',
+    shortName: 'RBS',
+    category: 'High Street Bank',
+    phone: '0345 600 2230',
+    fcaNumber: '114724',
+    department: 'Commercial Lending Services',
+    aliases: ['rbs', 'royal bank of scotland', 'royal bank'],
+  },
+  {
+    id: 'tsb',
+    name: 'TSB Bank Commercial Lending',
+    shortName: 'TSB',
+    category: 'High Street Bank',
+    phone: '0345 975 8758',
+    fcaNumber: '191240',
+    department: 'Business & Commercial Mortgages',
+    aliases: ['tsb', 'tsb bank', 'trustee savings bank'],
+  },
+  {
+    id: 'metro-bank',
+    name: 'Metro Bank Commercial Mortgages',
+    shortName: 'Metro Bank',
+    category: 'High Street Bank',
+    phone: '0345 080 8500',
+    fcaNumber: '502953',
+    department: 'Commercial Real Estate Team',
+    aliases: ['metro', 'metro bank', 'metro commercial'],
+  },
+  {
+    id: 'virgin-money',
+    name: 'Virgin Money Business & Commercial',
+    shortName: 'Virgin Money',
+    category: 'High Street Bank',
+    phone: '0800 028 3632',
+    fcaNumber: '121873',
+    department: 'Commercial Lending Support',
+    aliases: ['virgin money', 'virgin', 'clydesdale', 'clydesdale bank', 'yorkshire bank'],
+  },
+  {
+    id: 'ulster-bank',
+    name: 'Ulster Bank Commercial',
+    shortName: 'Ulster Bank',
+    category: 'High Street Bank',
+    phone: '0345 721 2477',
+    fcaNumber: '122315',
+    department: 'Commercial Real Estate Services',
+    aliases: ['ulster bank', 'ulster'],
+  },
+
+  // --- Specialist Commercial Lenders & Property Finance ---
+  {
+    id: 'shawbrook',
+    name: 'Shawbrook Bank Commercial',
+    shortName: 'Shawbrook Bank',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 600 7686',
+    fcaNumber: '204574',
+    department: 'Commercial Property Lending',
+    aliases: ['shawbrook', 'shawbrook bank', 'shawbrook property finance'],
+  },
+  {
+    id: 'aldermore',
+    name: 'Aldermore Commercial Mortgages',
+    shortName: 'Aldermore',
+    category: 'Specialist Commercial Lender',
+    phone: '0333 321 1000',
+    fcaNumber: '565021',
+    department: 'Commercial Real Estate Operations',
+    aliases: ['aldermore', 'aldermore bank'],
+  },
+  {
+    id: 'allica',
+    name: 'Allica Bank Commercial Mortgages',
+    shortName: 'Allica Bank',
+    category: 'Challenger Bank',
+    phone: '0330 095 8260',
+    fcaNumber: '821851',
+    department: 'Business & Commercial Mortgages',
+    aliases: ['allica', 'allica bank', 'civilised bank'],
+  },
+  {
+    id: 'together',
+    name: 'Together Commercial Finance',
+    shortName: 'Together',
+    category: 'Specialist Commercial Lender',
+    phone: '0333 455 2413',
+    fcaNumber: '305768',
+    department: 'Commercial Lending Underwriting',
+    aliases: ['together', 'together money', 'blemain', 'jerrold holdings', 'together commercial'],
+  },
+  {
+    id: 'paragon',
+    name: 'Paragon Bank Commercial Mortgages',
+    shortName: 'Paragon Bank',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 849 4060',
+    fcaNumber: '761955',
+    department: 'Commercial & Buy to Let Division',
+    aliases: ['paragon', 'paragon bank', 'mortgage trust'],
+  },
+  {
+    id: 'close-brothers',
+    name: 'Close Brothers Property Finance',
+    shortName: 'Close Brothers',
+    category: 'Specialist Commercial Lender',
+    phone: '020 7655 3100',
+    fcaNumber: '124756',
+    department: 'Commercial Real Estate Team',
+    aliases: ['close brothers', 'close brothers bank'],
+  },
+  {
+    id: 'interbay',
+    name: 'InterBay Commercial (OSB Group)',
+    shortName: 'InterBay',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 878 7000',
+    fcaNumber: '204481',
+    department: 'Commercial Underwriting',
+    aliases: ['interbay', 'interbay commercial', 'osb group', 'onesavings bank'],
+  },
+  {
+    id: 'htb',
+    name: 'Hampshire Trust Bank (HTB)',
+    shortName: 'HTB',
+    category: 'Specialist Commercial Lender',
+    phone: '020 7862 6262',
+    fcaNumber: '204601',
+    department: 'Specialist Mortgages Division',
+    aliases: ['htb', 'hampshire trust', 'hampshire trust bank'],
+  },
+  {
+    id: 'utb',
+    name: 'United Trust Bank (UTB)',
+    shortName: 'UTB',
+    category: 'Specialist Commercial Lender',
+    phone: '020 7190 5555',
+    fcaNumber: '204463',
+    department: 'Property Finance Operations',
+    aliases: ['utb', 'united trust', 'united trust bank'],
+  },
+  {
+    id: 'oaknorth',
+    name: 'OakNorth Bank Commercial Lending',
+    shortName: 'OakNorth Bank',
+    category: 'Challenger Bank',
+    phone: '020 3765 9300',
+    fcaNumber: '688000',
+    department: 'Business & Commercial Debt Finance',
+    aliases: ['oaknorth', 'oaknorth bank', 'oak north'],
+  },
+  {
+    id: 'lendinvest',
+    name: 'LendInvest Mortgages',
+    shortName: 'LendInvest',
+    category: 'Specialist Commercial Lender',
+    phone: '020 3846 6886',
+    fcaNumber: '737073',
+    department: 'Commercial & Bridging Operations',
+    aliases: ['lendinvest', 'lend invest'],
+  },
+  {
+    id: 'recognise',
+    name: 'Recognise Bank Commercial',
+    shortName: 'Recognise Bank',
+    category: 'Challenger Bank',
+    phone: '020 4516 2610',
+    fcaNumber: '843029',
+    department: 'Commercial Lending Services',
+    aliases: ['recognise', 'recognise bank'],
+  },
+  {
+    id: 'redwood',
+    name: 'Redwood Bank Commercial',
+    shortName: 'Redwood Bank',
+    category: 'Challenger Bank',
+    phone: '0330 053 6950',
+    fcaNumber: '765076',
+    department: 'Business Mortgage Operations',
+    aliases: ['redwood', 'redwood bank'],
+  },
+  {
+    id: 'cambridge-counties',
+    name: 'Cambridge & Counties Bank',
+    shortName: 'Cambridge & Counties',
+    category: 'Specialist Commercial Lender',
+    phone: '0344 855 2166',
+    fcaNumber: '579415',
+    department: 'Real Estate Finance Support',
+    aliases: ['cambridge and counties', 'cambridge & counties', 'cc bank'],
+  },
+  {
+    id: 'cynergy',
+    name: 'Cynergy Bank Commercial Lending',
+    shortName: 'Cynergy Bank',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 850 5555',
+    fcaNumber: '765107',
+    department: 'Business Lending Support',
+    aliases: ['cynergy', 'cynergy bank', 'bank of cyprus'],
+  },
+  {
+    id: 'atom-bank',
+    name: 'Atom Bank Commercial Mortgages',
+    shortName: 'Atom Bank',
+    category: 'Challenger Bank',
+    phone: '0333 399 0050',
+    fcaNumber: '684096',
+    department: 'Secured Business Lending',
+    aliases: ['atom', 'atom bank'],
+  },
+  {
+    id: 'funding-circle',
+    name: 'Funding Circle Commercial Finance',
+    shortName: 'Funding Circle',
+    category: 'Specialist Commercial Lender',
+    phone: '0800 048 2491',
+    fcaNumber: '722513',
+    department: 'Property & Commercial Lending',
+    aliases: ['funding circle'],
+  },
+  {
+    id: 'thincats',
+    name: 'ThinCats Business & Property Finance',
+    shortName: 'ThinCats',
+    category: 'Specialist Commercial Lender',
+    phone: '01530 444 040',
+    fcaNumber: '724062',
+    department: 'Commercial Lending Team',
+    aliases: ['thincats', 'thin cats'],
+  },
+  {
+    id: 'capital-on-tap',
+    name: 'Capital on Tap Commercial',
+    shortName: 'Capital on Tap',
+    category: 'Specialist Commercial Lender',
+    phone: '020 8962 7401',
+    fcaNumber: '625592',
+    department: 'Business Finance Services',
+    aliases: ['capital on tap', 'new wave capital'],
+  },
+  {
+    id: 'nucleus',
+    name: 'Nucleus Commercial Finance',
+    shortName: 'Nucleus',
+    category: 'Specialist Commercial Lender',
+    phone: '020 7839 1980',
+    fcaNumber: '729424',
+    department: 'Property Finance Team',
+    aliases: ['nucleus', 'nucleus commercial'],
+  },
+  {
+    id: 'octane',
+    name: 'Octane Capital',
+    shortName: 'Octane Capital',
+    category: 'Specialist Commercial Lender',
+    phone: '020 3883 5600',
+    fcaNumber: '802143',
+    department: 'Commercial Lending Services',
+    aliases: ['octane', 'octane capital'],
+  },
+  {
+    id: 'fiduciam',
+    name: 'Fiduciam Commercial Mortgages',
+    shortName: 'Fiduciam',
+    category: 'Specialist Commercial Lender',
+    phone: '020 3858 0550',
+    fcaNumber: '764350',
+    department: 'Commercial Real Estate Desk',
+    aliases: ['fiduciam'],
+  },
+  {
+    id: 'precise',
+    name: 'Precise Mortgages (Charter Court)',
+    shortName: 'Precise Mortgages',
+    category: 'Specialist Commercial Lender',
+    phone: '0800 111 020',
+    fcaNumber: '494549',
+    department: 'Specialist Mortgage Operations',
+    aliases: ['precise', 'precise mortgages', 'charter court'],
+  },
+  {
+    id: 'kent-reliance',
+    name: 'Kent Reliance (OSB Group)',
+    shortName: 'Kent Reliance',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 122 0033',
+    fcaNumber: '204481',
+    department: 'Commercial & BTL Lending',
+    aliases: ['kent reliance', 'krfi', 'osb group'],
+  },
+  {
+    id: 'fleet',
+    name: 'Fleet Mortgages',
+    shortName: 'Fleet Mortgages',
+    category: 'Specialist Commercial Lender',
+    phone: '01252 916 800',
+    fcaNumber: '625895',
+    department: 'Commercial Property Underwriting',
+    aliases: ['fleet', 'fleet mortgages'],
+  },
+  {
+    id: 'foundation',
+    name: 'Foundation Home Loans',
+    shortName: 'Foundation',
+    category: 'Specialist Commercial Lender',
+    phone: '0344 770 8032',
+    fcaNumber: '501101',
+    department: 'Specialist Lending Desk',
+    aliases: ['foundation', 'foundation home loans', 'paratus amc'],
+  },
+  {
+    id: 'landbay',
+    name: 'Landbay Commercial & Property',
+    shortName: 'Landbay',
+    category: 'Specialist Commercial Lender',
+    phone: '020 3817 4080',
+    fcaNumber: '722895',
+    department: 'Property Underwriting Support',
+    aliases: ['landbay'],
+  },
+  {
+    id: 'bluestone',
+    name: 'Bluestone Mortgages',
+    shortName: 'Bluestone',
+    category: 'Specialist Commercial Lender',
+    phone: '0800 368 1833',
+    fcaNumber: '305798',
+    department: 'Specialist Lending Services',
+    aliases: ['bluestone', 'bluestone mortgages'],
+  },
+  {
+    id: 'kensington',
+    name: 'Kensington Mortgages',
+    shortName: 'Kensington',
+    category: 'Specialist Commercial Lender',
+    phone: '0333 300 0426',
+    fcaNumber: '310336',
+    department: 'Mortgage Operations Desk',
+    aliases: ['kensington', 'kensington mortgages'],
+  },
+  {
+    id: 'castle-trust',
+    name: 'Castle Trust Bank',
+    shortName: 'Castle Trust',
+    category: 'Specialist Commercial Lender',
+    phone: '0345 565 2795',
+    fcaNumber: '546188',
+    department: 'Property & Commercial Lending',
+    aliases: ['castle trust', 'castle trust bank'],
+  },
+  {
+    id: 'roma',
+    name: 'Roma Finance Commercial',
+    shortName: 'Roma Finance',
+    category: 'Specialist Commercial Lender',
+    phone: '0161 817 7480',
+    fcaNumber: '737604',
+    department: 'Commercial Mortgages & Bridging',
+    aliases: ['roma', 'roma finance'],
+  },
+  {
+    id: 'mt-finance',
+    name: 'MT Finance Commercial Lending',
+    shortName: 'MT Finance',
+    category: 'Specialist Commercial Lender',
+    phone: '020 3051 2331',
+    fcaNumber: '708681',
+    department: 'Commercial Lending Operations',
+    aliases: ['mt finance', 'mt-finance'],
+  },
+  {
+    id: 'market-harborough',
+    name: 'Market Harborough Building Society Commercial',
+    shortName: 'Market Harborough BS',
+    category: 'Specialist Commercial Lender',
+    phone: '01858 412 412',
+    fcaNumber: '206041',
+    department: 'Commercial Mortgages Team',
+    aliases: ['market harborough', 'mhbs'],
+  },
+  {
+    id: 'hodge',
+    name: 'Hodge Bank Commercial Mortgages',
+    shortName: 'Hodge Bank',
+    category: 'Specialist Commercial Lender',
+    phone: '0800 138 9109',
+    fcaNumber: '206609',
+    department: 'Commercial Lending Operations',
+    aliases: ['hodge', 'hodge bank', 'julian hodge bank'],
+  },
+
+  // --- Building Societies ---
+  {
+    id: 'nationwide',
+    name: 'Nationwide Building Society Commercial',
+    shortName: 'Nationwide',
+    category: 'Building Society',
+    phone: '0800 30 20 11',
+    fcaNumber: '106078',
+    department: 'Commercial Real Estate Services',
+    aliases: ['nationwide', 'nationwide building society', 'nationwide commercial'],
+  },
+  {
+    id: 'coventry',
+    name: 'Coventry Building Society',
+    shortName: 'Coventry BS',
+    category: 'Building Society',
+    phone: '0800 121 8899',
+    fcaNumber: '150829',
+    department: 'Mortgage Services Operations',
+    aliases: ['coventry', 'coventry building society'],
+  },
+  {
+    id: 'yorkshire-bs',
+    name: 'Yorkshire Building Society Commercial',
+    shortName: 'Yorkshire BS',
+    category: 'Building Society',
+    phone: '0345 120 0200',
+    fcaNumber: '106085',
+    department: 'Commercial Lending Operations',
+    aliases: ['yorkshire', 'yorkshire building society', 'ybs'],
+  },
+  {
+    id: 'skipton',
+    name: 'Skipton Building Society Commercial',
+    shortName: 'Skipton BS',
+    category: 'Building Society',
+    phone: '0345 850 1700',
+    fcaNumber: '153706',
+    department: 'Commercial Lending Team',
+    aliases: ['skipton', 'skipton building society', 'sbs'],
+  },
+  {
+    id: 'leeds',
+    name: 'Leeds Building Society',
+    shortName: 'Leeds BS',
+    category: 'Building Society',
+    phone: '03450 50 50 75',
+    fcaNumber: '164939',
+    department: 'Mortgage Operations Desk',
+    aliases: ['leeds', 'leeds building society', 'lbs'],
+  },
+  {
+    id: 'principality',
+    name: 'Principality Commercial (Building Society)',
+    shortName: 'Principality BS',
+    category: 'Building Society',
+    phone: '0330 333 4000',
+    fcaNumber: '155996',
+    department: 'Commercial Real Estate Team',
+    aliases: ['principality', 'principality building society', 'principality commercial'],
+  },
+  {
+    id: 'newcastle',
+    name: 'Newcastle Building Society',
+    shortName: 'Newcastle BS',
+    category: 'Building Society',
+    phone: '0345 734 4345',
+    fcaNumber: '156058',
+    department: 'Intermediary & Commercial Lending',
+    aliases: ['newcastle', 'newcastle building society'],
+  },
+  {
+    id: 'nottingham',
+    name: 'Nottingham Building Society',
+    shortName: 'Nottingham BS',
+    category: 'Building Society',
+    phone: '0344 481 4444',
+    fcaNumber: '200785',
+    department: 'Mortgage Services Operations',
+    aliases: ['nottingham', 'nottingham building society'],
+  },
+  {
+    id: 'cumberland',
+    name: 'Cumberland Building Society Commercial',
+    shortName: 'Cumberland BS',
+    category: 'Building Society',
+    phone: '01228 403 141',
+    fcaNumber: '106014',
+    department: 'Commercial Lending Services',
+    aliases: ['cumberland', 'cumberland building society', 'cumberland commercial'],
+  },
+  {
+    id: 'west-bromwich',
+    name: 'West Bromwich Building Society',
+    shortName: 'West Brom BS',
+    category: 'Building Society',
+    phone: '0345 241 3784',
+    fcaNumber: '106008',
+    department: 'Commercial Lending Services',
+    aliases: ['west brom', 'west bromwich', 'west bromwich building society'],
+  },
+  {
+    id: 'saffron',
+    name: 'Saffron Building Society',
+    shortName: 'Saffron BS',
+    category: 'Building Society',
+    phone: '0800 072 1100',
+    fcaNumber: '100015',
+    department: 'Specialist Mortgage Desk',
+    aliases: ['saffron', 'saffron building society'],
+  },
+  {
+    id: 'monmouthshire',
+    name: 'Monmouthshire Building Society',
+    shortName: 'Monmouthshire BS',
+    category: 'Building Society',
+    phone: '01633 844 444',
+    fcaNumber: '206052',
+    department: 'Commercial Mortgages Desk',
+    aliases: ['monmouthshire', 'monmouthshire building society'],
+  },
+  {
+    id: 'furness',
+    name: 'Furness Building Society',
+    shortName: 'Furness BS',
+    category: 'Building Society',
+    phone: '0800 781 4311',
+    fcaNumber: '159624',
+    department: 'Commercial Lending Services',
+    aliases: ['furness', 'furness building society'],
+  },
+  {
+    id: 'hinckley-rugby',
+    name: 'Hinckley & Rugby Building Society',
+    shortName: 'Hinckley & Rugby BS',
+    category: 'Building Society',
+    phone: '0800 434 6343',
+    fcaNumber: '206043',
+    department: 'Mortgage Operations Desk',
+    aliases: ['hinckley and rugby', 'hinckley & rugby', 'hrbs'],
+  },
+  {
+    id: 'darlington',
+    name: 'Darlington Building Society',
+    shortName: 'Darlington BS',
+    category: 'Building Society',
+    phone: '01325 366 366',
+    fcaNumber: '205895',
+    department: 'Mortgage Support Desk',
+    aliases: ['darlington', 'darlington building society'],
+  },
+  {
+    id: 'beverley',
+    name: 'Beverley Building Society',
+    shortName: 'Beverley BS',
+    category: 'Building Society',
+    phone: '01482 881 510',
+    fcaNumber: '206064',
+    department: 'Lending Operations Desk',
+    aliases: ['beverley', 'beverley building society'],
+  },
+  {
+    id: 'dudley',
+    name: 'Dudley Building Society',
+    shortName: 'Dudley BS',
+    category: 'Building Society',
+    phone: '01384 231 414',
+    fcaNumber: '160320',
+    department: 'Mortgage Services Operations',
+    aliases: ['dudley', 'dudley building society'],
+  },
+  {
+    id: 'mansfield',
+    name: 'Mansfield Building Society',
+    shortName: 'Mansfield BS',
+    category: 'Building Society',
+    phone: '01623 676 300',
+    fcaNumber: '206049',
+    department: 'Mortgage Desk',
+    aliases: ['mansfield', 'mansfield building society'],
+  },
+  {
+    id: 'vernon',
+    name: 'Vernon Building Society',
+    shortName: 'Vernon BS',
+    category: 'Building Society',
+    phone: '0161 429 6262',
+    fcaNumber: '150998',
+    department: 'Mortgage Services Desk',
+    aliases: ['vernon', 'vernon building society'],
+  },
+
+  // --- Private & Merchant Banks ---
+  {
+    id: 'coutts',
+    name: 'Coutts & Company Commercial Mortgages',
+    shortName: 'Coutts',
+    category: 'Private Bank',
+    phone: '020 7759 1000',
+    fcaNumber: '122704',
+    department: 'Real Estate Finance Desk',
+    aliases: ['coutts', 'coutts and co', 'coutts & co'],
+  },
+  {
+    id: 'weatherbys',
+    name: 'Weatherbys Bank Commercial',
+    shortName: 'Weatherbys Bank',
+    category: 'Private Bank',
+    phone: '01933 543 543',
+    fcaNumber: '204540',
+    department: 'Private & Commercial Lending',
+    aliases: ['weatherbys', 'weatherbys bank'],
+  },
+  {
+    id: 'investec',
+    name: 'Investec Bank Commercial Property',
+    shortName: 'Investec',
+    category: 'Private Bank',
+    phone: '020 7597 4000',
+    fcaNumber: '172330',
+    department: 'Commercial Real Estate Finance',
+    aliases: ['investec', 'investec bank'],
+  },
+  {
+    id: 'arbuthnot',
+    name: 'Arbuthnot Latham Commercial Banking',
+    shortName: 'Arbuthnot Latham',
+    category: 'Private Bank',
+    phone: '020 7012 2500',
+    fcaNumber: '143336',
+    department: 'Commercial Lending Services',
+    aliases: ['arbuthnot', 'arbuthnot latham'],
+  },
+  {
+    id: 'hampden',
+    name: 'Hampden & Co Commercial Mortgages',
+    shortName: 'Hampden & Co',
+    category: 'Private Bank',
+    phone: '0131 226 7300',
+    fcaNumber: '466324',
+    department: 'Banking & Lending Operations',
+    aliases: ['hampden', 'hampden and co', 'hampden & co'],
+  },
+  {
+    id: 'hoare',
+    name: 'C. Hoare & Co Real Estate Finance',
+    shortName: 'C. Hoare & Co',
+    category: 'Private Bank',
+    phone: '020 7353 4522',
+    fcaNumber: '122093',
+    department: 'Commercial Lending Operations',
+    aliases: ['hoare', 'c hoare', 'c. hoare & co', 'hoares bank'],
+  },
+];
+
+export interface MortgageLenderSearchResult extends MortgageLender {
+  source: 'FCA & UK Finance Register' | 'Companies House';
+  matchScore: number;
+}
+
+/**
+ * Fast fuzzy matching against UK Authorized Mortgage Lenders
+ * Prioritizes starts-with > exact word match > alias match > contains
+ */
+export function searchCuratedLenders(query: string, limit = 8): MortgageLenderSearchResult[] {
+  const cleanQuery = query.trim().toLowerCase();
+  if (!cleanQuery) return [];
+
+  const results: MortgageLenderSearchResult[] = [];
+
+  for (const lender of UK_AUTHORIZED_MORTGAGE_LENDERS) {
+    const nameLower = lender.name.toLowerCase();
+    const shortLower = (lender.shortName || '').toLowerCase();
+    let score = 0;
+
+    // Exact matches
+    if (shortLower === cleanQuery || nameLower === cleanQuery) {
+      score = 100;
+    } else if (shortLower.startsWith(cleanQuery) || nameLower.startsWith(cleanQuery)) {
+      score = 80;
+    } else if (
+      lender.aliases.some((alias) => alias === cleanQuery)
+    ) {
+      score = 75;
+    } else if (
+      lender.aliases.some((alias) => alias.startsWith(cleanQuery))
+    ) {
+      score = 70;
+    } else if (
+      nameLower.includes(` ${cleanQuery}`) ||
+      shortLower.includes(` ${cleanQuery}`)
+    ) {
+      score = 60;
+    } else if (nameLower.includes(cleanQuery)) {
+      score = 40;
+    } else if (
+      lender.aliases.some((alias) => alias.includes(cleanQuery))
+    ) {
+      score = 30;
+    }
+
+    if (score > 0) {
+      results.push({
+        ...lender,
+        source: 'FCA & UK Finance Register',
+        matchScore: score,
+      });
+    }
+  }
+
+  // Sort by highest score first, then by name
+  return results
+    .sort((a, b) => b.matchScore - a.matchScore || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
+/**
+ * Full search function that queries the curated FCA/UK Finance register,
+ * and if results are few and query length >= 3, falls back to Companies House.
+ */
+export async function searchMortgageLenders(
+  query: string,
+  limit = 8,
+  includeCompaniesHouseFallback = true
+): Promise<MortgageLenderSearchResult[]> {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return [];
+
+  // Search curated FCA register first
+  const curatedResults = searchCuratedLenders(cleanQuery, limit);
+
+  // If we have strong matches or don't need fallback, return curated
+  if (curatedResults.length >= 3 || !includeCompaniesHouseFallback || cleanQuery.length < 3) {
+    return curatedResults;
+  }
+
+  // Optional Companies House fallback for niche SPVs or bespoke lenders
+  try {
+    const chResults = await searchCompaniesHouse(cleanQuery);
+    const existingIds = new Set(curatedResults.map((r) => r.name.toLowerCase()));
+
+    const fallbackResults: MortgageLenderSearchResult[] = chResults
+      .filter((ch) => !existingIds.has(ch.company_name.toLowerCase()))
+      .slice(0, limit - curatedResults.length)
+      .map((ch) => ({
+        id: `ch-${ch.company_number}`,
+        name: ch.company_name,
+        category: 'UK Registered Company',
+        phone: '',
+        fcaNumber: undefined,
+        department: 'Registered Office',
+        aliases: [ch.company_number],
+        source: 'Companies House',
+        matchScore: 20,
+      }));
+
+    return [...curatedResults, ...fallbackResults];
+  } catch {
+    return curatedResults;
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "application": {
+    "id": "test-app-FINAL",
+    "business": {
+      "legalName": "Integration Test Company Ltd",
+      "hasTradingName": false,
+      "registrationNumber": "12345678",
+      "legalEntity": "LTD",
+      "physicalAddress": {
+        "line1": "123 Test St",
+        "city": "London",
+        "postcode": "E1 1AA",
+        "country": "UK"
+      },
+      "businessPhone": "020 1234 5678",
+      "email": "test@bizloans4u.co.uk"
+    },
+    "funding": {
+      "requestedAmount": 50000,
+      "useOfFunds": "Working Capital",
+      "hasExistingLoanOrAdvance": false
+    },
+    "financials": {
+      "averageMonthlyCardSales": 10000,
+      "totalMonthlySales": 20000,
+      "annualGrossSales": 240000
+    },
+    "principals": [
+      {
+        "name": "John Doe",
+        "title": "Director",
+        "ownershipPercentage": 100,
+        "mobilePhone": "07123456789",
+        "email": "test@example.com",
+        "homeAddress": {
+          "line1": "456 Home St",
+          "city": "London",
+          "postcode": "E1 2BB",
+          "country": "UK"
+        }
+      }
+    ],
+    "certification": {
+      "confirmed": true,
+      "signatures": [
+        {
+          "principalName": "John Doe",
+          "signatureType": "type",
+          "signatureData": "John Doe"
+        }
+      ]
+    },
+    "authorisation": {
+      "confirmed": true,
+      "signatures": [
+        {
+          "principalName": "John Doe",
+          "signatureType": "type",
+          "signatureData": "John Doe"
+        }
+      ]
+    }
+  }
+}

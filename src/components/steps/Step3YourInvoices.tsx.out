@@ -1,0 +1,298 @@
+import React from 'react';
+import { useApplication } from '../../context/ApplicationContext';
+import { Info } from 'lucide-react';
+
+export const Step3YourInvoices: React.FC = () => {
+  const { data, updateInvoices, nextStep, prevStep, errors, validateField, clearError } = useApplication();
+  
+  const isConstruction = data.business?.industry === 'construction';
+  const isRecruitment = data.business?.industry === 'recruitment';
+  const hasExport = data.invoices?.debtor_geography?.some(g => ['europe', 'north_america', 'other_international'].includes(g));
+
+  const handleGeographyToggle = (val: string) => {
+    const current = data.invoices?.debtor_geography || [];
+    let newGeography;
+    if (current.includes(val)) {
+      newGeography = current.filter(g => g !== val);
+    } else {
+      newGeography = [...current, val];
+    }
+    updateInvoices({ debtor_geography: newGeography });
+    if (newGeography.length > 0) {
+      clearError('debtor_geography');
+    } else {
+      validateField(2, 'debtor_geography');
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4">
+      <div className="mb-8">
+        <h2 className="text-body-m font-semibold text-primary tracking-wide uppercase mb-1">Your invoices</h2>
+        <h1 className="text-display-s text-on-surface text-on-surface mb-3">What would you like the facility to do?</h1>
+        <p className="text-on-surface-variant text-body-l">Tell us the outcome you want. You do not need to know which invoice finance product is right for you.</p>
+      </div>
+      
+      <div className="space-y-8">
+        <fieldset>
+          <legend className="block text-title-s text-on-surface mb-3">What would be most useful?</legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { id: 'release_all', label: 'Release cash from all unpaid invoices' },
+              { id: 'help_credit_control', label: 'Help with credit control and collections' },
+              { id: 'keep_control', label: 'Keep control of customer collections' },
+              { id: 'fund_selected', label: 'Fund selected invoices or customers' },
+              { id: 'replace_existing', label: 'Replace an existing provider' },
+              { id: 'not_sure', label: 'Not sure — give me options' },
+            ].map(option => (
+              <label key={option.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${data.invoices?.desired_outcome === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-slate-50'}`}>
+                <input
+                  type="radio"
+                  name="outcome"
+                  className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                  checked={data.invoices?.desired_outcome === option.id}
+                  onChange={() => { updateInvoices({ desired_outcome: option.id }); clearError('desired_outcome'); }}
+                />
+                <span className="ml-3 text-title-s text-on-surface leading-tight">{option.label}</span>
+              </label>
+            ))}
+          </div>
+          {errors.desired_outcome && <p className="mt-2 text-body-m text-red-600">{errors.desired_outcome}</p>}
+        </fieldset>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+          <div>
+            <label className="block text-title-s text-on-surface mb-2">Ideal funding limit</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-on-surface-variant sm:text-body-m">£</span>
+              </div>
+              <input
+                type="number"
+                className={`w-full pl-8 p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface ${errors.requested_facility ? 'border-red-500 bg-red-50' : 'border-outline'}`}
+                placeholder="150000"
+                value={data.invoices?.requested_facility || ''}
+                onChange={(e) => { updateInvoices({ requested_facility: parseInt(e.target.value) || undefined }); clearError('requested_facility'); }}
+                onBlur={() => validateField(2, 'requested_facility')}
+              />
+            </div>
+            {errors.requested_facility && <p className="mt-1 text-body-m text-red-600">{errors.requested_facility}</p>}
+          </div>
+          <div>
+            <label className="block text-title-s text-on-surface mb-2">Usual customer payment terms</label>
+            <select
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface bg-white ${errors.payment_terms_days ? 'border-red-500 bg-red-50' : 'border-outline'}`}
+              value={data.invoices?.payment_terms_days || ''}
+              onChange={(e) => { updateInvoices({ payment_terms_days: e.target.value }); clearError('payment_terms_days'); }}
+              onBlur={() => validateField(2, 'payment_terms_days')}
+            >
+              <option value="">Select terms</option>
+              <option value="30_or_less">30 days or less</option>
+              <option value="31_60">31–60 days</option>
+              <option value="61_90">61–90 days</option>
+              <option value="more_than_90">More than 90 days</option>
+              <option value="varies">Varies</option>
+            </select>
+            {errors.payment_terms_days && <p className="mt-1 text-body-m text-red-600">{errors.payment_terms_days}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-title-s text-on-surface mb-2">Largest customer share of debtor book</label>
+            <select
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface bg-white ${errors.largest_debtor_concentration_pct ? 'border-red-500 bg-red-50' : 'border-outline'}`}
+              value={data.invoices?.largest_debtor_concentration_pct || ''}
+              onChange={(e) => { updateInvoices({ largest_debtor_concentration_pct: e.target.value }); clearError('largest_debtor_concentration_pct'); }}
+              onBlur={() => validateField(2, 'largest_debtor_concentration_pct')}
+            >
+              <option value="">Select concentration</option>
+              <option value="under_20">Under 20%</option>
+              <option value="20_39">20–39%</option>
+              <option value="40_59">40–59%</option>
+              <option value="60_79">60–79%</option>
+              <option value="80_plus">80%+</option>
+              <option value="not_sure">Not sure</option>
+            </select>
+            {errors.largest_debtor_concentration_pct ? (
+              <p className="mt-1 text-body-m text-red-600">{errors.largest_debtor_concentration_pct}</p>
+            ) : (
+              <p className="mt-2 text-label-s text-on-surface-variant">Your best estimate is fine.</p>
+            )}
+          </div>
+          <div>
+             <fieldset>
+                <legend className="block text-title-s text-on-surface mb-2">Where are most customers based?</legend>
+                <div className="space-y-2">
+                  {[
+                    { id: 'uk', label: 'UK' },
+                    { id: 'europe', label: 'Europe' },
+                    { id: 'north_america', label: 'North America' },
+                    { id: 'other_international', label: 'Other international' },
+                  ].map(option => (
+                    <label key={option.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-primary focus:ring-primary border-outline rounded"
+                        checked={data.invoices?.debtor_geography?.includes(option.id)}
+                        onChange={() => handleGeographyToggle(option.id)}
+                      />
+                      <span className="ml-2 text-body-m text-on-surface">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+                {errors.debtor_geography && <p className="mt-2 text-body-m text-red-600">{errors.debtor_geography}</p>}
+             </fieldset>
+          </div>
+        </div>
+
+        {hasExport && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300 pt-4 border-t border-slate-100">
+            <label className="block text-title-s text-on-surface mb-2">Approximately what percentage of sales is to customers outside the UK?</label>
+            <select
+              className="w-full sm:w-1/2 p-3 border border-outline rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface bg-white"
+              value={data.invoices?.export_sales_pct || ''}
+              onChange={(e) => updateInvoices({ export_sales_pct: e.target.value })}
+            >
+              <option value="">Select percentage</option>
+              <option value="under_10">Under 10%</option>
+              <option value="10_25">10–25%</option>
+              <option value="26_50">26–50%</option>
+              <option value="over_50">Over 50%</option>
+            </select>
+          </div>
+        )}
+
+        {isConstruction && (
+          <div className="space-y-6 pt-6 border-t border-outline-variant animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-2 text-primary mb-4">
+               <Info className="w-5 h-5" />
+               <span className="text-title-s">Construction sector questions</span>
+            </div>
+            <fieldset>
+              <legend className="block text-title-s text-on-surface mb-3">How do you normally invoice for construction work?</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: 'applications', label: 'Applications for payment' },
+                  { id: 'valuations', label: 'Valuations or stage payments' },
+                  { id: 'completed', label: 'Completed-work invoices' },
+                  { id: 'mixture', label: 'A mixture' },
+                ].map(option => (
+                  <label key={option.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${data.invoices?.construction_invoicing_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-slate-50'}`}>
+                    <input
+                      type="radio"
+                      name="construction_invoicing"
+                      className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                      checked={data.invoices?.construction_invoicing_type === option.id}
+                      onChange={() => updateInvoices({ construction_invoicing_type: option.id })}
+                    />
+                    <span className="ml-3 text-title-s text-on-surface leading-tight">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-title-s text-on-surface mb-2">How does the business normally work?</label>
+                <select
+                  className="w-full p-3 border border-outline rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface bg-white"
+                  value={data.invoices?.construction_main_contract_or || ''}
+                  onChange={(e) => updateInvoices({ construction_main_contract_or: e.target.value })}
+                >
+                  <option value="">Select option</option>
+                  <option value="main_contractor">Main contractor</option>
+                  <option value="subcontractor">Subcontractor</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-title-s text-on-surface mb-2">Are retentions normally deducted?</label>
+                <select
+                  className="w-full p-3 border border-outline rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-l bg-surface bg-white"
+                  value={data.invoices?.construction_retention || ''}
+                  onChange={(e) => updateInvoices({ construction_retention: e.target.value })}
+                >
+                  <option value="">Select option</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                  <option value="sometimes">Sometimes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isRecruitment && (
+          <div className="space-y-6 pt-6 border-t border-outline-variant animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-2 text-primary mb-4">
+               <Info className="w-5 h-5" />
+               <span className="text-title-s">Recruitment sector questions</span>
+            </div>
+            <fieldset>
+              <legend className="block text-title-s text-on-surface mb-3">What type of recruitment does the business provide?</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: 'permanent', label: 'Permanent recruitment' },
+                  { id: 'temporary', label: 'Temporary or contract recruitment' },
+                  { id: 'mixture', label: 'A mixture of both' },
+                ].map(option => (
+                  <label key={option.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${data.invoices?.recruitment_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-slate-50'}`}>
+                    <input
+                      type="radio"
+                      name="recruitment_type"
+                      className="mt-0.5 h-4 w-4 text-primary focus:ring-primary border-outline"
+                      checked={data.invoices?.recruitment_type === option.id}
+                      onChange={() => updateInvoices({ recruitment_type: option.id })}
+                    />
+                    <span className="ml-3 text-title-s text-on-surface leading-tight">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend className="block text-title-s text-on-surface mb-3">Would payroll support be useful?</legend>
+              <div className="flex gap-4">
+                {[
+                  { id: 'yes', label: 'Yes' },
+                  { id: 'no', label: 'No' },
+                  { id: 'not_sure', label: 'Not sure' },
+                ].map(option => (
+                  <label key={option.id} className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-colors ${data.invoices?.payroll_support_required === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-slate-50'}`}>
+                    <input
+                      type="radio"
+                      name="payroll_support"
+                      className="sr-only"
+                      checked={data.invoices?.payroll_support_required === option.id}
+                      onChange={() => updateInvoices({ payroll_support_required: option.id })}
+                    />
+                    <span className={`text-title-s ${data.invoices?.payroll_support_required === option.id ? 'text-primary' : 'text-on-surface'}`}>{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        )}
+
+      </div>
+      
+      <div className="mt-8 flex items-center justify-end border-t border-outline-variant pt-6">
+        <div className="flex gap-3">
+          <button
+            onClick={prevStep}
+            className="px-6 py-3 bg-white border border-outline text-on-surface font-medium rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Back
+          </button>
+          <button
+            onClick={nextStep}
+            className="px-6 py-3 bg-primary text-on-primary shadow-elevation-1 hover:shadow-elevation-2 rounded-full min-h-touch text-white font-medium rounded-lg hover:bg-brand-800 transition-colors flex items-center gap-2 shadow-sm"
+          >
+            Continue
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
