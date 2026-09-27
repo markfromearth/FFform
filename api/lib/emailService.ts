@@ -114,3 +114,70 @@ export async function sendApplicationNotificationEmail(
 }
 
 export default sendApplicationNotificationEmail;
+
+
+/**
+ * Dispatches an acknowledgement email to the applicant when a partial lead is captured.
+ */
+export async function sendPartialLeadAcknowledgementEmail(
+  options: SendApplicationEmailOptions
+): Promise<SendApplicationEmailResult> {
+  const { application } = options;
+  const appRef = options.applicationRef || `FF-${new Date().getFullYear()}-${crypto.randomUUID().slice(-5).toUpperCase()}`;
+  
+  const recipient = application.contact?.email;
+  if (!recipient) {
+    return { success: false, recipient: 'unknown', error: 'No email provided in partial lead' };
+  }
+
+  const applicantName = application.contact?.full_name?.split(' ')[0] || 'there';
+  const subject = `Your Factoring Finance Enquiry (Ref: ${appRef})`;
+  
+  const textBody = `Hi ${applicantName},\n\nThank you for starting your enquiry with Factoring Finance.\n\nWe have received your initial details. If you didn't get a chance to finish the form, don't worry—one of our invoice finance specialists will review the information you provided and will be in touch shortly to discuss your options.\n\nYour reference number is: ${appRef}\n\nBest regards,\nThe Factoring Finance Team`;
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:20px;font-family:sans-serif;color:#333;line-height:1.6;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;">
+    <p>Hi ${applicantName},</p>
+    <p>Thank you for starting your enquiry with Factoring Finance.</p>
+    <p>We have received your initial details. If you didn't get a chance to finish the form, don't worry—one of our invoice finance specialists will review the information you provided and will be in touch shortly to discuss your options.</p>
+    <p>Your reference number is: <strong>${appRef}</strong></p>
+    <br/>
+    <p>Best regards,<br/><strong>The Factoring Finance Team</strong></p>
+  </div>
+</body>
+</html>
+`;
+
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    const mockMessageId = `mock_msg_${Date.now()}_mock`;
+    console.log(`[EmailService] RESEND_API_KEY not configured. Mocking Partial Acknowledgement Email to: ${recipient}`);
+    return { success: true, messageId: mockMessageId, isMock: true, recipient };
+  }
+
+  try {
+    const resend = new Resend(apiKey);
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'Factoring Finance <enquiries@factoringfinance.co.uk>';
+
+    const { data, error } = await resend.emails.send({
+      from: fromAddress,
+      to: [recipient],
+      subject,
+      text: textBody,
+      html: htmlBody,
+    });
+
+    if (error) {
+      console.error('[EmailService] Resend API error response (Partial):', error);
+      return { success: false, error: error.message, recipient };
+    }
+    return { success: true, messageId: data?.id, recipient };
+  } catch (err: any) {
+    console.error('[EmailService] Unexpected error during Partial email dispatch:', err?.message || err);
+    return { success: false, error: err?.message, recipient };
+  }
+}

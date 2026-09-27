@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
-import { sendApplicationNotificationEmail } from './lib/emailService';
+import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './lib/emailService';
 
 // In-memory mock storage for local testing and deduplication
 // In a real environment, this would be a Redis cache or Database table
@@ -205,12 +205,24 @@ export default async function handler(req: any, res: any) {
     // 4. Decoupled Secondary Task: Email Summary Dispatch
     if (!isPartial) {
       try {
-      await sendApplicationNotificationEmail({
-        application,
-        applicationRef: submissionRef,
-      });
-    } catch (emailErr: any) {
-      console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
+        await sendApplicationNotificationEmail({
+          application,
+          applicationRef: submissionRef,
+        });
+      } catch (emailErr: any) {
+        console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
+      }
+    } else {
+      // Partial lead - send welcome/acknowledgement email to the applicant
+      if (application.contact?.email) {
+        try {
+          await sendPartialLeadAcknowledgementEmail({
+            application,
+            applicationRef: submissionRef,
+          });
+        } catch (emailErr: any) {
+          console.error('[SubmitAPI] Downstream partial acknowledgement email failed (decoupled):', emailErr?.message || emailErr);
+        }
       }
     }
 
