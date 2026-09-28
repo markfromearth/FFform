@@ -199,7 +199,7 @@ export async function sendPartialLeadAcknowledgementEmail(
     return { success: false, recipient: 'unknown', error: 'No email provided in partial lead' };
   }
 
-  const applicantName = application.contact?.full_name?.split(' ')[0] || 'there';
+  const applicantName = application.contact?.contact_full_name?.split(' ')[0] || 'there';
   const subject = `Your Factoring Finance Enquiry (Ref: ${appRef})`;
   
   const textBody = `Hi ${applicantName},\n\nThank you for starting your enquiry with Factoring Finance.\n\nWe have received your initial details. If you didn't get a chance to finish the form, don't worry—one of our invoice finance specialists will review the information you provided and will be in touch shortly to discuss your options.\n\nYour reference number is: ${appRef}\n\nBest regards,\nThe Factoring Finance Team`;

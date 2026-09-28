@@ -1,3 +1,4 @@
+import { formatLabel } from '../../src/utils/formatters';
 import { ApplicationData } from '../../src/schemas/applicationSchemas';
 
 export interface SummaryOptions {
