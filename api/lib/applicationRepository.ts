@@ -6,7 +6,7 @@ const COLLECTION_NAME = 'ffApplications';
 export interface FFApplicationRecord {
   applicationId: string;
   submissionRef: string;
-  status: string;
+  applicationStatus: string;
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
@@ -35,7 +35,7 @@ export async function saveOrUpdateApplication(
       record: {
         applicationId,
         submissionRef,
-        status,
+        applicationStatus,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         application: applicationData
@@ -52,15 +52,15 @@ export async function saveOrUpdateApplication(
       const existingData = doc.data() as FFApplicationRecord;
       
       // Idempotency: if it's already fully submitted, treat as duplicate
-      if (status === 'introduction_ready' && existingData.status === 'introduction_ready') {
+      if (applicationStatus === 'submitted' && existingData.applicationStatus === 'submitted') {
         return { isDuplicate: true, record: existingData };
       }
       
       const updatedRecord: Partial<FFApplicationRecord> = {
-        status,
+        applicationStatus,
         updatedAt: new Date().toISOString(),
         application: applicationData,
-        ...(status === 'introduction_ready' && !existingData.submittedAt ? { submittedAt: new Date().toISOString() } : {})
+        ...(applicationStatus === 'submitted' && !existingData.submittedAt ? { submittedAt: new Date().toISOString() } : {})
       };
       
       t.update(docRef, updatedRecord as any);
@@ -70,12 +70,14 @@ export async function saveOrUpdateApplication(
       const newRecord: FFApplicationRecord = {
         applicationId,
         submissionRef,
-        status,
+        applicationStatus,
         createdAt: now,
         updatedAt: now,
-        ...(status === 'introduction_ready' ? { submittedAt: now } : {}),
+        ...(applicationStatus === 'submitted' ? { submittedAt: now } : {}),
         application: applicationData,
-        uploadStatus: 'pending'
+        uploadStatus: 'pending',
+        emailStatus: 'pending',
+        crmStatus: 'pending'
       };
       t.set(docRef, newRecord);
       return { isDuplicate: false, record: newRecord };

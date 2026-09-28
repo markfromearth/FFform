@@ -109,7 +109,7 @@ export default async function handler(req: any, res: any) {
     
     const submissionRef = generateFallbackReference(id);
     const submittedAt = payload.submittedAt || new Date().toISOString();
-    const appStatus = payload.status || 'introduction_ready';
+    const appStatus = isPartial ? 'draft' : 'submitted';
 
     // 2. Persist to Firestore and Idempotency Check
     let dbRecord;
@@ -210,7 +210,7 @@ const docToSave = {
     } else {
       // Mocking successful CRM delivery if URL is not set (e.g., local dev)
       console.log('[SubmitAPI] MONDAY_WEBHOOK_URL not configured. Mocking successful CRM routing.');
-      crmStatus = 'mock_delivered';
+      crmStatus = 'delivered';
     }
 
     
@@ -223,7 +223,7 @@ const docToSave = {
           applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
         });
         if (emailRes.success) {
-          await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+          await updateEmailStatus(id, { emailStatus: 'sent', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
         } else {
           await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
         }
@@ -239,7 +239,7 @@ const docToSave = {
             applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
           });
           if (emailRes.success) {
-            await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+            await updateEmailStatus(id, { emailStatus: 'sent', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
           } else {
             await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
           }
