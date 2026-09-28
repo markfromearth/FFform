@@ -17,6 +17,7 @@ interface PartialApplicationData {
   contact: Partial<ContactDetails>;
   invoices: Partial<InvoicesDetails>;
   consents: Partial<ConsentsDetails>;
+  documents: any[];
 }
 
 interface ApplicationContextType {
@@ -26,6 +27,7 @@ interface ApplicationContextType {
   updateContact: (data: Partial<ContactDetails>) => void;
   updateInvoices: (data: Partial<InvoicesDetails>) => void;
   updateConsents: (data: Partial<ConsentsDetails>) => void;
+  addDocument: (doc: any) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
@@ -53,7 +55,8 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     consents: {
       marketing_email: false,
       marketing_sms: false,
-    }
+    },
+    documents: []
   });
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -78,6 +81,9 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     setData((prev) => ({ ...prev, invoices: { ...prev.invoices, ...invoicesData } }));
   };
 
+  const addDocument = (doc: any) => {
+    setData((prev) => ({ ...prev, documents: [...(prev.documents || []), doc] }));
+  };
   const updateConsents = (consentsData: Partial<ConsentsDetails>) => {
     setData((prev) => ({ ...prev, consents: { ...prev.consents, ...consentsData } }));
   };
@@ -197,6 +203,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
         updateContact,
         updateInvoices,
         updateConsents,
+        addDocument,
         currentStep,
         setCurrentStep,
         nextStep,

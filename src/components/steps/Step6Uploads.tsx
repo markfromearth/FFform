@@ -1,11 +1,129 @@
 import React, { useState } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
-import { ShieldCheck, CheckCircle2, UploadCloud, Clock } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, UploadCloud, Clock, FileText, AlertCircle, RefreshCw } from 'lucide-react';
 import { FileUploadZone } from '../ui/FileUploadZone';
 
+
+interface UploadTask {
+  id: string;
+  file: File;
+  documentType: string;
+  status: 'uploading' | 'success' | 'error';
+  progress: number;
+  errorMessage?: string;
+}
+
 export const Step6Uploads: React.FC = () => {
-  const { data, nextStep } = useApplication();
+  const { data, nextStep, applicationId, addDocument } = useApplication();
   const [choice, setChoice] = useState<'now' | 'later' | null>(null);
+
+  const [uploadTasks, setUploadTasks] = useState<UploadTask[]>([]);
+
+  const processUpload = async (task: UploadTask) => {
+    try {
+      const res = await fetch('/api/get-upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId,
+          fileName: task.file.name,
+          fileType: task.file.type,
+          fileSize: task.file.size,
+          documentType: task.documentType
+        })
+      });
+      
+      const dataRes = await res.json();
+      if (!dataRes.success) throw new Error(dataRes.error || dataRes.message || 'Failed to get upload URL');
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', dataRes.uploadUrl, true);
+        xhr.setRequestHeader('Content-Type', task.file.type);
+        
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            setUploadTasks(prev => prev.map(t => t.id === task.id ? { ...t, progress } : t));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'success', progress: 100 } : t));
+            addDocument({
+              documentType: task.documentType,
+              fileName: task.file.name,
+              storagePath: dataRes.storagePath,
+              uploadedAt: new Date().toISOString(),
+              fileSize: task.file.size
+            });
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.send(task.file);
+      });
+    } catch (err: any) {
+      setUploadTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'error', errorMessage: err.message } : t));
+    }
+  };
+
+  const handleFilesSelected = (files: File[], documentType: string) => {
+    const newTasks = files.map(file => ({
+      id: `${file.name}-${Date.now()}`,
+      file,
+      documentType,
+      status: 'uploading' as const,
+      progress: 0
+    }));
+    
+    // Check for duplicates
+    const existingFileNames = uploadTasks.map(t => t.file.name);
+    const filteredNewTasks = newTasks.filter(t => !existingFileNames.includes(t.file.name));
+
+    setUploadTasks(prev => [...prev, ...filteredNewTasks]);
+    
+    filteredNewTasks.forEach(task => processUpload(task));
+  };
+
+  const handleRetry = (taskId: string) => {
+    setUploadTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'uploading', progress: 0, errorMessage: undefined } : t));
+    const taskToRetry = uploadTasks.find(t => t.id === taskId);
+    if (taskToRetry) {
+      processUpload(taskToRetry);
+    }
+  };
+
+  const renderTaskList = (docType: string) => {
+    const tasks = uploadTasks.filter(t => t.documentType === docType);
+    if (tasks.length === 0) return null;
+    return (
+      <div className="mt-3 space-y-2">
+        {tasks.map(task => (
+          <div key={task.id} className="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-xl text-left">
+            <div className="flex items-center gap-3 overflow-hidden">
+               <FileText className="w-5 h-5 text-primary shrink-0" />
+               <span className="truncate text-body-m text-on-surface">{task.file.name}</span>
+            </div>
+            <div className="pl-4 shrink-0">
+              {task.status === 'uploading' && <span className="text-body-s text-primary font-medium">Uploading {Math.round(task.progress)}%</span>}
+              {task.status === 'success' && <span className="text-body-s text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> Uploaded</span>}
+              {task.status === 'error' && (
+                 <div className="flex items-center gap-2">
+                   <span className="text-body-s text-error flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Failed</span>
+                   <button onClick={() => handleRetry(task.id)} className="text-label-s text-primary hover:underline flex items-center gap-1"><RefreshCw className="w-3 h-3"/> Retry</button>
+                 </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
   const [isSendingLink, setIsSendingLink] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
 
@@ -45,30 +163,44 @@ export const Step6Uploads: React.FC = () => {
           <p className="body-l text-on-surface-variant">Providing these now will fast-track your application.</p>
         </div>
         
-        <div className="space-y-6">
-          <FileUploadZone 
-            label="Current Aged Debtor Report" 
-            description="A breakdown of what your customers owe you, sorted by age."
-            onFilesSelected={(files) => console.log('Aged Debtors:', files)}
-          />
-          <FileUploadZone 
-            label="Current Aged Creditor Report" 
-            description="A breakdown of what you owe to suppliers, sorted by age."
-            onFilesSelected={(files) => console.log('Aged Creditors:', files)}
-          />
-          <FileUploadZone 
-            label="Last 3 Months Business Bank Statements" 
-            description="PDF format preferred. Please provide the main trading account."
-            onFilesSelected={(files) => console.log('Bank Statements:', files)}
-          />
-          {data.business?.industry === 'construction' && (
+        
+        <div className="space-y-8">
+          <div>
             <FileUploadZone 
-              label="Sample application for payment or certified valuation (construction only)" 
-              description="Please provide a recent example."
-              onFilesSelected={(files) => console.log('Construction Sample:', files)}
+              label="Current Aged Debtor Report" 
+              description="A breakdown of what your customers owe you, sorted by age."
+              onFilesSelected={(files) => handleFilesSelected(files, 'aged_debtor_report')}
             />
+            {renderTaskList('aged_debtor_report')}
+          </div>
+          <div>
+            <FileUploadZone 
+              label="Current Aged Creditor Report" 
+              description="A breakdown of what you owe to suppliers, sorted by age."
+              onFilesSelected={(files) => handleFilesSelected(files, 'aged_creditor_report')}
+            />
+            {renderTaskList('aged_creditor_report')}
+          </div>
+          <div>
+            <FileUploadZone 
+              label="Last 3 Months Business Bank Statements" 
+              description="PDF format preferred. Please provide the main trading account."
+              onFilesSelected={(files) => handleFilesSelected(files, 'bank_statement')}
+            />
+            {renderTaskList('bank_statement')}
+          </div>
+          {data.business?.industry === 'construction' && (
+            <div>
+              <FileUploadZone 
+                label="Sample application for payment or certified valuation (construction only)" 
+                description="Please provide a recent example."
+                onFilesSelected={(files) => handleFilesSelected(files, 'construction_sample')}
+              />
+              {renderTaskList('construction_sample')}
+            </div>
           )}
         </div>
+
 
         <div className="mt-8 flex justify-center border-t border-outline-variant pt-8">
           <button

@@ -81,11 +81,20 @@ export const consentsSchema = z.object({
   consent_source: z.string().optional(),
 });
 
+export const uploadedDocumentSchema = z.object({
+  documentType: z.string(),
+  fileName: z.string(),
+  storagePath: z.string(),
+  uploadedAt: z.string(),
+  fileSize: z.number(),
+});
+
 export const fullApplicationSchema = z.object({
   business: businessDetailsSchema,
   contact: contactDetailsSchema,
   invoices: invoicesSchema,
   consents: consentsSchema,
+  documents: z.array(uploadedDocumentSchema).optional(),
 });
 
 export type BusinessDetails = z.infer<typeof businessDetailsSchema>;
