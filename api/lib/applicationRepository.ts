@@ -178,3 +178,12 @@ export async function updateDocumentMetadata(
     updatedAt: new Date().toISOString()
   }).catch(e => console.error('[Firestore DAL] Failed to update document metadata', e.message));
 }
+
+
+export async function getApplicationById(applicationId: string): Promise<FFApplicationRecord | null> {
+  const db = getAdminFirestore();
+  if (!db) return null;
+  const doc = await db.collection(COLLECTION_NAME).doc(applicationId).get();
+  if (!doc.exists) return null;
+  return doc.data() as FFApplicationRecord;
+}
