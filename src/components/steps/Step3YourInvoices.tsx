@@ -123,7 +123,7 @@ export const Step3YourInvoices: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="largest_debtor_concentration_pct" className="block text-title-s text-on-surface mb-2">Largest customer share of debtor book</label>
+            <label htmlFor="largest_debtor_concentration_pct" className="block text-title-s text-on-surface mb-2">What percentage of sales comes from your largest customer?</label>
             <select
               id="largest_debtor_concentration_pct"
               className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.largest_debtor_concentration_pct ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
