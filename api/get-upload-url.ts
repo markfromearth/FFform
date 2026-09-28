@@ -12,6 +12,15 @@ const ALLOWED_MIME_TYPES = [
   'application/vnd.ms-excel',
 ];
 
+const ALLOWED_DOCUMENT_TYPES = [
+  'aged_debtor_report',
+  'aged_creditor_report',
+  'bank_statement',
+  'construction_sample',
+  'other_supporting_document',
+  'completed_application'
+];
+
 /**
  * Sanitizes an application ID to prevent directory traversal and injection.
  */
@@ -23,7 +32,7 @@ function sanitizeApplicationId(id: string): string {
  * Sanitizes a file name, removing path segments and unsafe characters while preserving the extension.
  */
 function sanitizeFileName(fileName: string): string {
-  const base = fileName.split(/[/\\]/).pop() || 'document';
+  const base = fileName.split(/[\/\\]/).pop() || 'document';
   const clean = base.replace(/[^a-zA-Z0-9._-]/g, '_');
   return clean;
 }
@@ -49,11 +58,11 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { applicationId, fileName, fileType, fileSize, uploadType } = req.body || {};
+    const { applicationId, fileName, fileType, fileSize, documentType } = req.body || {};
 
-    if (!applicationId || !fileName || !fileType) {
+    if (!applicationId || !fileName || !fileType || !documentType) {
       res.status(400).json({
-        error: 'Missing required parameters: applicationId, fileName, and fileType are required.',
+        error: 'Missing required parameters: applicationId, fileName, fileType, and documentType are required.',
       });
       return;
     }
@@ -61,6 +70,11 @@ export default async function handler(req: any, res: any) {
     const cleanAppId = sanitizeApplicationId(applicationId);
     if (!cleanAppId) {
       res.status(400).json({ error: 'Invalid applicationId format.' });
+      return;
+    }
+
+    if (!ALLOWED_DOCUMENT_TYPES.includes(documentType)) {
+      res.status(400).json({ error: 'Invalid document type requested.' });
       return;
     }
 
@@ -74,19 +88,17 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const isManagementAccounts = uploadType === 'management_accounts';
-    const limitBytes = isManagementAccounts ? 5 * 1024 * 1024 : MAX_FILE_SIZE_BYTES;
-
-    if (typeof fileSize === 'number' && fileSize > limitBytes) {
+    if (typeof fileSize === 'number' && fileSize > MAX_FILE_SIZE_BYTES) {
       res.status(400).json({
-        error: `File size exceeds the ${isManagementAccounts ? '5 MB' : '20 MB'} limit.`,
+        error: `File size exceeds the 20 MB limit.`,
       });
       return;
     }
 
-    // Target private storage path
-    const folder = isManagementAccounts ? 'management-accounts' : 'bank-statements';
-    const storagePath = `applications/${cleanAppId}/${folder}/${cleanFileName}`;
+    // Target private storage path for FFform namespace (distinct from BizLoans4U)
+    // We add a timestamp to the file name to allow multiple uploads of the same type without overwriting
+    const timestamp = Date.now();
+    const storagePath = `applications/ff/${cleanAppId}/documents/${documentType}/${timestamp}_${cleanFileName}`;
     const expiresInSeconds = 15 * 60; // 15 minutes
 
     const storage = getAdminStorage();
@@ -100,6 +112,10 @@ export default async function handler(req: any, res: any) {
         action: 'write',
         expires: Date.now() + expiresInSeconds * 1000,
         contentType: fileType,
+        extensionHeaders: {
+          // Strictly enforce content length limit on the cloud storage side
+          'x-goog-content-length-range': `0,${MAX_FILE_SIZE_BYTES}`
+        }
       });
 
       res.status(200).json({
@@ -111,14 +127,16 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // Graceful development / mock fallback when Firebase credentials are not yet provisioned
-    const mockUploadUrl = `https://storage.googleapis.com/mock-bucket/${storagePath}?mock=true`;
+    // Mock fallback for local development
+    // Using a domain that will unequivocally fail if accidentally queried by a production client
+    const mockUploadUrl = `https://mock-local-storage.example.invalid/${storagePath}?mock=true_do_not_use_in_prod`;
     res.status(200).json({
       success: true,
       uploadUrl: mockUploadUrl,
       storagePath,
       expiresInSeconds,
       isMock: true,
+      warning: 'WARNING: Firebase Storage is not configured. This is a local mock URL.'
     });
   } catch (error: any) {
     console.error('Error generating direct upload URL:', error?.message || error);
