@@ -61,8 +61,14 @@ export function formatPercentage(pct: number | null | undefined): string {
 /**
  * Format raw select values (e.g. 20_39) into human readable labels
  */
-export function formatLabel(value: string | undefined | null): string {
-  if (!value) return '';
+export function formatLabel(value: any): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return String(value);
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(v => formatLabel(v)).join(', ');
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return String(value);
+  if (typeof value !== 'string') return String(value);
   const labels: Record<string, string> = {
     'under_10': 'Under 10%',
     '10_25': '10–25%',
