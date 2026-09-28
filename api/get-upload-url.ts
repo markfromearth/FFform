@@ -1,5 +1,5 @@
-import { getAdminStorage, isFirebaseConfigured } from './lib/firebaseAdmin.js';
-import { validateUploadToken } from './lib/applicationRepository';
+import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
+import { validateUploadToken } from './_lib/applicationRepository';
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.csv'];

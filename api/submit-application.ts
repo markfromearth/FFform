@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
-import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './lib/emailService';
+import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './_lib/emailService';
 
-import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken } from './lib/applicationRepository';
-import { generateApplicationPdf } from './lib/pdfGenerator';
-import { getAdminStorage } from './lib/firebaseAdmin';
+import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken } from './_lib/applicationRepository';
+import { generateApplicationPdf } from './_lib/pdfGenerator';
+import { getAdminStorage } from './_lib/firebaseAdmin';
 
 
 /**

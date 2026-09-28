@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import crypto from 'crypto';
-import { createUploadToken } from './lib/applicationRepository';
+import { createUploadToken } from './_lib/applicationRepository';
 
 export default async function handler(req: any, res: any) {
   // CORS Headers

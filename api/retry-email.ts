@@ -1,5 +1,5 @@
-import { getApplicationById, updateEmailStatus } from './lib/applicationRepository.js';
-import { sendApplicationNotificationEmail } from './lib/emailService.js';
+import { getApplicationById, updateEmailStatus } from './_lib/applicationRepository.js';
+import { sendApplicationNotificationEmail } from './_lib/emailService.js';
 
 export default async function handler(req: any, res: any) {
   // CORS Headers
