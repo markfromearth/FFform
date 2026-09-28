@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { createUploadToken } from './lib/applicationRepository';
 
 export default async function handler(req: any, res: any) {
   // CORS Headers
@@ -29,9 +30,9 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // Generate a secure, time-limited token
-    const token = crypto.randomBytes(32).toString('hex');
-    const returnLink = `https://factoringfinance.co.uk/upload?app_id=${applicationId}&token=${token}`;
+const origin = req.headers.origin || 'https://factoringfinance.co.uk';
+    const token = await createUploadToken(applicationId, 7 * 24 * 60 * 60 * 1000);
+    const returnLink = `${origin}/?token=${token}`;
 
     const apiKey = process.env.RESEND_API_KEY;
 

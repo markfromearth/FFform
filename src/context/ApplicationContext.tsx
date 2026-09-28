@@ -22,6 +22,8 @@ interface PartialApplicationData {
 
 interface ApplicationContextType {
   applicationId: string;
+  uploadToken: string | null;
+  setUploadToken: (token: string) => void;
   data: PartialApplicationData;
   updateBusiness: (data: Partial<BusinessDetails>) => void;
   updateContact: (data: Partial<ContactDetails>) => void;
@@ -41,6 +43,10 @@ interface ApplicationContextType {
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
 export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const tokenFromUrl = searchParams.get('token');
+  
+  const [uploadToken, setUploadToken] = useState<string | null>(tokenFromUrl);
   const [applicationId] = useState(() => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36));
   const [data, setData] = useState<PartialApplicationData>({
     business: {
@@ -58,7 +64,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     },
     documents: []
   });
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(tokenFromUrl ? 5 : 0);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const clearError = (field: string) => {
@@ -176,6 +182,8 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: applicationId,
+        uploadToken,
+        setUploadToken,
               status: 'contact_captured',
               application: data
             })
@@ -198,6 +206,8 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     <ApplicationContext.Provider
       value={{
         applicationId,
+        uploadToken,
+        setUploadToken,
         data,
         updateBusiness,
         updateContact,

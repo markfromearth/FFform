@@ -4,7 +4,7 @@ import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
 import { formatLabel } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
-  const { data, prevStep, setCurrentStep, updateConsents, validateStep, clearError, errors, applicationId } = useApplication();
+  const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, setUploadToken } = useApplication();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -40,11 +40,15 @@ export const Step5Review: React.FC = () => {
         throw new Error(`Server Error: ${text.slice(0, 50)}`);
       }
 
-      if (!response.ok) {
+if (!response.ok) {
         throw new Error(result?.error || 'Something went wrong processing your application');
       }
 
-      setIsSuccess(true);
+      if (result?.uploadToken) {
+        setUploadToken(result.uploadToken);
+      }
+
+      nextStep();
       window.scrollTo(0, 0);
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to submit application. Please try again.');

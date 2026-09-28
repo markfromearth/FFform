@@ -1,4 +1,61 @@
 import { getAdminFirestore } from './firebaseAdmin';
+
+import crypto from 'crypto';
+
+export interface UploadTokenRecord {
+  token: string;
+  applicationId: string;
+  createdAt: string;
+  expiresAt: string;
+  status: 'active' | 'used';
+}
+
+export async function createUploadToken(applicationId: string, expiresInMs: number): Promise<string> {
+  const db = getAdminFirestore();
+  if (!db) return 'mock_token_' + Date.now();
+  
+  const token = crypto.randomBytes(32).toString('hex');
+  const now = Date.now();
+  
+  const record: UploadTokenRecord = {
+    token,
+    applicationId,
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + expiresInMs).toISOString(),
+    status: 'active'
+  };
+  
+  await db.collection('ffUploadTokens').doc(token).set(record);
+  return token;
+}
+
+export async function validateUploadToken(token: string): Promise<{ valid: boolean; applicationId?: string; error?: string }> {
+  const db = getAdminFirestore();
+  if (!db) {
+    if (token.startsWith('mock_token_')) return { valid: true, applicationId: 'mock_app_id' };
+    return { valid: false, error: 'Database unavailable' };
+  }
+  
+  const docRef = db.collection('ffUploadTokens').doc(token);
+  const doc = await docRef.get();
+  
+  if (!doc.exists) {
+    return { valid: false, error: 'Invalid token' };
+  }
+  
+  const data = doc.data() as UploadTokenRecord;
+  
+  if (data.status !== 'active') {
+    return { valid: false, error: 'Token has already been used or revoked' };
+  }
+  
+  if (new Date(data.expiresAt).getTime() < Date.now()) {
+    return { valid: false, error: 'Token has expired' };
+  }
+  
+  return { valid: true, applicationId: data.applicationId };
+}
+
 import type { ApplicationData } from '../../src/schemas/applicationSchemas';
 
 const COLLECTION_NAME = 'ffApplications';

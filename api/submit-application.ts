@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
 import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './lib/emailService';
 
-import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata } from './lib/applicationRepository';
+import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken } from './lib/applicationRepository';
 import { generateApplicationPdf } from './lib/pdfGenerator';
 import { getAdminStorage } from './lib/firebaseAdmin';
 
@@ -119,6 +119,7 @@ export default async function handler(req: any, res: any) {
 
       if (result.isDuplicate) {
         // Idempotent immediate 200 OK return (preventing duplicate CRM entry and emails)
+        const uploadToken = await createUploadToken(dbRecord.applicationId, 2 * 60 * 60 * 1000);
         res.status(200).json({
           success: true,
           message: 'Application already submitted (idempotent duplicate request)',
@@ -126,6 +127,7 @@ export default async function handler(req: any, res: any) {
           submissionRef: dbRecord.submissionRef,
           submittedAt: dbRecord.submittedAt,
           crmStatus: dbRecord.crmStatus || 'delivered',
+          uploadToken,
         });
         return;
       }
@@ -250,12 +252,16 @@ const docToSave = {
     }
 
     // 5. Return 200 OK
+    const uploadToken = await createUploadToken(id, 2 * 60 * 60 * 1000);
+    
+    // 5. Return 200 OK
     res.status(200).json({
       success: true,
       applicationId: id,
       submissionRef,
       submittedAt,
       crmStatus,
+      uploadToken,
       queued: crmStatus === 'queued_for_retry'
     });
   } catch (error: any) {

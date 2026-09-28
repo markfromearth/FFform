@@ -1,4 +1,5 @@
 import { getAdminStorage, isFirebaseConfigured } from './lib/firebaseAdmin.js';
+import { validateUploadToken } from './lib/applicationRepository';
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.csv'];
@@ -58,18 +59,24 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { applicationId, fileName, fileType, fileSize, documentType } = req.body || {};
+const { token, fileName, fileType, fileSize, documentType } = req.body || {};
 
-    if (!applicationId || !fileName || !fileType || !documentType) {
+    if (!token || !fileName || !fileType || !documentType) {
       res.status(400).json({
-        error: 'Missing required parameters: applicationId, fileName, fileType, and documentType are required.',
+        error: 'Missing required parameters: token, fileName, fileType, and documentType are required.',
       });
       return;
     }
 
-    const cleanAppId = sanitizeApplicationId(applicationId);
-    if (!cleanAppId) {
-      res.status(400).json({ error: 'Invalid applicationId format.' });
+    const tokenValidation = await validateUploadToken(token);
+    if (!tokenValidation.valid) {
+      res.status(403).json({ error: tokenValidation.error || 'Invalid or expired upload token.' });
+      return;
+    }
+
+    const cleanAppId = sanitizeApplicationId(tokenValidation.applicationId || 'unknown');
+    if (!cleanAppId || cleanAppId === 'unknown') {
+      res.status(400).json({ error: 'Invalid applicationId format bound to token.' });
       return;
     }
 

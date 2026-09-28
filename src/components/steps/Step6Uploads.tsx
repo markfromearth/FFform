@@ -14,18 +14,19 @@ interface UploadTask {
 }
 
 export const Step6Uploads: React.FC = () => {
-  const { data, nextStep, applicationId, addDocument } = useApplication();
+  const { data, nextStep, applicationId, addDocument, uploadToken } = useApplication();
   const [choice, setChoice] = useState<'now' | 'later' | null>(null);
 
   const [uploadTasks, setUploadTasks] = useState<UploadTask[]>([]);
 
   const processUpload = async (task: UploadTask) => {
     try {
+      if (!uploadToken) { throw new Error('Upload session expired or invalid'); }
       const res = await fetch('/api/get-upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          applicationId,
+          token: uploadToken,
           fileName: task.file.name,
           fileType: task.file.type,
           fileSize: task.file.size,
@@ -134,10 +135,10 @@ export const Step6Uploads: React.FC = () => {
       await fetch('/api/send-deferred-upload-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+body: JSON.stringify({
           email: data.contact?.email,
           phone: data.contact?.phone,
-          applicationId: 'deferred-' + Date.now() // Usually we would get the actual ID from the submit response or context
+          applicationId
         })
       });
       setLinkSent(true);
