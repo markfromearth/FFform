@@ -2,28 +2,7 @@ import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
 import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './lib/emailService';
 
-// In-memory mock storage for local testing and deduplication
-// In a real environment, this would be a Redis cache or Database table
-const mockSubmittedApplications = new Map<string, any>();
-const mockRetryQueue: any[] = [];
-
-import * as fsQueue from 'fs';
-import * as path from 'path';
-
-function saveToDurableQueue(payload) {
-  try {
-    const queueFile = path.resolve('/tmp', 'ff_retry_queue.json');
-    let queue = [];
-    if (fsQueue.existsSync(queueFile)) {
-      queue = JSON.parse(fsQueue.readFileSync(queueFile, 'utf8'));
-    }
-    queue.push({ timestamp: new Date().toISOString(), payload });
-    fsQueue.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
-    console.log('[SubmitAPI] Saved payload to durable local queue at /tmp/ff_retry_queue.json');
-  } catch (e) {
-    console.error('[SubmitAPI] Failed to write to durable queue', e);
-  }
-}
+import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus } from './lib/applicationRepository';
 
 
 /**
@@ -128,20 +107,31 @@ export default async function handler(req: any, res: any) {
     
     const submissionRef = generateFallbackReference(id);
     const submittedAt = payload.submittedAt || new Date().toISOString();
+    const appStatus = payload.status || 'introduction_ready';
 
-    // 2. Idempotency & Deduplication Check
-    if (mockSubmittedApplications.has(dedupKey)) {
-      const existing = mockSubmittedApplications.get(dedupKey);
-      
-      // Idempotent immediate 200 OK return (preventing duplicate CRM entry)
-      res.status(200).json({
-        success: true,
-        message: 'Application already submitted (idempotent duplicate request)',
-        applicationId: existing.id,
-        submissionRef: existing.submissionRef,
-        submittedAt: existing.submittedAt,
-        crmStatus: existing.crmStatus,
-      });
+    // 2. Persist to Firestore and Idempotency Check
+    let dbRecord;
+    try {
+      const result = await saveOrUpdateApplication(id, submissionRef, appStatus, application);
+      dbRecord = result.record;
+
+      if (result.isDuplicate) {
+        // Idempotent immediate 200 OK return (preventing duplicate CRM entry and emails)
+        res.status(200).json({
+          success: true,
+          message: 'Application already submitted (idempotent duplicate request)',
+          applicationId: dbRecord.applicationId,
+          submissionRef: dbRecord.submissionRef,
+          submittedAt: dbRecord.submittedAt,
+          crmStatus: dbRecord.crmStatus || 'delivered',
+        });
+        return;
+      }
+    } catch (dbError: any) {
+      console.error('[SubmitAPI] Failed to persist application to Firestore:', dbError.message);
+      // We could throw here, but we will allow the workflow to try and complete if CRM still needs to be hit
+      // Usually you throw if persistence is strictly required. We'll throw to be safe for production.
+      res.status(500).json({ error: 'Failed to persist application data' });
       return;
     }
 
@@ -150,12 +140,9 @@ export default async function handler(req: any, res: any) {
       id,
       submissionRef,
       submittedAt,
-      status: 'submitted',
+      status: appStatus,
       crmStatus: 'pending',
     };
-
-    // Store in mock database for deduplication
-    mockSubmittedApplications.set(dedupKey, docToSave);
 
     // 3. CRM Routing to Monday.com
     let crmStatus = 'pending';
@@ -180,18 +167,11 @@ export default async function handler(req: any, res: any) {
         }
         
         crmStatus = 'delivered';
+        await updateCrmStatus(id, { crmStatus });
       } catch (crmError: any) {
         console.error('[SubmitAPI] Monday.com routing failed. Queuing for retry.', crmError.message);
         crmStatus = 'queued_for_retry';
-        saveToDurableQueue({ event: 'new_factoring_enquiry', reference: submissionRef, data: docToSave });
-        
-        // Push to retry queue for a background worker to pick up
-        mockRetryQueue.push({
-          dedupKey,
-          payload: docToSave,
-          failedAt: new Date().toISOString(),
-          attempts: 1
-        });
+        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message });
       }
     } else {
       // Mocking successful CRM delivery if URL is not set (e.g., local dev)
@@ -199,16 +179,20 @@ export default async function handler(req: any, res: any) {
       crmStatus = 'mock_delivered';
     }
 
-    // Update status in mock database
-    mockSubmittedApplications.get(dedupKey).crmStatus = crmStatus;
+    
 
     // 4. Decoupled Secondary Task: Email Summary Dispatch
     if (!isPartial) {
       try {
-        await sendApplicationNotificationEmail({
+        const emailRes = await sendApplicationNotificationEmail({
           application,
           applicationRef: submissionRef,
         });
+        if (emailRes.success) {
+          await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+        } else {
+          await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
+        }
       } catch (emailErr: any) {
         console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
       }
@@ -216,10 +200,15 @@ export default async function handler(req: any, res: any) {
       // Partial lead - send welcome/acknowledgement email to the applicant
       if (application.contact?.email) {
         try {
-          await sendPartialLeadAcknowledgementEmail({
+          const emailRes = await sendPartialLeadAcknowledgementEmail({
             application,
             applicationRef: submissionRef,
           });
+          if (emailRes.success) {
+            await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+          } else {
+            await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
+          }
         } catch (emailErr: any) {
           console.error('[SubmitAPI] Downstream partial acknowledgement email failed (decoupled):', emailErr?.message || emailErr);
         }
