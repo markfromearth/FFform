@@ -109,7 +109,14 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const { application, id } = validationResult.data;
+    let application, id;
+    if (isPartial) {
+      application = payload.application;
+      id = payload.id;
+    } else {
+      application = validationResult!.data.application;
+      id = validationResult!.data.id;
+    }
     
     // Normalize data for deduplication
     const normEmail = normalizeEmail(application.contact.email);
@@ -151,7 +158,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-const docToSave = {
+const docToSave: any = {
       ...application,
       id,
       submissionRef,

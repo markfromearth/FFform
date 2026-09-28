@@ -71,7 +71,7 @@ export default async function handler(req: any, res: any) {
     
     // Pass the existing documents payload properly, allowing generated PDFs and metadata to be reused safely.
     const emailRes = await sendApplicationNotificationEmail({
-      application: record.application,
+      application: record.application as any,
       applicationRef: record.submissionRef,
       generatedPdfPath: record.documentMetadata?.generatedPdfPath,
       uploadedDocuments: record.application.documents || []
