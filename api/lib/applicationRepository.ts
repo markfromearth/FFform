@@ -81,7 +81,7 @@ export interface FFApplicationRecord {
 export async function saveOrUpdateApplication(
   applicationId: string,
   submissionRef: string,
-  status: string,
+  applicationStatus: string,
   applicationData: Partial<ApplicationData>
 ): Promise<{ isDuplicate: boolean; record: FFApplicationRecord }> {
   const db = getAdminFirestore();
