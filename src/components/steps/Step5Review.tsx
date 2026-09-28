@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
-import { ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
 
 export const Step5Review: React.FC = () => {
-  const { data, prevStep, updateConsents, validateStep, clearError, errors, applicationId } = useApplication();
+  const { data, prevStep, setCurrentStep, updateConsents, validateStep, clearError, errors, applicationId } = useApplication();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -52,6 +52,33 @@ export const Step5Review: React.FC = () => {
     }
   };
 
+
+  const ReviewRow = ({ label, value }: { label: string, value: React.ReactNode }) => (
+    <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant last:border-0 last:pb-0">
+      <span className="body-l text-on-surface-variant w-1/3">{label}</span>
+      <strong className="body-l text-on-surface w-2/3 text-right break-words">{value || 'Not provided'}</strong>
+    </div>
+  );
+  
+  const ReviewSection = ({ title, stepIndex, children }: { title: string, stepIndex: number, children: React.ReactNode }) => (
+    <div className="bg-surface border border-outline-variant rounded-2xl p-6 relative">
+      <div className="flex justify-between items-center mb-4 pb-2 border-b border-outline-variant">
+        <h3 className="title-m text-on-surface">{title}</h3>
+        <button 
+          onClick={() => setCurrentStep(stepIndex)}
+          className="flex items-center gap-1 text-primary hover:text-primary-dark transition-colors text-label-m"
+          type="button"
+        >
+          <Pencil className="w-4 h-4" /> Edit
+        </button>
+      </div>
+      <div className="space-y-4">
+        {children}
+      </div>
+    </div>
+  );
+
+
   if (isSuccess) {
     return (
       <div className="max-w-2xl mx-auto px-4 text-center py-12">
@@ -76,43 +103,43 @@ export const Step5Review: React.FC = () => {
         <p className="body-l text-on-surface-variant">These are the details we will use to assess your requirement and identify suitable finance providers.</p>
       </div>
       
-      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6 space-y-4">
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Business</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">{data.business?.company_name || 'Not provided'}</strong>
-        </div>
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Company number</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">{data.business?.company_number || 'N/A'}</strong>
-        </div>
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Contact</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">{data.contact?.contact_full_name} ({data.contact?.email})</strong>
-        </div>
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Annual turnover</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">
-            {data.business?.annual_turnover ? `£${data.business.annual_turnover.toLocaleString()}` : 'Not provided'}
-          </strong>
-        </div>
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Funding required</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">
-            {data.invoices?.requested_facility ? `£${data.invoices.requested_facility.toLocaleString()}` : 'Not provided'}
-          </strong>
-        </div>
-        <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-          <span className="body-l text-on-surface-variant w-1/3">Debtor book</span>
-          <strong className="body-l text-on-surface w-2/3 text-right">
-            {data.business?.gross_debtor_book ? `£${data.business.gross_debtor_book.toLocaleString()}` : 'Not provided'}
-          </strong>
-        </div>
-        {data.invoices?.payment_terms_days && (
-           <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant">
-             <span className="body-l text-on-surface-variant w-1/3">Payment terms</span>
-             <strong className="body-l text-on-surface w-2/3 text-right">{data.invoices.payment_terms_days.replace(/_/g, ' ')}</strong>
-           </div>
-        )}
+      
+      <div className="space-y-6">
+        <ReviewSection title="Your Business" stepIndex={0}>
+          <ReviewRow label="Company" value={data.business?.company_name ? `${data.business.company_name} (${data.business.company_number || 'N/A'})` : null} />
+          <ReviewRow label="Industry" value={data.business?.industry ? data.business.industry.replace(/_/g, ' ') : null} />
+          <ReviewRow label="Annual turnover" value={data.business?.annual_turnover ? `£${data.business.annual_turnover.toLocaleString()}` : null} />
+          <ReviewRow label="Debtor book" value={data.business?.gross_debtor_book ? `£${data.business.gross_debtor_book.toLocaleString()}` : null} />
+        </ReviewSection>
+
+        <ReviewSection title="Your Details" stepIndex={1}>
+          <ReviewRow label="Contact" value={data.contact?.contact_full_name ? `${data.contact.contact_full_name} (${data.contact.contact_role?.replace(/_/g, ' ') || 'Role not specified'})` : null} />
+          <ReviewRow label="Phone" value={data.contact?.phone} />
+          <ReviewRow label="Email" value={data.contact?.email} />
+          <ReviewRow label="Timescale" value={data.contact?.funding_timescale?.replace(/_/g, ' ')} />
+        </ReviewSection>
+
+        <ReviewSection title="Your Invoices" stepIndex={2}>
+          <ReviewRow label="Facility required" value={data.invoices?.requested_facility ? `£${data.invoices.requested_facility.toLocaleString()}` : null} />
+          <ReviewRow label="Desired outcome" value={data.invoices?.desired_outcome?.replace(/_/g, ' ')} />
+          <ReviewRow label="Payment terms" value={data.invoices?.payment_terms_days?.replace(/_/g, ' ')} />
+          <ReviewRow label="Customer concentration" value={data.invoices?.largest_debtor_concentration_pct?.replace(/_/g, ' ')} />
+          <ReviewRow label="Geography" value={data.invoices?.debtor_geography?.join(', ').replace(/_/g, ' ')} />
+        </ReviewSection>
+
+        <ReviewSection title="Final Details" stepIndex={3}>
+          <ReviewRow label="Requirement type" value={data.invoices?.existing_invoice_finance ? 'Refinance existing facility' : 'New facility'} />
+          <ReviewRow label="HMRC status" value={data.invoices?.hmrc_status?.replace(/_/g, ' ')} />
+          {data.invoices?.funding_purpose && (
+            <ReviewRow label="Funding purpose" value={data.invoices.funding_purpose.join(', ').replace(/_/g, ' ')} />
+          )}
+          {data.invoices?.construction_invoicing_type && (
+            <ReviewRow label="Construction invoicing" value={data.invoices.construction_invoicing_type.replace(/_/g, ' ')} />
+          )}
+          {data.invoices?.recruitment_type && (
+            <ReviewRow label="Recruitment type" value={data.invoices.recruitment_type.replace(/_/g, ' ')} />
+          )}
+        </ReviewSection>
       </div>
 
       <div className="bg-surface border border-outline-variant rounded-2xl p-6 mt-6">
