@@ -106,3 +106,16 @@ export async function updateCrmStatus(
     updatedAt: new Date().toISOString()
   }).catch(e => console.error('[Firestore DAL] Failed to update crm status', e.message));
 }
+
+
+export async function updateDocumentMetadata(
+  applicationId: string,
+  documentMetadata: any
+) {
+  const db = getAdminFirestore();
+  if (!db) return;
+  await db.collection(COLLECTION_NAME).doc(applicationId).update({
+    documentMetadata,
+    updatedAt: new Date().toISOString()
+  }).catch(e => console.error('[Firestore DAL] Failed to update document metadata', e.message));
+}

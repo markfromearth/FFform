@@ -2,7 +2,9 @@ import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas';
 import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './lib/emailService';
 
-import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus } from './lib/applicationRepository';
+import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata } from './lib/applicationRepository';
+import { generateApplicationPdf } from './lib/pdfGenerator';
+import { getAdminStorage } from './lib/firebaseAdmin';
 
 
 /**
@@ -135,7 +137,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const docToSave = {
+const docToSave = {
       ...application,
       id,
       submissionRef,
@@ -143,6 +145,38 @@ export default async function handler(req: any, res: any) {
       status: appStatus,
       crmStatus: 'pending',
     };
+
+    // 2.5 PDF Generation and Storage (Full submissions only)
+    if (!isPartial) {
+      try {
+        console.log('[SubmitAPI] Generating completed application PDF...');
+        const pdfBytes = await generateApplicationPdf(id, submissionRef, submittedAt, application);
+        
+        const storage = getAdminStorage();
+        if (storage) {
+          const bucket = storage.bucket();
+          const pdfPath = `applications/ff/${id}/generated/${submissionRef}-application.pdf`;
+          const file = bucket.file(pdfPath);
+          
+          await file.save(pdfBytes, {
+            metadata: { contentType: 'application/pdf' },
+            resumable: false // optimization for small files in serverless
+          });
+          
+          console.log('[SubmitAPI] Saved PDF to', pdfPath);
+          
+          await updateDocumentMetadata(id, {
+            generatedPdfPath: pdfPath,
+            generatedAt: new Date().toISOString()
+          });
+          
+          docToSave.documentMetadata = { generatedPdfPath: pdfPath };
+        }
+      } catch (pdfError: any) {
+        console.error('[SubmitAPI] Failed to generate or upload PDF:', pdfError.message);
+        // We do not fail the entire submission if the PDF fails, but we log the error.
+      }
+    }
 
     // 3. CRM Routing to Monday.com
     let crmStatus = 'pending';
