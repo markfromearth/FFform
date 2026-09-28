@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
+import { formatLabel } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
   const { data, prevStep, setCurrentStep, updateConsents, validateStep, clearError, errors, applicationId } = useApplication();
@@ -107,37 +108,37 @@ export const Step5Review: React.FC = () => {
       <div className="space-y-6">
         <ReviewSection title="Your Business" stepIndex={0}>
           <ReviewRow label="Company" value={data.business?.company_name ? `${data.business.company_name} (${data.business.company_number || 'N/A'})` : null} />
-          <ReviewRow label="Industry" value={data.business?.industry ? data.business.industry.replace(/_/g, ' ') : null} />
+          <ReviewRow label="Industry" value={data.business?.industry ? formatLabel(data.business.industry) : null} />
           <ReviewRow label="Annual turnover" value={data.business?.annual_turnover ? `£${data.business.annual_turnover.toLocaleString()}` : null} />
           <ReviewRow label="Debtor book" value={data.business?.gross_debtor_book ? `£${data.business.gross_debtor_book.toLocaleString()}` : null} />
         </ReviewSection>
 
         <ReviewSection title="Your Details" stepIndex={1}>
-          <ReviewRow label="Contact" value={data.contact?.contact_full_name ? `${data.contact.contact_full_name} (${data.contact.contact_role?.replace(/_/g, ' ') || 'Role not specified'})` : null} />
+          <ReviewRow label="Contact" value={data.contact?.contact_full_name ? `${data.contact.contact_full_name} (${formatLabel(data.contact.contact_role) || 'Role not specified'})` : null} />
           <ReviewRow label="Phone" value={data.contact?.phone} />
           <ReviewRow label="Email" value={data.contact?.email} />
-          <ReviewRow label="Timescale" value={data.contact?.funding_timescale?.replace(/_/g, ' ')} />
+          <ReviewRow label="Timescale" value={formatLabel(data.contact?.funding_timescale)} />
         </ReviewSection>
 
         <ReviewSection title="Your Invoices" stepIndex={2}>
           <ReviewRow label="Facility required" value={data.invoices?.requested_facility ? `£${data.invoices.requested_facility.toLocaleString()}` : null} />
-          <ReviewRow label="Desired outcome" value={data.invoices?.desired_outcome?.replace(/_/g, ' ')} />
-          <ReviewRow label="Payment terms" value={data.invoices?.payment_terms_days?.replace(/_/g, ' ')} />
-          <ReviewRow label="Customer concentration" value={data.invoices?.largest_debtor_concentration_pct?.replace(/_/g, ' ')} />
-          <ReviewRow label="Geography" value={data.invoices?.debtor_geography?.join(', ').replace(/_/g, ' ')} />
+          <ReviewRow label="Desired outcome" value={formatLabel(data.invoices?.desired_outcome)} />
+          <ReviewRow label="Payment terms" value={formatLabel(data.invoices?.payment_terms_days)} />
+          <ReviewRow label="Customer concentration" value={formatLabel(data.invoices?.largest_debtor_concentration_pct)} />
+          <ReviewRow label="Geography" value={data.invoices?.debtor_geography?.map(formatLabel).join(', ')} />
         </ReviewSection>
 
         <ReviewSection title="Final Details" stepIndex={3}>
           <ReviewRow label="Requirement type" value={data.invoices?.existing_invoice_finance ? 'Refinance existing facility' : 'New facility'} />
-          <ReviewRow label="HMRC status" value={data.invoices?.hmrc_status?.replace(/_/g, ' ')} />
+          <ReviewRow label="HMRC status" value={formatLabel(data.invoices?.hmrc_status)} />
           {data.invoices?.funding_purpose && (
-            <ReviewRow label="Funding purpose" value={data.invoices.funding_purpose.join(', ').replace(/_/g, ' ')} />
+            <ReviewRow label="Funding purpose" value={data.invoices.funding_purpose.map(formatLabel).join(', ')} />
           )}
           {data.invoices?.construction_invoicing_type && (
-            <ReviewRow label="Construction invoicing" value={data.invoices.construction_invoicing_type.replace(/_/g, ' ')} />
+            <ReviewRow label="Construction invoicing" value={formatLabel(data.invoices.construction_invoicing_type)} />
           )}
           {data.invoices?.recruitment_type && (
-            <ReviewRow label="Recruitment type" value={data.invoices.recruitment_type.replace(/_/g, ' ')} />
+            <ReviewRow label="Recruitment type" value={formatLabel(data.invoices.recruitment_type)} />
           )}
         </ReviewSection>
       </div>

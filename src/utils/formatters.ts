@@ -57,3 +57,39 @@ export function formatPercentage(pct: number | null | undefined): string {
   if (pct === null || pct === undefined || isNaN(pct)) return '';
   return `${pct}%`;
 }
+
+/**
+ * Format raw select values (e.g. 20_39) into human readable labels
+ */
+export function formatLabel(value: string | undefined | null): string {
+  if (!value) return '';
+  const labels: Record<string, string> = {
+    'under_10': 'Under 10%',
+    '10_25': '10–25%',
+    '26_50': '26–50%',
+    'over_50': 'Over 50%',
+    'under_20': 'Under 20%',
+    '20_39': '20–39%',
+    '40_59': '40–59%',
+    '60_79': '60–79%',
+    '80_plus': '80%+',
+    '30_or_less': '30 days or less',
+    '31_60': '31–60 days',
+    '61_90': '61–90 days',
+    'more_than_90': 'More than 90 days',
+    'gbp_only': 'GBP only',
+    'gbp_and_foreign': 'GBP and foreign currencies',
+    'mainly_foreign': 'Mainly foreign currencies',
+    'main_contractor': 'Main contractor',
+    'not_sure': 'Not sure',
+    'uk': 'UK',
+    'europe': 'Europe',
+    'north_america': 'North America',
+    'other_international': 'Other international',
+  };
+  
+  if (labels[value]) return labels[value];
+  
+  const spaced = value.replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}

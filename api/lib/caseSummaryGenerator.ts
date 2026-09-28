@@ -81,16 +81,16 @@ B2B Supply: ${business.b2b_completed_supply === 'yes' ? 'Yes (Completed)' : busi
 
 ---
 ## 2. REQUIREMENT
-Desired Outcome: ${invoices.desired_outcome?.replace(/_/g, ' ') || 'Not specified'}
+Desired Outcome: ${formatLabel(invoices.desired_outcome) || 'Not specified'}
 Requested Facility Limit: ${formatCurrency(invoices.requested_facility)}
 Primary Funding Purpose: ${formatPurpose()}
-Timescale: ${contact.funding_timescale?.replace(/_/g, ' ') || 'Not specified'}
+Timescale: ${formatLabel(contact.funding_timescale) || 'Not specified'}
 
 ---
 ## 3. LEDGER PROFILE
 Gross Debtor Book: ${formatCurrency(business.gross_debtor_book)}
-Customer Payment Terms: ${invoices.payment_terms_days?.replace(/_/g, ' ') || 'Not specified'}
-Largest Debtor Concentration: ${invoices.largest_debtor_concentration_pct?.replace(/_/g, ' ') || 'Not specified'}
+Customer Payment Terms: ${formatLabel(invoices.payment_terms_days) || 'Not specified'}
+Largest Debtor Concentration: ${formatLabel(invoices.largest_debtor_concentration_pct) || 'Not specified'}
 Debtor Geography: ${formatGeography()}
 
 ---
@@ -101,7 +101,7 @@ Current Facility Limit: ${formatCurrency(invoices.current_facility_limit)}
 Reasons for Switch: ${formatReasons()}
 Notice / Deadline: ${invoices.notice_or_exit_date || 'None specified'}` : ''}
 
-HMRC Status: ${invoices.hmrc_status?.replace(/_/g, ' ') || 'Unknown'}
+HMRC Status: ${formatLabel(invoices.hmrc_status) || 'Unknown'}
 
 Additional Context provided by applicant:
 > ${invoices.additional_context || 'None'}
