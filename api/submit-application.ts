@@ -220,7 +220,7 @@ const docToSave = {
       try {
         const emailRes = await sendApplicationNotificationEmail({
           application,
-          applicationRef: submissionRef,
+          applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
         });
         if (emailRes.success) {
           await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
@@ -236,7 +236,7 @@ const docToSave = {
         try {
           const emailRes = await sendPartialLeadAcknowledgementEmail({
             application,
-            applicationRef: submissionRef,
+            applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
           });
           if (emailRes.success) {
             await updateEmailStatus(id, { emailStatus: 'delivered', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });

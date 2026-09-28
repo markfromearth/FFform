@@ -1,11 +1,14 @@
 import { Resend } from 'resend';
-import { generateCaseSummary } from './caseSummaryGenerator.js';
+import { getAdminStorage } from './firebaseAdmin.js';
+import { formatLabel } from '../../src/utils/formatters.js';
 import type { ApplicationData } from '../../src/schemas/applicationSchemas';
 
 export interface SendApplicationEmailOptions {
   application: ApplicationData;
   recipientEmail?: string;
   applicationRef?: string;
+  generatedPdfPath?: string;
+  uploadedDocuments?: any[];
 }
 
 export interface SendApplicationEmailResult {
@@ -22,25 +25,50 @@ export interface SendApplicationEmailResult {
 export async function sendApplicationNotificationEmail(
   options: SendApplicationEmailOptions
 ): Promise<SendApplicationEmailResult> {
-  const { application } = options;
-
+  const { application, generatedPdfPath, uploadedDocuments = [] } = options;
   const appRef = options.applicationRef || `FF-${new Date().getFullYear()}-${crypto.randomUUID().slice(-5).toUpperCase()}`;
-
+  
   const recipient =
     options.recipientEmail ||
-    process.env.APPLICATION_NOTIFICATION_EMAIL ||
-    'ben@factoringfinance.co.uk';
+    process.env.APPLICATION_NOTIFICATION_EMAIL;
 
-  const businessName = application.business.company_name || 'Business Applicant';
-  const subject = `New Factoring Enquiry: ${businessName} (Ref: ${appRef})`;
+  if (!recipient) {
+    return { success: false, recipient: 'unknown', error: 'APPLICATION_NOTIFICATION_EMAIL is not configured in the environment.' };
+  }
+
+  const businessName = application.business?.company_name || 'Business Applicant';
+  const subject = `New Factoring Finance Application – ${businessName} – ${appRef}`;
   
-  // Generate the structured, editable Markdown text for the broker
-  const textBody = generateCaseSummary(application, {
-    submissionRef: appRef,
-    submittedAt: new Date().toISOString()
-  });
+  const contactName = application.contact?.contact_full_name || 'Not provided';
+  const requestedFacility = application.invoices?.requested_facility 
+    ? `£${application.invoices.requested_facility.toLocaleString()}` 
+    : 'Not provided';
+  
+  const outcome = application.invoices?.desired_outcome ? formatLabel(application.invoices.desired_outcome) : 'Not provided';
+  
+  let docsSuppliedStr = 'None';
+  if (uploadedDocuments.length > 0) {
+    docsSuppliedStr = uploadedDocuments.map(d => formatLabel(d.documentType) + ` (${d.fileName})`).join('\n- ');
+    docsSuppliedStr = '\n- ' + docsSuppliedStr;
+  }
 
-  // Convert simple markdown to HTML for the email
+  const textBody = `
+New Factoring Finance Application Received
+
+Company Name: ${businessName}
+Application Reference: ${appRef}
+Submission Date: ${new Date().toISOString().split('T')[0]}
+Contact Name: ${contactName}
+Requested Facility: ${requestedFacility}
+
+Enquiry Summary:
+The applicant is seeking a facility of ${requestedFacility}. Their desired outcome is: ${outcome}.
+
+Supporting Documents Supplied: ${docsSuppliedStr}
+
+IMPORTANT: The completed application document and all supplied supporting documents are securely attached to this email.
+`.trim();
+
   const htmlBody = `
 <!DOCTYPE html>
 <html>
@@ -51,11 +79,62 @@ export async function sendApplicationNotificationEmail(
 </head>
 <body style="margin:0;padding:0;font-family:sans-serif;color:#333;line-height:1.5;">
   <div style="max-width:700px;margin:20px auto;background:#fff;border:1px solid #ddd;padding:20px;">
-    <pre style="white-space: pre-wrap; font-family: sans-serif; font-size: 14px;">${textBody}</pre>
+    <h2>New Factoring Finance Application Received</h2>
+    <p><strong>Company Name:</strong> ${businessName}</p>
+    <p><strong>Application Reference:</strong> ${appRef}</p>
+    <p><strong>Submission Date:</strong> ${new Date().toISOString().split('T')[0]}</p>
+    <p><strong>Contact Name:</strong> ${contactName}</p>
+    <p><strong>Requested Facility:</strong> ${requestedFacility}</p>
+    
+    <h3>Enquiry Summary</h3>
+    <p>The applicant is seeking a facility of ${requestedFacility}. Their desired outcome is: ${outcome}.</p>
+    
+    <h3>Supporting Documents Supplied</h3>
+    <pre style="font-family:inherit;">${docsSuppliedStr}</pre>
+    
+    <p style="color:#d32f2f; font-weight:bold;">
+      IMPORTANT: The completed application document and all supplied supporting documents are securely attached to this email.
+    </p>
   </div>
 </body>
 </html>
 `;
+
+  // Fetch Attachments using Firebase Admin Storage
+  const attachments = [];
+  try {
+    const storage = getAdminStorage();
+    if (storage) {
+      const bucket = storage.bucket();
+      
+      // 1. Attach Generated PDF
+      if (generatedPdfPath) {
+        console.log(`[EmailService] Downloading generated PDF for attachment: ${generatedPdfPath}`);
+        const [pdfBuffer] = await bucket.file(generatedPdfPath).download();
+        attachments.push({
+          filename: `${appRef}-application.pdf`,
+          content: pdfBuffer,
+        });
+      }
+
+      // 2. Attach Uploaded Documents
+      for (const doc of uploadedDocuments) {
+        if (doc.storagePath) {
+          console.log(`[EmailService] Downloading supporting doc for attachment: ${doc.storagePath}`);
+          const [docBuffer] = await bucket.file(doc.storagePath).download();
+          attachments.push({
+            filename: doc.fileName,
+            content: docBuffer,
+          });
+        }
+      }
+    } else {
+      console.warn('[EmailService] Firebase Storage is not configured. Cannot download attachments.');
+    }
+  } catch (err: any) {
+    console.error('[EmailService] Error retrieving attachments from Firebase Storage:', err.message);
+    // Continue with email dispatch even if attachments fail
+  }
 
   // Check environment credentials
   const apiKey = process.env.RESEND_API_KEY;
@@ -63,23 +142,20 @@ export async function sendApplicationNotificationEmail(
   if (!apiKey) {
     const mockMessageId = `mock_msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     console.log(
-      `[EmailService] RESEND_API_KEY not configured. Bypassing network request. Simulated dispatch for Application Ref: ${appRef}`,
-      { mockMessageId }
+      `[EmailService] RESEND_API_KEY not configured. Simulated dispatch for Application Ref: ${appRef}`,
+      { mockMessageId, attachmentsAttached: attachments.length }
     );
-
-    return {
-      success: true,
-      messageId: mockMessageId,
-      isMock: true,
-      recipient
-    };
+    return { success: true, messageId: mockMessageId, isMock: true, recipient };
   }
 
   // Dispatch via Resend SDK
   try {
     const resend = new Resend(apiKey);
-    const fromAddress =
-      process.env.RESEND_FROM_EMAIL || 'Factoring Finance <enquiries@factoringfinance.co.uk>';
+    const fromAddress = process.env.RESEND_FROM_EMAIL;
+    
+    if (!fromAddress) {
+       return { success: false, recipient, error: 'RESEND_FROM_EMAIL is not configured.' };
+    }
 
     const { data, error } = await resend.emails.send({
       from: fromAddress,
@@ -87,15 +163,12 @@ export async function sendApplicationNotificationEmail(
       subject,
       text: textBody,
       html: htmlBody,
+      attachments,
     });
 
     if (error) {
-      console.error('[EmailService] Resend API error response:', error);
-      return {
-        success: false,
-        error: error.message || 'Resend failed to deliver email',
-        recipient,
-      };
+      console.error('[EmailService] Resend API rejected the payload:', error);
+      return { success: false, recipient, error: error.message };
     }
 
     return {
@@ -104,12 +177,8 @@ export async function sendApplicationNotificationEmail(
       recipient,
     };
   } catch (err: any) {
-    console.error('[EmailService] Unexpected error during Resend email dispatch:', err?.message || err);
-    return {
-      success: false,
-      error: err?.message || 'Unexpected error during email dispatch',
-      recipient,
-    };
+    console.error('[EmailService] Unexpected error sending email via Resend:', err.message);
+    return { success: false, recipient, error: err.message };
   }
 }
 
