@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { getAdminStorage } from './firebaseAdmin.js';
 import { formatLabel } from '../../src/utils/formatters.js';
-import type { ApplicationData } from '../../src/schemas/applicationSchemas';
+import type { ApplicationData } from '../../src/schemas/applicationSchemas.js';
 
 export interface SendApplicationEmailOptions {
   application: ApplicationData;

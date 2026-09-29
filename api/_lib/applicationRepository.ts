@@ -1,4 +1,4 @@
-import { getAdminFirestore } from './firebaseAdmin';
+import { getAdminFirestore } from './firebaseAdmin.js';
 
 import crypto from 'crypto';
 
@@ -56,7 +56,7 @@ export async function validateUploadToken(token: string): Promise<{ valid: boole
   return { valid: true, applicationId: data.applicationId };
 }
 
-import type { ApplicationData } from '../../src/schemas/applicationSchemas';
+import type { ApplicationData } from '../../src/schemas/applicationSchemas.js';
 
 const COLLECTION_NAME = 'ffApplications';
 

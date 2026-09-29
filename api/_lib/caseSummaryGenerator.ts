@@ -1,5 +1,5 @@
-import { formatLabel } from '../../src/utils/formatters';
-import { ApplicationData } from '../../src/schemas/applicationSchemas';
+import { formatLabel } from '../../src/utils/formatters.js';
+import { ApplicationData } from '../../src/schemas/applicationSchemas.js';
 
 export interface SummaryOptions {
   submissionRef: string;
