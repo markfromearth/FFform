@@ -10,9 +10,6 @@ export const Header: React.FC = () => {
           className="h-10 w-auto" 
         />
       </div>
-      <div className="label-m text-on-surface-variant">
-        Need help? 0151 000 0000
-      </div>
     </header>
   );
 };
