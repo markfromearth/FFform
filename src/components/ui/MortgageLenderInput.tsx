@@ -50,7 +50,7 @@ const CATEGORY_STYLES: Record<LenderCategory, { bg: string; text: string; border
     border: 'border-purple-200',
   },
   'UK Registered Company': {
-    bg: 'bg-slate-50',
+    bg: 'bg-surface-variant',
     text: 'text-white/90',
     border: 'border-white/10',
   },
@@ -258,7 +258,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
                 onClick={() => handleSelect(lender)}
                 className={clsx(
                   'px-3.5 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-b-0 flex flex-col gap-1',
-                  isHighlighted ? 'bg-brand-50/80 text-brand-950' : 'hover:bg-slate-50 text-white'
+                  isHighlighted ? 'bg-surface-variant text-primary' : 'hover:bg-surface-variant text-white'
                 )}
               >
                 <div className="flex items-center justify-between gap-2">

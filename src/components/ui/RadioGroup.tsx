@@ -104,7 +104,7 @@ export function RadioGroup<T extends string | number | boolean>({
                     {opt.label}
                   </span>
                   {opt.badge && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-white/90">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-variant text-white">
                       {opt.badge}
                     </span>
                   )}

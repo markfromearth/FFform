@@ -194,7 +194,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
             role="tabpanel"
             aria-labelledby={`tab-draw-${principalId}`}
           >
-            <div className="relative rounded-lg border-2 border-dashed border-outline bg-slate-50/70 p-1 hover:border-slate-400 transition-colors">
+            <div className="relative rounded-lg border-2 border-dashed border-outline bg-surface-variant/70 p-1 hover:border-outline-variant transition-colors">
               <canvas
                 ref={canvasRef}
                 role="img"
@@ -256,7 +256,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
             </div>
 
             {typedName.trim() && (
-              <div className="p-3 bg-slate-50 rounded-lg border border-white/10">
+              <div className="p-3 bg-surface-variant rounded-lg border border-white/10">
                 <span className="text-[11px] text-white/70 uppercase tracking-wider block mb-1">Digital Signature Preview:</span>
                 <p className="font-serif italic text-2xl text-white tracking-wider">
                   {typedName}

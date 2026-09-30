@@ -171,7 +171,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg border border-white/10 bg-slate-50/60 space-y-3">
+            <div className="p-4 rounded-lg border border-white/10 bg-surface-variant/60 space-y-3">
               <span className="text-xs font-bold text-white block">From (Start Month)</span>
               <div className="grid grid-cols-2 gap-3">
                 <select
@@ -201,7 +201,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border border-white/10 bg-slate-50/60 space-y-3">
+            <div className="p-4 rounded-lg border border-white/10 bg-surface-variant/60 space-y-3">
               <span className="text-xs font-bold text-white block">To (End Month)</span>
               <div className="grid grid-cols-2 gap-3">
                 <select

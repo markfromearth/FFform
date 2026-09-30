@@ -222,7 +222,7 @@ if (!response.ok) {
             <button
               onClick={prevStep}
               disabled={isSubmitting}
-              className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-container transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-variant transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
               Back
             </button>

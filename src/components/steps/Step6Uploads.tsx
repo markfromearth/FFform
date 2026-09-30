@@ -231,7 +231,7 @@ body: JSON.stringify({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl mx-auto">
         <button 
           onClick={() => setChoice('now')}
-          className="flex flex-col items-center justify-center p-8 border-2 border-primary rounded-2xl hover:bg-surface-container transition-colors group focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
+          className="flex flex-col items-center justify-center p-8 border-2 border-primary rounded-2xl hover:bg-surface-variant transition-colors group focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
         >
           <UploadCloud className="w-12 h-12 text-primary mb-4 group-hover:-translate-y-1 transition-transform" />
           <h3 className="title-m text-on-surface mb-2">Upload them now</h3>
@@ -241,7 +241,7 @@ body: JSON.stringify({
         <button 
           onClick={() => { setChoice('later'); handleDefer(); }}
           disabled={isSendingLink}
-          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-container transition-colors group disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
+          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-variant transition-colors group disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
         >
           {linkSent ? (
             <CheckCircle2 className="w-12 h-12 text-primary mb-4" />

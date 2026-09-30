@@ -143,7 +143,7 @@ export const Modal: React.FC<ModalProps> = ({
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-variant/70">
           <div className="flex items-center gap-2.5">
             {icon}
             <div>
@@ -173,7 +173,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Optional Footer */}
         {footer && (
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 bg-surface-variant border-t border-outline-variant flex items-center justify-end gap-3">
             {footer}
           </div>
         )}

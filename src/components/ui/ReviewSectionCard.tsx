@@ -25,7 +25,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
 }) => {
   return (
     <div className={twMerge('bg-surface rounded-2xl border border-white/10 shadow-soft overflow-hidden', className)}>
-      <div className="flex items-center justify-between px-6 py-4 bg-slate-50/80 border-b border-white/10">
+      <div className="flex items-center justify-between px-6 py-4 bg-surface-variant/80 border-b border-white/10">
         <div className="flex items-center gap-2.5 font-bold text-white text-sm">
           {icon}
           <span>{title}</span>
