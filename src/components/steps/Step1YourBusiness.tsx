@@ -131,7 +131,7 @@ export const Step1YourBusiness: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto px-4">
       <div className="mb-8">
-        <h2 className="text-title-s text-primary tracking-wide uppercase mb-1">Check your options</h2>
+        <p className="text-title-s text-primary tracking-wide uppercase mb-1">Check your options</p>
         <h1 className="text-display-s text-on-surface mb-3">Tell us about your business</h1>
         <p className="text-on-surface-variant text-body-l">We'll use these details to see which invoice finance providers are most likely to suit you.</p>
       </div>
@@ -243,7 +243,7 @@ export const Step1YourBusiness: React.FC = () => {
                 <p>Company number: {selectedCompany.company_number}</p>
                 <p>Registered office: {[selectedCompany.registered_office_address.address_line_1, selectedCompany.registered_office_address.locality, selectedCompany.registered_office_address.postal_code].filter(Boolean).join(', ')}</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={handleConfirmCompany}
