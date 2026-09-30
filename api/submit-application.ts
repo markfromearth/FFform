@@ -85,42 +85,7 @@ export default async function handler(req: any, res: any) {
   try {
     const payload = req.body || {};
 
-    // Anti-spam Turnstile Verification
-    const turnstileToken = payload.turnstileToken;
-    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
-    
-    if (turnstileSecret) {
-      if (!turnstileToken) {
-        res.status(403).json({ error: 'Missing anti-spam token.' });
-        return;
-      }
-      
-      try {
-        const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: `secret=${encodeURIComponent(turnstileSecret)}&response=${encodeURIComponent(turnstileToken)}`,
-          signal: AbortSignal.timeout(5000)
-        });
-        
-        if (verifyRes.ok) {
-          const outcome = await verifyRes.json();
-          if (!outcome.success) {
-            console.warn('[SubmitAPI] Invalid Turnstile token:', outcome['error-codes']);
-            res.status(403).json({ error: 'Invalid anti-spam token.' });
-            return;
-          }
-        } else {
-          console.error('[SubmitAPI] Turnstile verify endpoint failed. Failing OPEN.', verifyRes.status);
-        }
-      } catch (err) {
-        console.error('[SubmitAPI] Turnstile verify network error. Failing OPEN.', err);
-      }
-    } else {
-      console.warn('[SubmitAPI] TURNSTILE_SECRET_KEY not set. Skipping verification.');
-    }
+    // Anti-spam Turnstile Verification removed
 
     if (!payload.application || !payload.id) {
       res.status(400).json({

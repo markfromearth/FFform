@@ -13,7 +13,6 @@ import { Step4FinalDetails } from './components/steps/Step4FinalDetails';
 import { Step5Review } from './components/steps/Step5Review';
 import { Step6Uploads } from './components/steps/Step6Uploads';
 import { Step7Success } from './components/steps/Step7Success';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 const JourneyRouter: React.FC = () => {
   const { currentStep } = useApplication();
@@ -76,15 +75,6 @@ const AppContent: React.FC = () => {
 
           <div className="p-7">
             <JourneyRouter />
-            {currentStep < 6 && (
-              <div className="mt-6 flex justify-center">
-                <Turnstile
-                  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                  onSuccess={(token) => setTurnstileToken(token)}
-                  options={{ theme: 'light' }}
-                />
-              </div>
-            )}
           </div>
         </section>
       </main>
