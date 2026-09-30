@@ -6,11 +6,11 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
+            colors: {
         'on-primary': '#ffffff',
-        'on-primary-container': '#001d36',
-        'on-surface': '#1a1c1e',
-        'on-surface-variant': '#43474e',
+        'on-primary-container': '#ffffff',
+        'on-surface': '#ffffff',
+        'on-surface-variant': '#cbd5e1',
         // Material 3 Color Roles
         brand: {
           50: '#f0f7ff',
@@ -26,16 +26,16 @@ export default {
           950: '#082f49',
         },
         primary: {
-          DEFAULT: '#0061a4', // md-sys-color-primary
+          DEFAULT: '#38a9f6', // md-sys-color-primary
           on: '#ffffff',
-          container: '#d1e4ff',
-          'on-container': '#001d36',
+          container: '#0284c7',
+          'on-container': '#ffffff',
         },
         secondary: {
-          DEFAULT: '#535f70',
+          DEFAULT: '#64748b',
           on: '#ffffff',
-          container: '#d7e3f7',
-          'on-container': '#101c2b',
+          container: '#334155',
+          'on-container': '#f8fafc',
         },
         tertiary: {
           DEFAULT: '#6b5778',
@@ -44,31 +44,31 @@ export default {
           'on-container': '#251431',
         },
         error: {
-          DEFAULT: '#ba1a1a',
-          on: '#ffffff',
-          container: '#ffdad6',
-          'on-container': '#410002',
+          DEFAULT: '#ffb4ab',
+          on: '#690005',
+          container: '#93000a',
+          'on-container': '#ffdad6',
         },
         accent: {
           DEFAULT: '#e8893d',
           soft: 'color-mix(in srgb, #e8893d 24%, transparent)'
         },
         surface: {
-          DEFAULT: '#fdfcff',
-          on: '#1a1c1e',
-          variant: '#dfe2eb',
-          'on-variant': '#43474e',
+          DEFAULT: 'rgba(38, 70, 115, 0.65)',
+          on: '#ffffff',
+          variant: 'rgba(25, 45, 80, 0.7)',
+          'on-variant': '#cbd5e1',
           container: {
-            lowest: '#ffffff',
-            low: '#f7f6f9',
-            DEFAULT: '#f1f0f4',
-            high: '#ebeaef',
-            highest: '#e6e4e9',
+            lowest: 'rgba(15, 23, 42, 0.8)',
+            low: 'rgba(30, 41, 59, 0.8)',
+            DEFAULT: 'rgba(38, 70, 115, 0.5)',
+            high: 'rgba(51, 65, 85, 0.8)',
+            highest: 'rgba(71, 85, 105, 0.8)',
           }
         },
         outline: {
-          DEFAULT: '#73777f',
-          variant: '#c3c7cf',
+          DEFAULT: 'rgba(255, 255, 255, 0.15)',
+          variant: 'rgba(255, 255, 255, 0.1)',
         }
       },
       fontFamily: {
