@@ -46,7 +46,7 @@ export const Step3YourInvoices: React.FC = () => {
               { id: 'replace_existing', label: 'Replace an existing provider' },
               { id: 'not_sure', label: 'Not sure — give me options' },
             ].map(option => (
-              <label key={option.id} htmlFor={`outcome_${option.id}`} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.desired_outcome === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+              <label key={option.id} htmlFor={`outcome_${option.id}`} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.desired_outcome === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                 <input
                   id={`outcome_${option.id}`}
                   type="radio"
@@ -62,7 +62,7 @@ export const Step3YourInvoices: React.FC = () => {
             ))}
           </div>
           {errors.desired_outcome && (
-            <p className="mt-2 text-label-s text-error flex items-center gap-1" id="desired_outcome_error">
+            <p className="field-error" id="desired_outcome_error">
               <AlertCircle className="w-4 h-4" />
               {errors.desired_outcome}
             </p>
@@ -79,7 +79,7 @@ export const Step3YourInvoices: React.FC = () => {
               <input
                 id="requested_facility"
                 type="number"
-                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                 placeholder="e.g. 150000"
                 value={data.invoices?.requested_facility || ''}
                 onChange={(e) => { updateInvoices({ requested_facility: parseInt(e.target.value) || undefined }); clearError('requested_facility'); }}
@@ -89,7 +89,7 @@ export const Step3YourInvoices: React.FC = () => {
               />
             </div>
             {errors.requested_facility && (
-              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="requested_facility_error">
+              <p className="field-error" id="requested_facility_error">
                 <AlertCircle className="w-4 h-4" />
                 {errors.requested_facility}
               </p>
@@ -99,7 +99,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="payment_terms_days" className="block text-title-s text-on-surface mb-2">Usual customer payment terms</label>
             <select
               id="payment_terms_days"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.payment_terms_days ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`field ${errors.payment_terms_days ? 'has-error' : ''}`}
               value={data.invoices?.payment_terms_days || ''}
               onChange={(e) => { updateInvoices({ payment_terms_days: e.target.value }); clearError('payment_terms_days'); }}
               onBlur={() => validateField(2, 'payment_terms_days')}
@@ -114,7 +114,7 @@ export const Step3YourInvoices: React.FC = () => {
               <option value="varies">Varies</option>
             </select>
             {errors.payment_terms_days && (
-              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="payment_terms_days_error">
+              <p className="field-error" id="payment_terms_days_error">
                 <AlertCircle className="w-4 h-4" />
                 {errors.payment_terms_days}
               </p>
@@ -127,7 +127,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="largest_debtor_concentration_pct" className="block text-title-s text-on-surface mb-2">What percentage of sales comes from your largest customer?</label>
             <select
               id="largest_debtor_concentration_pct"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.largest_debtor_concentration_pct ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`field ${errors.largest_debtor_concentration_pct ? 'has-error' : ''}`}
               value={data.invoices?.largest_debtor_concentration_pct || ''}
               onChange={(e) => { updateInvoices({ largest_debtor_concentration_pct: e.target.value }); clearError('largest_debtor_concentration_pct'); }}
               onBlur={() => validateField(2, 'largest_debtor_concentration_pct')}
@@ -143,7 +143,7 @@ export const Step3YourInvoices: React.FC = () => {
               <option value="not_sure">Not sure</option>
             </select>
             {errors.largest_debtor_concentration_pct ? (
-              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="largest_debtor_concentration_pct_error">
+              <p className="field-error" id="largest_debtor_concentration_pct_error">
                 <AlertCircle className="w-4 h-4" />
                 {errors.largest_debtor_concentration_pct}
               </p>
@@ -176,7 +176,7 @@ export const Step3YourInvoices: React.FC = () => {
                   ))}
                 </div>
                 {errors.debtor_geography && (
-                  <p className="mt-2 text-label-s text-error flex items-center gap-1" id="debtor_geography_error">
+                  <p className="field-error" id="debtor_geography_error">
                     <AlertCircle className="w-4 h-4" />
                     {errors.debtor_geography}
                   </p>
@@ -191,7 +191,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="export_sales_pct" className="block text-title-s text-on-surface mb-2">Approximately what percentage of sales is to customers outside the UK?</label>
             <select
               id="export_sales_pct"
-              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
               value={data.invoices?.export_sales_pct || ''}
               onChange={(e) => updateInvoices({ export_sales_pct: e.target.value })}
             >
@@ -206,7 +206,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="invoice_currency" className="block text-title-s text-on-surface mb-2">What currencies do you normally invoice in?</label>
             <select
               id="invoice_currency"
-              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
               value={data.invoices?.invoice_currency || ''}
               onChange={(e) => updateInvoices({ invoice_currency: e.target.value })}
             >
@@ -234,7 +234,7 @@ export const Step3YourInvoices: React.FC = () => {
                   { id: 'completed', label: 'Completed-work invoices' },
                   { id: 'mixture', label: 'A mixture' },
                 ].map(option => (
-                  <label key={option.id} htmlFor={`const_inv_${option.id}`} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.construction_invoicing_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+                  <label key={option.id} htmlFor={`const_inv_${option.id}`} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.construction_invoicing_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                     <input
                       id={`const_inv_${option.id}`}
                       type="radio"
@@ -254,7 +254,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_main_contract_or" className="block text-title-s text-on-surface mb-2">How does the business normally work?</label>
                 <select
                   id="construction_main_contract_or"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                   value={data.invoices?.construction_main_contract_or || ''}
                   onChange={(e) => updateInvoices({ construction_main_contract_or: e.target.value })}
                 >
@@ -268,7 +268,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_retention" className="block text-title-s text-on-surface mb-2">Are retentions normally deducted?</label>
                 <select
                   id="construction_retention"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                   value={data.invoices?.construction_retention || ''}
                   onChange={(e) => updateInvoices({ construction_retention: e.target.value })}
                 >
@@ -296,7 +296,7 @@ export const Step3YourInvoices: React.FC = () => {
                   { id: 'temporary', label: 'Temporary or contract recruitment' },
                   { id: 'mixture', label: 'A mixture of both' },
                 ].map(option => (
-                  <label key={option.id} htmlFor={`recruit_type_${option.id}`} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.recruitment_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+                  <label key={option.id} htmlFor={`recruit_type_${option.id}`} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.recruitment_type === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                     <input
                       id={`recruit_type_${option.id}`}
                       type="radio"
@@ -318,7 +318,7 @@ export const Step3YourInvoices: React.FC = () => {
                   { id: 'no', label: 'No' },
                   { id: 'not_sure', label: 'Not sure' },
                 ].map(option => (
-                  <label key={option.id} htmlFor={`payroll_${option.id}`} className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.payroll_support_required === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+                  <label key={option.id} htmlFor={`payroll_${option.id}`} className={`flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.payroll_support_required === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                     <input
                       id={`payroll_${option.id}`}
                       type="radio"

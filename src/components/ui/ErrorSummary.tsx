@@ -26,10 +26,10 @@ export const ErrorSummary: React.FC<ErrorSummaryProps> = ({
       role="alert"
       tabIndex={-1}
       aria-labelledby="error-summary-title"
-      className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 sm:p-5 text-rose-900 shadow-sm"
+      className="mb-6 rounded-lg border border-rose-200 bg-rose-50 p-4 sm:p-5 text-rose-900 shadow-sm"
     >
       <div className="flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" aria-hidden="true" />
+        <AlertCircle className="field-error" aria-hidden="true" />
         <div className="flex-1 min-w-0">
           <h2 id="error-summary-title" className="text-sm font-bold text-rose-900">
             {title}

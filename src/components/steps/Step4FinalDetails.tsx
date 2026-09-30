@@ -43,17 +43,17 @@ export const Step4FinalDetails: React.FC = () => {
         <fieldset>
           <legend className="block text-title-s text-on-surface mb-3">Are you currently using invoice finance?</legend>
           <div className="flex gap-4 max-w-sm">
-            <label htmlFor="existing-yes" className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.existing_invoice_finance === true ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+            <label htmlFor="existing-yes" className={`flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.existing_invoice_finance === true ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="existing-yes" type="radio" name="existing" className="sr-only" checked={data.invoices?.existing_invoice_finance === true} onChange={() => { updateInvoices({ existing_invoice_finance: true }); clearError('existing_invoice_finance'); }} />
               <span className={`text-label-m ${data.invoices?.existing_invoice_finance === true ? 'text-primary' : 'text-on-surface'}`}>Yes</span>
             </label>
-            <label htmlFor="existing-no" className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.invoices?.existing_invoice_finance === false ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+            <label htmlFor="existing-no" className={`flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.invoices?.existing_invoice_finance === false ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="existing-no" type="radio" name="existing" className="sr-only" checked={data.invoices?.existing_invoice_finance === false} onChange={() => { updateInvoices({ existing_invoice_finance: false }); clearError('existing_invoice_finance'); }} />
               <span className={`text-label-m ${data.invoices?.existing_invoice_finance === false ? 'text-primary' : 'text-on-surface'}`}>No</span>
             </label>
           </div>
           {errors.existing_invoice_finance && (
-            <p className="mt-2 text-label-s text-error flex items-center gap-1" id="existing_invoice_finance_error">
+            <p className="field-error" id="existing_invoice_finance_error">
               <AlertCircle className="w-4 h-4" />
               {errors.existing_invoice_finance}
             </p>
@@ -69,7 +69,7 @@ export const Step4FinalDetails: React.FC = () => {
                   id="current_provider"
                   type="text"
                   placeholder="e.g. Acme Corp"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                   value={data.invoices?.current_provider || ''}
                   onChange={(e) => updateInvoices({ current_provider: e.target.value })}
                 />
@@ -84,7 +84,7 @@ export const Step4FinalDetails: React.FC = () => {
                     id="current_facility_limit"
                     type="number"
                     placeholder="e.g. 50000"
-                    className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                    className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                     value={data.invoices?.current_facility_limit || ''}
                     onChange={(e) => updateInvoices({ current_facility_limit: parseInt(e.target.value) || undefined })}
                   />
@@ -123,7 +123,7 @@ export const Step4FinalDetails: React.FC = () => {
                 id="notice_or_exit_date"
                 type="text"
                 placeholder="e.g. Notice expires 31st Oct"
-                className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                 value={data.invoices?.notice_or_exit_date || ''}
                 onChange={(e) => updateInvoices({ notice_or_exit_date: e.target.value })}
               />
@@ -135,7 +135,7 @@ export const Step4FinalDetails: React.FC = () => {
           <label htmlFor="hmrc_status" className="block text-title-s text-on-surface mb-2">Is the business up to date with HMRC?</label>
           <select
             id="hmrc_status"
-            className={`w-full sm:w-2/3 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.hmrc_status ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+            className={`w-full sm:w-2/3 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.hmrc_status ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
             value={data.invoices?.hmrc_status || ''}
             onChange={(e) => { updateInvoices({ hmrc_status: e.target.value }); clearError('hmrc_status'); }}
             onBlur={() => validateField(3, 'hmrc_status')}
@@ -149,7 +149,7 @@ export const Step4FinalDetails: React.FC = () => {
             <option value="not_sure">Not sure</option>
           </select>
           {errors.hmrc_status && (
-            <p className="mt-1 text-label-s text-error flex items-center gap-1" id="hmrc_status_error">
+            <p className="field-error" id="hmrc_status_error">
               <AlertCircle className="w-4 h-4" />
               {errors.hmrc_status}
             </p>
@@ -167,7 +167,7 @@ export const Step4FinalDetails: React.FC = () => {
                 id="hmrc_arrears_amount"
                 type="number"
                 placeholder="e.g. 10000"
-                className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                 value={data.invoices?.hmrc_arrears_amount || ''}
                 onChange={(e) => updateInvoices({ hmrc_arrears_amount: parseInt(e.target.value) || undefined })}
               />
@@ -202,7 +202,7 @@ export const Step4FinalDetails: React.FC = () => {
             ))}
           </div>
           {errors.funding_purpose && (
-            <p className="mt-2 text-label-s text-error flex items-center gap-1" id="funding_purpose_error">
+            <p className="field-error" id="funding_purpose_error">
               <AlertCircle className="w-4 h-4" />
               {errors.funding_purpose}
             </p>
@@ -215,7 +215,7 @@ export const Step4FinalDetails: React.FC = () => {
           </label>
           <textarea
             id="additional_context"
-            className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline resize-y min-h-[100px]"
+            className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline resize-y min-h-[100px]"
             placeholder="e.g. growth plans, a recent loss, poor credit, disputed invoices, or a major new contract."
             value={data.invoices?.additional_context || ''}
             onChange={(e) => updateInvoices({ additional_context: e.target.value })}

@@ -93,7 +93,7 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
     <div ref={containerRef} className="w-full">
       {/* If already selected & verified with Companies House */}
       {isVerified ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 transition-all">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -165,9 +165,11 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
               onFocus={() => results.length > 0 && setIsOpen(true)}
               placeholder="Start typing company name (e.g. Apex, Tesco, Brewdog) or 8-digit number..."
               className={clsx(
-                'w-full pl-10 pr-10 py-2.5 text-sm bg-white/10 border rounded-xl shadow-xs transition-all',
-                'border-white/20 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
-                isOpen ? 'rounded-b-none border-brand-400' : ''
+                'field pl-10 pr-10 py-2.5 text-sm min-h-[44px]',
+                query.length > 0 ? 'is-filled' : ''
+                  
+                  ,
+                isOpen ? 'rounded-b-none border-primary' : ''
               )}
               autoComplete="off"
             />
@@ -178,7 +180,7 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="p-1 text-white/70 hover:text-white/90 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="p-1 text-white/70 hover:text-white/90 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   aria-label="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -188,7 +190,7 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
 
             {/* Results Dropdown */}
             {isOpen && (
-              <div className="absolute top-full left-0 right-0 z-30 bg-white/10 rounded-b-xl border-x border-b border-brand-400 shadow-elevated max-h-72 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50 duration-100">
+              <div className="absolute top-full left-0 right-0 z-30 bg-surface rounded-b-xl border-x border-b border-brand-400 shadow-elevated max-h-72 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50 duration-100">
                 {results.length > 0 ? (
                   results.map((c) => {
                     const isActive = (c.company_status || '').toLowerCase() === 'active';

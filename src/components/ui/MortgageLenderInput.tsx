@@ -168,7 +168,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
       <div className="flex items-center justify-between gap-2">
         <label htmlFor={inputId} className="text-sm font-semibold text-white flex items-center gap-1">
           {label}
-          {required && <span className="text-rose-600 font-bold" aria-hidden="true">*</span>}
+          {required && <span className="field-error" aria-hidden="true">*</span>}
         </label>
         <span className="text-[11px] text-brand-600 font-medium flex items-center gap-1">
           <ShieldCheck className="w-3 h-3 text-brand-600" />
@@ -177,7 +177,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
       </div>
 
       {hint && (
-        <p id={hintId} className="text-xs text-white/70 leading-relaxed">
+        <p id={hintId} className="field-hint">
           {hint}
         </p>
       )}
@@ -215,11 +215,8 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
           }}
           onKeyDown={handleKeyDown}
           className={clsx(
-            'w-full block pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-white/60 border rounded-lg transition-colors duration-150',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-white/70 disabled:cursor-not-allowed',
-            error
-              ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200 bg-rose-50/20'
-              : 'border-white/20 bg-white/10 focus:border-brand-600 focus:ring-brand-100 hover:border-slate-400'
+            'field pl-10 pr-10 py-2.5 text-sm min-h-[44px]',
+            value && value !== '' && 'is-filled'
           )}
         />
 
@@ -240,7 +237,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-white/10 shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
+          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-white/10 bg-surface shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
         >
           <li className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/80 border-b border-slate-100 flex items-center justify-between">
             <span>UK Mortgage Lenders & Administrators</span>
@@ -305,7 +302,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
       )}
 
       {error && (
-        <p id={errorId} className="text-xs text-rose-600 flex items-center gap-1 mt-0.5" role="alert">
+        <p id={errorId} className="field-error" role="alert">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{error}</span>
         </p>

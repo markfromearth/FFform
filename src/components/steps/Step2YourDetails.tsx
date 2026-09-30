@@ -24,14 +24,14 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="name"
               aria-invalid={!!errors.contact_full_name}
               aria-describedby={errors.contact_full_name ? "contact_full_name_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.contact_full_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.contact_full_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.contact_full_name || ''}
               placeholder="e.g. Jane Doe"
               onChange={(e) => { updateContact({ contact_full_name: e.target.value }); clearError('contact_full_name'); }}
               onBlur={() => validateField(1, 'contact_full_name')}
             />
             {errors.contact_full_name && (
-              <p id="contact_full_name_error" className="mt-1 text-label-s text-error flex items-center gap-1">
+              <p id="contact_full_name_error" className="field-error">
                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                  {errors.contact_full_name}
               </p>
@@ -43,7 +43,7 @@ export const Step2YourDetails: React.FC = () => {
               id="contact_role"
               aria-invalid={!!errors.contact_role}
               aria-describedby={errors.contact_role ? "contact_role_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.contact_role ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.contact_role ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.contact_role || ''}
               onChange={(e) => { updateContact({ contact_role: e.target.value }); clearError('contact_role'); }}
               onBlur={() => validateField(1, 'contact_role')}
@@ -56,7 +56,7 @@ export const Step2YourDetails: React.FC = () => {
               <option value="other">Other</option>
             </select>
             {errors.contact_role && (
-              <p id="contact_role_error" className="mt-1 text-label-s text-error flex items-center gap-1">
+              <p id="contact_role_error" className="field-error">
                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                  {errors.contact_role}
               </p>
@@ -73,14 +73,14 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="tel"
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? "phone_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.phone ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.phone ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.phone || ''}
               placeholder="e.g. 07700 900000"
               onChange={(e) => { updateContact({ phone: e.target.value }); clearError('phone'); }}
               onBlur={() => validateField(1, 'phone')}
             />
             {errors.phone && (
-              <p id="phone_error" className="mt-1 text-label-s text-error flex items-center gap-1">
+              <p id="phone_error" className="field-error">
                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                  {errors.phone}
               </p>
@@ -94,14 +94,14 @@ export const Step2YourDetails: React.FC = () => {
               autoComplete="email"
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email_error" : undefined}
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.email ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
+              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.email ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.email || ''}
               placeholder="e.g. name@company.com"
               onChange={(e) => { updateContact({ email: e.target.value }); clearError('email'); }}
               onBlur={() => validateField(1, 'email')}
             />
             {errors.email && (
-              <p id="email_error" className="mt-1 text-label-s text-error flex items-center gap-1">
+              <p id="email_error" className="field-error">
                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                  {errors.email}
               </p>
@@ -119,7 +119,7 @@ export const Step2YourDetails: React.FC = () => {
               { id: '1_to_3_months', label: '1–3 months' },
               { id: 'just_exploring', label: 'Just exploring' },
             ].map(option => (
-              <label key={option.id} className={`flex items-center min-h-touch p-4 border rounded-xl cursor-pointer transition-colors ${data.contact?.funding_timescale === option.id ? 'border-primary bg-primary-container ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-container-low'}`}>
+              <label key={option.id} className={`flex items-center min-h-touch p-4 border rounded-lg cursor-pointer transition-colors ${data.contact?.funding_timescale === option.id ? 'border-primary bg-primary-container ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-container-low'}`}>
                 <input
                   type="radio"
                   name="timing"
@@ -132,7 +132,7 @@ export const Step2YourDetails: React.FC = () => {
             ))}
           </div>
           {errors.funding_timescale && (
-              <p id="funding_timescale_error" className="mt-2 text-label-s text-error flex items-center gap-1">
+              <p id="funding_timescale_error" className="field-error">
                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                  {errors.funding_timescale}
               </p>

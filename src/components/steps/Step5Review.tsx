@@ -153,10 +153,10 @@ if (!response.ok) {
         <h3 className="title-m text-on-surface mb-4">Privacy & Permissions</h3>
         
         <div className="space-y-4">
-          <label className="flex items-start gap-3 p-3 bg-surface-container-low border border-outline-variant rounded-xl cursor-pointer min-h-touch">
+          <label className="flex items-start gap-3 p-3 bg-surface-container-low border border-outline-variant rounded-lg cursor-pointer min-h-touch">
             <input 
               type="checkbox" 
-              className={`mt-1 h-5 w-5 rounded border-outline text-primary focus:ring-primary ${errors.processing_notice_acknowledged ? 'ring-2 ring-error ring-offset-1 border-error' : ''}`}
+              className={`mt-1 h-5 w-5 rounded border-outline text-primary focus:ring-accent ${errors.processing_notice_acknowledged ? 'ring-2 ring-error ring-offset-1 border-error' : ''}`}
               checked={data.consents?.processing_notice_acknowledged === true}
               onChange={(e) => { 
                 updateConsents({ 
@@ -177,14 +177,14 @@ if (!response.ok) {
             </div>
           </label>
 
-          <div className="p-4 border border-outline-variant rounded-xl">
+          <div className="p-4 border border-outline-variant rounded-lg">
             <span className="label-m text-on-surface block mb-2">Optional: Promotional Contact</span>
             <p className="body-l text-white/80 mb-3">Factoring Finance may occasionally send you relevant market updates or alternative funding offers. Please select how you'd like to hear from us:</p>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer min-h-touch">
                 <input 
                   type="checkbox" 
-                  className="h-5 w-5 rounded border-outline text-primary focus:ring-primary"
+                  className="h-5 w-5 rounded border-outline text-primary focus:ring-accent"
                   checked={data.consents?.marketing_email === true}
                   onChange={(e) => updateConsents({ marketing_email: e.target.checked })}
                 />
@@ -193,7 +193,7 @@ if (!response.ok) {
               <label className="flex items-center gap-2 cursor-pointer min-h-touch">
                 <input 
                   type="checkbox" 
-                  className="h-5 w-5 rounded border-outline text-primary focus:ring-primary"
+                  className="h-5 w-5 rounded border-outline text-primary focus:ring-accent"
                   checked={data.consents?.marketing_sms === true}
                   onChange={(e) => updateConsents({ marketing_sms: e.target.checked })}
                 />
@@ -205,7 +205,7 @@ if (!response.ok) {
       </div>
 
       {submitError && (
-        <div className="mt-6 p-4 bg-error/10 border border-error/20 rounded-xl text-error body-l flex items-start gap-3">
+        <div className="mt-6 p-4 bg-error/10 border border-error/20 rounded-lg text-error body-l flex items-start gap-3">
            <ShieldCheck className="w-5 h-5 text-error shrink-0 mt-0.5" />
            <span>{submitError}</span>
         </div>
@@ -222,14 +222,14 @@ if (!response.ok) {
             <button
               onClick={prevStep}
               disabled={isSubmitting}
-              className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-container transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-container transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
               Back
             </button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-6 py-3 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-75 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="px-6 py-3 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-75 min-h-touch focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
               {isSubmitting ? 'Submitting...' : 'Submit my enquiry'}
               {!isSubmitting && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>}

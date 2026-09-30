@@ -41,10 +41,10 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
         <span
           className={clsx(
             'flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer select-none',
-            'peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2',
+            'peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2',
             checked
               ? 'border-brand-600 bg-brand-600 text-white'
-              : 'border-white/20 bg-white/10 hover:border-slate-400',
+              : 'border-outline bg-surface hover:border-slate-400',
             disabled && 'opacity-50 cursor-not-allowed',
             error && !checked && 'border-rose-500 bg-rose-50/50'
           )}
@@ -65,7 +65,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
         </label>
         {hint && <div className="text-xs text-white/70 mt-0.5">{hint}</div>}
         {error && (
-          <p className="text-xs font-medium text-rose-600 mt-1" role="alert">
+          <p className="field-error" role="alert">
             {error}
           </p>
         )}

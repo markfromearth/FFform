@@ -68,13 +68,10 @@ export function RadioGroup<T extends string | number | boolean>({
               key={String(opt.value)}
               htmlFor={optId}
               className={clsx(
-                'relative flex items-start gap-3 border transition-all duration-150 cursor-pointer select-none text-left',
-                variant === 'compact' ? 'p-2.5 rounded-lg' : 'p-4 rounded-xl',
-                'hover:border-slate-400 hover:bg-slate-50/70',
-                'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 has-[:focus-visible]:ring-offset-2',
-                isSelected
-                  ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-500'
-                  : 'border-white/10 bg-white/10 shadow-xs'
+                'choice',
+                variant === 'compact' ? 'p-2.5' : '',
+                isSelected && 'is-selected',
+                error && 'has-error'
               )}
             >
               <input
@@ -93,17 +90,17 @@ export function RadioGroup<T extends string | number | boolean>({
                 className={clsx(
                   'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
                   isSelected
-                    ? 'border-emerald-600 bg-emerald-600'
-                    : 'border-white/20 bg-white/10'
+                    ? 'border-primary bg-primary'
+                    : 'border-outline bg-surface'
                 )}
                 aria-hidden="true"
               >
-                {isSelected && <div className="w-2 h-2 rounded-full bg-white/10" />}
+                {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={clsx('text-sm font-medium', isSelected ? 'text-emerald-950 font-semibold' : 'text-white')}>
+                  <span className={clsx('text-sm font-medium', isSelected ? 'text-white font-semibold' : 'text-white')}>
                     {opt.label}
                   </span>
                   {opt.badge && (
@@ -113,7 +110,7 @@ export function RadioGroup<T extends string | number | boolean>({
                   )}
                 </div>
                 {opt.description && (
-                  <p className="mt-0.5 text-xs text-white/70 leading-relaxed">
+                  <p className="field-hint">
                     {opt.description}
                   </p>
                 )}
@@ -124,7 +121,7 @@ export function RadioGroup<T extends string | number | boolean>({
       </div>
 
       {error && (
-        <p className="text-xs font-medium text-rose-600 mt-1" role="alert">
+        <p className="field-error" role="alert">
           {error}
         </p>
       )}

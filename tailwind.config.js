@@ -67,8 +67,8 @@ export default {
           }
         },
         outline: {
-          DEFAULT: 'rgba(255, 255, 255, 0.15)',
-          variant: 'rgba(255, 255, 255, 0.1)',
+          DEFAULT: 'rgba(255, 255, 255, 0.4)',
+          variant: 'rgba(255, 255, 255, 0.6)',
         }
       },
       fontFamily: {

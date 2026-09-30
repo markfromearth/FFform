@@ -94,7 +94,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
       }
     >
       <div className="space-y-5">
-        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs sm:text-sm">
+        <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-amber-50/80 border border-amber-200 text-amber-900 text-xs sm:text-sm">
           <HelpCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <p>
             We couldn't automatically detect the statement period from this file name. Please let us know which calendar period this document covers.
@@ -109,7 +109,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
               name="periodType"
               checked={!isRange}
               onChange={() => setIsRange(false)}
-              className="w-4 h-4 text-brand-700 border-white/20 focus:ring-brand-500"
+              className="w-4 h-4 text-brand-700 border-outline focus:ring-accent"
             />
             <span>Single month</span>
           </label>
@@ -119,7 +119,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
               name="periodType"
               checked={isRange}
               onChange={() => setIsRange(true)}
-              className="w-4 h-4 text-brand-700 border-white/20 focus:ring-brand-500"
+              className="w-4 h-4 text-brand-700 border-outline focus:ring-accent"
             />
             <span>Multi-month range (e.g. 2–6 months)</span>
           </label>
@@ -138,7 +138,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
                 id="single-month-select"
                 value={startMonth}
                 onChange={(e) => setStartMonth(parseInt(e.target.value, 10))}
-                className="w-full px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 text-sm text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full px-3 py-2.5 rounded-lg border border-outline bg-surface text-sm text-white focus:ring-2 focus:ring-accent focus:border-accent"
               >
                 {MONTH_OPTIONS.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -159,7 +159,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
                 id="single-year-select"
                 value={startYear}
                 onChange={(e) => setStartYear(parseInt(e.target.value, 10))}
-                className="w-full px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 text-sm text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full px-3 py-2.5 rounded-lg border border-outline bg-surface text-sm text-white focus:ring-2 focus:ring-accent focus:border-accent"
               >
                 {YEAR_OPTIONS.map((y) => (
                   <option key={y} value={y}>
@@ -171,14 +171,14 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl border border-white/10 bg-slate-50/60 space-y-3">
+            <div className="p-4 rounded-lg border border-white/10 bg-slate-50/60 space-y-3">
               <span className="text-xs font-bold text-white block">From (Start Month)</span>
               <div className="grid grid-cols-2 gap-3">
                 <select
                   aria-label="Start Month"
                   value={startMonth}
                   onChange={(e) => setStartMonth(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-outline bg-surface text-sm"
                 >
                   {MONTH_OPTIONS.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -190,7 +190,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
                   aria-label="Start Year"
                   value={startYear}
                   onChange={(e) => setStartYear(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-outline bg-surface text-sm"
                 >
                   {YEAR_OPTIONS.map((y) => (
                     <option key={y} value={y}>
@@ -201,14 +201,14 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-white/10 bg-slate-50/60 space-y-3">
+            <div className="p-4 rounded-lg border border-white/10 bg-slate-50/60 space-y-3">
               <span className="text-xs font-bold text-white block">To (End Month)</span>
               <div className="grid grid-cols-2 gap-3">
                 <select
                   aria-label="End Month"
                   value={endMonth}
                   onChange={(e) => setEndMonth(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-outline bg-surface text-sm"
                 >
                   {MONTH_OPTIONS.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -220,7 +220,7 @@ export const DocumentPeriodModal: React.FC<DocumentPeriodModalProps> = ({
                   aria-label="End Year"
                   value={endYear}
                   onChange={(e) => setEndYear(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-outline bg-surface text-sm"
                 >
                   {YEAR_OPTIONS.map((y) => (
                     <option key={y} value={y}>

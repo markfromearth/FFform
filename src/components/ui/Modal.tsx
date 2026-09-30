@@ -136,7 +136,7 @@ export const Modal: React.FC<ModalProps> = ({
         tabIndex={-1}
         className={twMerge(
           clsx(
-            'relative w-full bg-white/10 rounded-2xl shadow-elevated border border-white/10 overflow-hidden outline-none',
+            'relative w-full bg-surface rounded-2xl shadow-elevated border border-white/10 overflow-hidden outline-none',
             maxWidthStyles[maxWidth],
             className
           )
@@ -162,7 +162,7 @@ export const Modal: React.FC<ModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="flex items-center justify-center w-10 h-10 -mr-2 rounded-xl text-white/60 hover:text-white/80 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none transition-colors"
+            className="flex items-center justify-center w-10 h-10 -mr-2 rounded-lg text-white/60 hover:text-white/80 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none transition-colors"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>

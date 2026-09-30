@@ -143,7 +143,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/10 p-5 shadow-xs">
+    <div className="rounded-lg border border-white/10 bg-surface p-5 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
         <div>
           <h3 className="text-sm font-semibold text-white">{title}</h3>
@@ -162,8 +162,8 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
             aria-controls={`panel-draw-${principalId}`}
             onClick={() => setTab('draw')}
             className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-              tab === 'draw' ? 'bg-white/10 text-brand-700 shadow-xs' : 'text-white/80 hover:text-white'
+              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent',
+              tab === 'draw' ? 'bg-surface text-brand-700 shadow-xs' : 'text-white/80 hover:text-white'
             )}
           >
             <Pen className="w-3.5 h-3.5" />
@@ -177,8 +177,8 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
             aria-controls={`panel-type-${principalId}`}
             onClick={() => setTab('type')}
             className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-              tab === 'type' ? 'bg-white/10 text-brand-700 shadow-xs' : 'text-white/80 hover:text-white'
+              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent',
+              tab === 'type' ? 'bg-surface text-brand-700 shadow-xs' : 'text-white/80 hover:text-white'
             )}
           >
             <Type className="w-3.5 h-3.5" />
@@ -194,7 +194,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
             role="tabpanel"
             aria-labelledby={`tab-draw-${principalId}`}
           >
-            <div className="relative rounded-lg border-2 border-dashed border-white/20 bg-slate-50/70 p-1 hover:border-slate-400 transition-colors">
+            <div className="relative rounded-lg border-2 border-dashed border-outline bg-slate-50/70 p-1 hover:border-slate-400 transition-colors">
               <canvas
                 ref={canvasRef}
                 role="img"
@@ -251,7 +251,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
                 value={typedName}
                 onChange={handleTypedChange}
                 placeholder="e.g. Alistair Ross"
-                className="w-full px-3 py-2 text-sm border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
+                className={`field ${typedName ? "is-filled" : ""}`}
               />
             </div>
 
@@ -281,7 +281,7 @@ export const SignatureInput: React.FC<SignatureInputProps> = ({
       </div>
 
       {error && (
-        <p className="text-xs font-medium text-rose-600 mt-2" role="alert">
+        <p className="field-error" role="alert">
           {error}
         </p>
       )}

@@ -142,7 +142,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={clsx(
-          'relative flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-touch',
+          'relative flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch',
           isDragging
             ? 'border-primary bg-primary-container/20 scale-[1.005]'
             : 'border-outline-variant bg-surface-container-low hover:border-primary hover:bg-surface-container-low/80',
@@ -189,7 +189,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               triggerPicker();
             }}
             disabled={disabled || isUploading}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-touch label-m rounded-full bg-primary text-on-primary shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-touch label-m rounded-full bg-primary text-on-primary shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <FileUp className="w-4 h-4 stroke-[2.2]" />
             <span>{isUploading ? 'Uploading statements...' : 'Choose files'}</span>
@@ -212,7 +212,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         <div
           role="alert"
           aria-live="assertive"
-          className="mt-3 flex items-start gap-2.5 p-4 rounded-xl bg-error/10 border border-error/20 text-error body-l"
+          className="mt-3 flex items-start gap-2.5 p-4 rounded-lg bg-error/10 border border-error/20 text-error body-l"
         >
           <AlertCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
           <span>{validationError}</span>

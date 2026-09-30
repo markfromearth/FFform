@@ -105,7 +105,7 @@ export const Step6Uploads: React.FC = () => {
     return (
       <div className="mt-3 space-y-2">
         {tasks.map(task => (
-          <div key={task.id} className="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-xl text-left">
+          <div key={task.id} className="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-lg text-left">
             <div className="flex items-center gap-3 overflow-hidden">
                <FileText className="w-5 h-5 text-primary shrink-0" />
                <span className="truncate text-body-m text-on-surface">{task.file.name}</span>
@@ -115,7 +115,7 @@ export const Step6Uploads: React.FC = () => {
               {task.status === 'success' && <span className="text-body-s text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> Uploaded</span>}
               {task.status === 'error' && (
                  <div className="flex items-center gap-2">
-                   <span className="text-body-s text-error flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Failed</span>
+                   <span className="field-error"><AlertCircle className="w-4 h-4" /> Failed</span>
                    <button onClick={() => handleRetry(task.id)} className="text-label-s text-primary hover:underline flex items-center gap-1"><RefreshCw className="w-3 h-3"/> Retry</button>
                  </div>
               )}
@@ -207,7 +207,7 @@ body: JSON.stringify({
         <div className="mt-8 flex justify-center border-t border-outline-variant pt-8">
           <button
             onClick={handleCompleteUploads}
-            className="px-8 py-4 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors shadow-sm min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="px-8 py-4 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors shadow-sm min-h-touch focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
           >
             I've finished uploading
           </button>
@@ -231,7 +231,7 @@ body: JSON.stringify({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl mx-auto">
         <button 
           onClick={() => setChoice('now')}
-          className="flex flex-col items-center justify-center p-8 border-2 border-primary rounded-2xl hover:bg-surface-container transition-colors group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-touch"
+          className="flex flex-col items-center justify-center p-8 border-2 border-primary rounded-2xl hover:bg-surface-container transition-colors group focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
         >
           <UploadCloud className="w-12 h-12 text-primary mb-4 group-hover:-translate-y-1 transition-transform" />
           <h3 className="title-m text-on-surface mb-2">Upload them now</h3>
@@ -241,7 +241,7 @@ body: JSON.stringify({
         <button 
           onClick={() => { setChoice('later'); handleDefer(); }}
           disabled={isSendingLink}
-          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-container transition-colors group disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-touch"
+          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-container transition-colors group disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch"
         >
           {linkSent ? (
             <CheckCircle2 className="w-12 h-12 text-primary mb-4" />

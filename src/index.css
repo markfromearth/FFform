@@ -1,20 +1,24 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  *:focus-visible {
+    outline: 2px solid #e8893d;
+    outline-offset: 2px;
+  }
+  .field:focus-visible, .choice:focus-visible, .choice:has(:focus-visible) {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
   html {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #0f172a;
     background-color: #f8fafc;
   }
 
-  /* Accessible focus indicators with WCAG 2.2 AA compliant contrast (5.98:1) */
-  :focus-visible {
-    outline: 2px solid #0369a1;
-    outline-offset: 2px;
-  }
-
+  
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
@@ -41,9 +45,9 @@
   select:-webkit-autofill,
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px #f0fdf4 inset !important;
-    -webkit-text-fill-color: #0f172a !important;
-    caret-color: #0f172a !important;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(25, 45, 80, 0.7) inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
     transition: background-color 5000s ease-in-out 0s;
   }
 }
@@ -88,5 +92,69 @@
     background-position: center top;
     background-attachment: fixed;
     color: #ffffff;
+  }
+
+  #main-content {
+    background-color: #1a2a4b;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      radial-gradient(circle at top right, #2a5a9b 0%, #1a2a4b 70%);
+    background-size: 40px 40px, 40px 40px, 100% 100%;
+    background-position: center top;
+  }
+
+  
+}
+
+@layer components {
+  .field {
+    @apply w-full min-h-[48px] px-3 py-3 bg-surface border border-outline rounded-lg text-white transition-all duration-150 ease-in-out;
+  }
+  .field::placeholder {
+    @apply text-white/60;
+  }
+  .field:hover:not(:disabled) {
+    @apply bg-surface/80 border-outline-variant;
+  }
+  .field:focus, .field:focus-visible {
+    @apply outline-none border-accent ring-1 ring-accent/35;
+  }
+  /* using a specific class for filled since pseudo-selectors are tricky for select/custom */
+  .field.is-filled {
+    @apply bg-surface border-white/50 text-white;
+  }
+  .field[aria-invalid="true"] {
+    @apply border-error bg-error/10 text-white;
+  }
+  .field:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-surface hover:border-outline;
+  }
+
+  .choice {
+    @apply relative flex items-start gap-3 p-4 bg-surface border border-outline rounded-lg cursor-pointer transition-all duration-150 ease-in-out text-white text-left;
+  }
+  .choice:hover:not(.is-disabled) {
+    @apply bg-surface/80 border-outline-variant;
+  }
+  .choice:has(:focus-visible) {
+    @apply outline-none border-accent ring-1 ring-accent/35;
+  }
+  .choice.is-selected {
+    @apply border-primary bg-primary/10;
+  }
+  .choice.has-error {
+    @apply border-error bg-error/10;
+  }
+  
+  .field-hint {
+    @apply text-xs text-white/70 leading-relaxed mt-1;
+  }
+  .field-error {
+    @apply text-xs font-medium text-error flex items-center gap-1 mt-1;
+  }
+
+  .choice.is-disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-surface hover:border-outline;
   }
 }

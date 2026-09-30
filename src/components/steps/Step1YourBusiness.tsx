@@ -140,17 +140,17 @@ export const Step1YourBusiness: React.FC = () => {
         <fieldset>
           <legend className="block text-title-s text-on-surface mb-2">Does your business invoice other businesses for goods or services already supplied?</legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label htmlFor="b2b_yes" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'yes' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+            <label htmlFor="b2b_yes" className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'yes' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="b2b_yes" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'yes'} onChange={() => { updateBusiness({ b2b_completed_supply: 'yes' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
               <span className="ml-3 text-label-m text-on-surface">Yes</span>
             </label>
-            <label htmlFor="b2b_mixture" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'mixture' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+            <label htmlFor="b2b_mixture" className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'mixture' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="b2b_mixture" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'mixture'} onChange={() => { updateBusiness({ b2b_completed_supply: 'mixture' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
               <span className="ml-3 text-label-m text-on-surface">A mixture of businesses and consumers</span>
             </label>
           </div>
           {errors.b2b_completed_supply && (
-            <p className="mt-2 text-label-s text-error flex items-center gap-1" id="b2b_completed_supply_error">
+            <p className="field-error" id="b2b_completed_supply_error">
               <AlertCircle className="w-4 h-4" />
               {errors.b2b_completed_supply}
             </p>
@@ -174,7 +174,7 @@ export const Step1YourBusiness: React.FC = () => {
                   aria-expanded={showResults}
                   aria-controls="company_results"
                   aria-autocomplete="list"
-                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                   placeholder="e.g. Acme Corp or 12345678"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -185,7 +185,7 @@ export const Step1YourBusiness: React.FC = () => {
                 />
               </div>
               {errors.company_name ? (
-                <p className="mt-2 text-label-s text-error flex items-center gap-1" id="company_name_error">
+                <p className="field-error" id="company_name_error">
                   <AlertCircle className="w-4 h-4" />
                   {errors.company_name}
                 </p>
@@ -232,7 +232,7 @@ export const Step1YourBusiness: React.FC = () => {
 
           {/* Unconfirmed Company Card */}
           {selectedCompany && !companyConfirmed && !isManualEntry && (
-            <div className="bg-surface-variant border border-outline-variant rounded-xl p-5">
+            <div className="bg-surface-variant border border-outline-variant rounded-lg p-5">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-title-s text-on-surface">{selectedCompany.company_name}</h3>
                 <span className={`text-label-s px-2 py-1 rounded-full ${selectedCompany.company_status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
@@ -264,7 +264,7 @@ export const Step1YourBusiness: React.FC = () => {
 
           {/* Confirmed Company Display (API) */}
           {companyConfirmed && selectedCompany && !isManualEntry && (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5 flex items-start justify-between">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-5 flex items-start justify-between">
               <div className="flex gap-3">
                 <div className="mt-1">
                   <Check className="w-5 h-5 text-emerald-600" />
@@ -286,7 +286,7 @@ export const Step1YourBusiness: React.FC = () => {
           
           {/* Manual Entry */}
           {isManualEntry && (
-             <div className="space-y-4 p-5 border border-outline-variant rounded-xl bg-surface-variant">
+             <div className="space-y-4 p-5 border border-outline-variant rounded-lg bg-surface-variant">
                <div className="flex justify-between items-center mb-2">
                  <h3 className="text-title-s text-on-surface">Enter business details manually</h3>
                  <button type="button" onClick={handleResetCompany} className="text-label-m text-primary hover:underline min-h-touch">Cancel</button>
@@ -296,7 +296,7 @@ export const Step1YourBusiness: React.FC = () => {
                   <input
                     id="manual_company_name"
                     type="text"
-                    className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                    className={`field ${errors.company_name ? 'has-error' : ''}`}
                     placeholder="e.g. Acme Corp"
                     value={data.business?.company_name || ''}
                     onChange={(e) => { updateBusiness({ company_name: e.target.value }); clearError('company_name'); }}
@@ -305,7 +305,7 @@ export const Step1YourBusiness: React.FC = () => {
                     aria-describedby={errors.company_name ? "manual_company_name_error" : undefined}
                   />
                   {errors.company_name && (
-                    <p className="mt-1 text-label-s text-error flex items-center gap-1" id="manual_company_name_error">
+                    <p className="field-error" id="manual_company_name_error">
                       <AlertCircle className="w-4 h-4" />
                       {errors.company_name}
                     </p>
@@ -316,7 +316,7 @@ export const Step1YourBusiness: React.FC = () => {
                     <label htmlFor="entity_type" className="block text-label-m text-on-surface mb-1">Entity Type</label>
                     <select
                       id="entity_type"
-                      className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.entity_type ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                      className={`field ${errors.entity_type ? 'has-error' : ''}`}
                       value={data.business?.entity_type || ''}
                       onChange={(e) => { updateBusiness({ entity_type: e.target.value }); clearError('entity_type'); }}
                       onBlur={() => validateField(0, 'entity_type')}
@@ -331,7 +331,7 @@ export const Step1YourBusiness: React.FC = () => {
                       <option value="other">Other</option>
                     </select>
                     {errors.entity_type && (
-                      <p className="mt-1 text-label-s text-error flex items-center gap-1" id="entity_type_error">
+                      <p className="field-error" id="entity_type_error">
                         <AlertCircle className="w-4 h-4" />
                         {errors.entity_type}
                       </p>
@@ -342,7 +342,7 @@ export const Step1YourBusiness: React.FC = () => {
                     <input
                       id="postal_code"
                       type="text"
-                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                       placeholder="e.g. SW1A 1AA"
                       value={data.business?.registered_address?.postal_code || ''}
                       onChange={(e) => updateBusiness({ registered_address: { ...data.business?.registered_address, postal_code: e.target.value }})}
@@ -358,11 +358,11 @@ export const Step1YourBusiness: React.FC = () => {
           <fieldset className="animate-in fade-in slide-in-from-top-4 duration-300">
             <legend className="block text-title-s text-on-surface mb-2">Is your trading address the same as your registered office?</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label htmlFor="same-address-yes" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === true ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+              <label htmlFor="same-address-yes" className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === true ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                 <input id="same-address-yes" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.trading_address_same_as_registered === true} onChange={() => updateBusiness({ trading_address_same_as_registered: true })} />
                 <span className="ml-3 text-label-m text-on-surface">Yes</span>
               </label>
-              <label htmlFor="same-address-no" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === false ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+              <label htmlFor="same-address-no" className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors min-h-touch ${data.business?.trading_address_same_as_registered === false ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                 <input id="same-address-no" type="radio" name="same-address" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.trading_address_same_as_registered === false} onChange={() => updateBusiness({ trading_address_same_as_registered: false })} />
                 <span className="ml-3 text-label-m text-on-surface">No</span>
               </label>
@@ -374,7 +374,7 @@ export const Step1YourBusiness: React.FC = () => {
                 <input
                   id="trading_address_line_1"
                   type="text"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                   placeholder="e.g. 123 High Street"
                   value={data.business?.trading_address?.address_line_1 || ''}
                   onChange={(e) => updateBusiness({ trading_address: { ...data.business?.trading_address, address_line_1: e.target.value }})}
@@ -393,7 +393,7 @@ export const Step1YourBusiness: React.FC = () => {
              ) : (
                <select
                  id="selected_officer_name"
-                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface border-outline"
+                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                  value={data.business?.selected_officer_name || ''}
                  onChange={(e) => updateBusiness({ selected_officer_name: e.target.value })}
                >
@@ -414,7 +414,7 @@ export const Step1YourBusiness: React.FC = () => {
             <label htmlFor="industry" className="block text-title-s text-on-surface mb-2">Industry</label>
             <select
               id="industry"
-              className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.industry ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`field ${errors.industry ? 'has-error' : data.business?.industry ? 'is-filled' : ''}`}
               value={data.business?.industry || ''}
               onChange={(e) => { updateBusiness({ industry: e.target.value }); clearError('industry'); }}
               onBlur={() => validateField(0, 'industry')}
@@ -429,7 +429,7 @@ export const Step1YourBusiness: React.FC = () => {
               <option value="other">Other</option>
             </select>
             {errors.industry && (
-              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="industry_error">
+              <p className="field-error" id="industry_error">
                 <AlertCircle className="w-4 h-4" />
                 {errors.industry}
               </p>
@@ -444,7 +444,7 @@ export const Step1YourBusiness: React.FC = () => {
               <input
                 id="annual_turnover"
                 type="number"
-                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.annual_turnover ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`field ${errors.annual_turnover ? 'has-error' : data.business?.annual_turnover ? 'is-filled' : ''}`}
                 placeholder="e.g. 500000"
                 value={data.business?.annual_turnover || ''}
                 onChange={(e) => { updateBusiness({ annual_turnover: parseInt(e.target.value) || undefined }); clearError('annual_turnover'); }}
@@ -466,7 +466,7 @@ export const Step1YourBusiness: React.FC = () => {
                   key={btn.label}
                   type="button"
                   onClick={() => { updateBusiness({ annual_turnover: btn.val }); clearError('annual_turnover'); }}
-                  className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-white/80"
+                  className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
                 >
                   {btn.label}
                 </button>
@@ -474,7 +474,7 @@ export const Step1YourBusiness: React.FC = () => {
             </div>
 
             {errors.annual_turnover && (
-              <p className="mt-1 text-label-s text-error flex items-center gap-1" id="annual_turnover_error">
+              <p className="field-error" id="annual_turnover_error">
                 <AlertCircle className="w-4 h-4" />
                 {errors.annual_turnover}
               </p>
@@ -491,7 +491,7 @@ export const Step1YourBusiness: React.FC = () => {
             <input
               id="gross_debtor_book"
               type="number"
-              className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.gross_debtor_book ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+              className={`field ${errors.gross_debtor_book ? 'has-error' : data.business?.gross_debtor_book ? 'is-filled' : ''}`}
               placeholder="e.g. 50000"
               value={data.business?.gross_debtor_book || ''}
               onChange={(e) => { updateBusiness({ gross_debtor_book: parseInt(e.target.value) || undefined }); clearError('gross_debtor_book'); }}
@@ -513,7 +513,7 @@ export const Step1YourBusiness: React.FC = () => {
                 key={btn.label}
                 type="button"
                 onClick={() => { updateBusiness({ gross_debtor_book: btn.val }); clearError('gross_debtor_book'); }}
-                className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-white/80"
+                className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
               >
                 {btn.label}
               </button>
@@ -521,7 +521,7 @@ export const Step1YourBusiness: React.FC = () => {
           </div>
 
           {errors.gross_debtor_book ? (
-             <p className="mt-1 text-label-s text-error flex items-center gap-1" id="gross_debtor_book_error">
+             <p className="field-error" id="gross_debtor_book_error">
                <AlertCircle className="w-4 h-4" />
                {errors.gross_debtor_book}
              </p>
