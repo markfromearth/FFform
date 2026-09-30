@@ -55,7 +55,7 @@ const AppContent: React.FC = () => {
   const percent = isComplete ? 100 : ((currentStep + 1) / 5) * 100;
   
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 selection:bg-brand-100 selection:text-brand-900">
+    <div className="flex flex-col min-h-screen text-white selection:bg-brand-500 selection:text-white">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
       <Header />
 
       <main id="main-content" className="flex-1 w-full py-8 flex justify-center px-4 sm:px-6" tabIndex={-1}>
-        <section className="w-full max-w-[760px] bg-surface rounded-[18px] border border-outline-variant shadow-elevation-3 overflow-hidden flex flex-col">
+        <section className="w-full max-w-[760px] bg-surface backdrop-blur-xl rounded-[24px] border border-outline-variant shadow-elevation-3 overflow-hidden flex flex-col">
           
           {/* Progress Bar (omitted on complete) */}
           {!isComplete && (
