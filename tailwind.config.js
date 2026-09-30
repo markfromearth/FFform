@@ -7,6 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
+        'on-primary': '#ffffff',
+        'on-primary-container': '#001d36',
+        'on-surface': '#1a1c1e',
+        'on-surface-variant': '#43474e',
         // Material 3 Color Roles
         brand: {
           50: '#f0f7ff',
