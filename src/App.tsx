@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
       <Header />
 
       <main id="main-content" className="flex-1 w-full py-8 flex justify-center px-4 sm:px-6" tabIndex={-1}>
-        <section className="w-full max-w-[760px] bg-surface backdrop-blur-xl rounded-[24px] border border-outline-variant shadow-elevation-3 overflow-hidden flex flex-col">
+        <section className="w-full max-w-[760px] bg-white/10 backdrop-blur-2xl rounded-[24px] border border-white/20 shadow-2xl overflow-hidden flex flex-col">
           
           {/* Progress Bar (omitted on complete) */}
           {!isComplete && (
