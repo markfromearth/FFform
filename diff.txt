@@ -1,0 +1,491 @@
+diff --git a/api/_lib/emailService.ts b/api/_lib/emailService.ts
+index b2b0ea8..7d7ae99 100644
+--- a/api/_lib/emailService.ts
++++ b/api/_lib/emailService.ts
+@@ -52,7 +52,7 @@ export async function sendApplicationNotificationEmail(
+     docsSuppliedStr = '\n- ' + docsSuppliedStr;
+   }
+ 
+-  const textBody = `
++  let textBody = `
+ New Factoring Finance Application Received
+ 
+ Company Name: ${businessName}
+@@ -69,7 +69,7 @@ Supporting Documents Supplied: ${docsSuppliedStr}
+ IMPORTANT: The completed application document and all supplied supporting documents are securely attached to this email.
+ `.trim();
+ 
+-  const htmlBody = `
++  let htmlBody = `
+ <!DOCTYPE html>
+ <html>
+ <head>
+@@ -101,7 +101,11 @@ IMPORTANT: The completed application document and all supplied supporting docume
+ `;
+ 
+   // Fetch Attachments using Firebase Admin Storage
+-  const attachments = [];
++  const attachments: any[] = [];
++  let totalAttachmentBytes = 0;
++  const MAX_ATTACHMENT_BYTES = 30 * 1024 * 1024;
++  let attachmentsTruncated = false;
++
+   try {
+     const storage = getAdminStorage();
+     if (storage) {
+@@ -111,21 +115,35 @@ IMPORTANT: The completed application document and all supplied supporting docume
+       if (generatedPdfPath) {
+         console.log(`[EmailService] Downloading generated PDF for attachment: ${generatedPdfPath}`);
+         const [pdfBuffer] = await bucket.file(generatedPdfPath).download();
+-        attachments.push({
+-          filename: `${appRef}-application.pdf`,
+-          content: pdfBuffer,
+-        });
++        
++        if (totalAttachmentBytes + pdfBuffer.length <= MAX_ATTACHMENT_BYTES) {
++          totalAttachmentBytes += pdfBuffer.length;
++          attachments.push({
++            filename: `${appRef}-application.pdf`,
++            content: pdfBuffer,
++          });
++        } else {
++          attachmentsTruncated = true;
++        }
+       }
+ 
+       // 2. Attach Uploaded Documents
+       for (const doc of uploadedDocuments) {
+         if (doc.storagePath) {
++          if (attachmentsTruncated) continue;
+           console.log(`[EmailService] Downloading supporting doc for attachment: ${doc.storagePath}`);
+           const [docBuffer] = await bucket.file(doc.storagePath).download();
+-          attachments.push({
+-            filename: doc.fileName,
+-            content: docBuffer,
+-          });
++          
++          if (totalAttachmentBytes + docBuffer.length <= MAX_ATTACHMENT_BYTES) {
++            totalAttachmentBytes += docBuffer.length;
++            attachments.push({
++              filename: doc.fileName,
++              content: docBuffer,
++            });
++          } else {
++            attachmentsTruncated = true;
++            console.warn(`[EmailService] Attachment size limit reached. Skipping ${doc.fileName}`);
++          }
+         }
+       }
+     } else {
+@@ -136,6 +154,12 @@ IMPORTANT: The completed application document and all supplied supporting docume
+     // Continue with email dispatch even if attachments fail
+   }
+ 
++  if (attachmentsTruncated) {
++    const warning = "\n\nNote: Some supporting documents were too large to attach to this email. Please log in to the admin dashboard to view all submitted files.";
++    textBody += warning;
++    htmlBody = htmlBody.replace('</div>\n</body>', `  <p style="color:#d32f2f; font-weight:bold; padding:10px; border:2px dashed #d32f2f;">Note: Some supporting documents were too large to attach to this email. Please log in to the admin dashboard to view all submitted files.</p>\n  </div>\n</body>`);
++  }
++
+   // Check environment credentials
+   const apiKey = process.env.RESEND_API_KEY;
+ 
+@@ -167,7 +191,7 @@ IMPORTANT: The completed application document and all supplied supporting docume
+     });
+ 
+     if (error) {
+-      console.error('[EmailService] Resend API rejected the payload:', error);
++      console.error(`[EmailService] Resend API rejected the payload. Total attachment bytes: ${totalAttachmentBytes}. Error:`, error);
+       return { success: false, recipient, error: error.message };
+     }
+ 
+@@ -177,7 +201,7 @@ IMPORTANT: The completed application document and all supplied supporting docume
+       recipient,
+     };
+   } catch (err: any) {
+-    console.error('[EmailService] Unexpected error sending email via Resend:', err.message);
++    console.error(`[EmailService] Unexpected error sending email via Resend (Total attachment bytes: ${totalAttachmentBytes}):`, err.message);
+     return { success: false, recipient, error: err.message };
+   }
+ }
+diff --git a/api/companies-house.ts b/api/companies-house.ts
+index 85f6fde..b00d93b 100644
+--- a/api/companies-house.ts
++++ b/api/companies-house.ts
+@@ -1,6 +1,8 @@
+ import crypto from 'crypto';
+ 
+ // In-memory caching for short-term identical requests (lives per-container)
++// NOTE: In-memory state is isolated per-instance in Vercel and is not a true global 
++// rate limit or cache, but acts as a sufficient safety net per-container.
+ const cache = new Map<string, { data: any; expiry: number }>();
+ const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+ 
+@@ -14,7 +16,19 @@ let globalBackoffUntil = 0; // Timestamp when we can resume requests
+ export default async function handler(req: any, res: any) {
+   // CORS configuration
+   res.setHeader('Access-Control-Allow-Credentials', 'true');
+-  res.setHeader('Access-Control-Allow-Origin', '*');
++  const origin = req.headers.origin;
++  const allowedOrigins = [
++    'https://factoringfinance.co.uk',
++    'https://www.factoringfinance.co.uk',
++    'http://localhost:5173',
++    'http://localhost:3000'
++  ];
++  
++  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
++    res.setHeader('Access-Control-Allow-Origin', origin);
++  } else {
++    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
++  }
+   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+   res.setHeader(
+     'Access-Control-Allow-Headers',
+@@ -27,7 +41,9 @@ export default async function handler(req: any, res: any) {
+   }
+ 
+   const { endpoint, ...queryParams } = req.query || {};
+-  const targetEndpoint = Array.isArray(endpoint) ? endpoint.join('/') : endpoint || '';
++  let targetEndpoint = Array.isArray(endpoint) ? endpoint.join('/') : endpoint || '';
++  // Mitigate path traversal
++  targetEndpoint = targetEndpoint.replace(/\.\.\//g, '').replace(/\.\//g, '');
+ 
+   const params = new URLSearchParams();
+   Object.entries(queryParams).forEach(([key, val]) => {
+@@ -88,6 +104,7 @@ export default async function handler(req: any, res: any) {
+         Authorization: authHeader,
+         Accept: 'application/json',
+       },
++      signal: AbortSignal.timeout(8000)
+     });
+ 
+     if (response.status === 429) {
+@@ -97,7 +114,7 @@ export default async function handler(req: any, res: any) {
+     }
+ 
+     if (!response.ok) {
+-      console.warn(`[CompaniesHouseAPI] Integration failure: CH API returned ${response.status}.`);
++      console.warn(`[CompaniesHouseAPI] Integration failure: CH API returned ${response.status} for URL: ${targetUrl}`);
+       return serveFallback(targetEndpoint, queryParams, res);
+     }
+ 
+@@ -116,7 +133,7 @@ export default async function handler(req: any, res: any) {
+     res.status(200).json(data);
+ 
+   } catch (error: any) {
+-    console.error('[CompaniesHouseAPI] Integration failure: Network or server error.', error?.message || 'Unknown error');
++    console.error(`[CompaniesHouseAPI] Integration failure for URL: ${targetUrl}. Error:`, error?.message || 'Unknown error');
+     // On unexpected failure, ensure form remains usable via fallback
+     return serveFallback(targetEndpoint, queryParams, res);
+   }
+diff --git a/api/google-places.ts b/api/google-places.ts
+index 5496e1d..3d2f54d 100644
+--- a/api/google-places.ts
++++ b/api/google-places.ts
+@@ -1,7 +1,19 @@
+ export default async function handler(req: any, res: any) {
+   // CORS configuration
+   res.setHeader('Access-Control-Allow-Credentials', 'true');
+-  res.setHeader('Access-Control-Allow-Origin', '*');
++  const origin = req.headers.origin;
++  const allowedOrigins = [
++    'https://factoringfinance.co.uk',
++    'https://www.factoringfinance.co.uk',
++    'http://localhost:5173',
++    'http://localhost:3000'
++  ];
++  
++  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
++    res.setHeader('Access-Control-Allow-Origin', origin);
++  } else {
++    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
++  }
+   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+   res.setHeader(
+     'Access-Control-Allow-Headers',
+@@ -110,6 +122,7 @@ export default async function handler(req: any, res: any) {
+           body: JSON.stringify({
+             textQuery: searchQuery,
+           }),
++          signal: AbortSignal.timeout(8000)
+         });
+ 
+         if (newPlacesRes.ok) {
+@@ -138,23 +151,30 @@ export default async function handler(req: any, res: any) {
+           }
+         } else {
+           const errBody = await newPlacesRes.text();
+-          console.warn('Places API (New) non-OK:', newPlacesRes.status, errBody);
++          console.warn(`Places API (New) non-OK for URL: https://places.googleapis.com/v1/places:searchText. Status: ${newPlacesRes.status}. Body:`, errBody);
+         }
+-      } catch (newErr) {
+-        console.warn('Places API (New) error:', newErr);
++      } catch (newErr: any) {
++        console.warn(`Places API (New) error for URL: https://places.googleapis.com/v1/places:searchText. Error:`, newErr?.message || newErr);
+       }
+ 
+       // 2b. Fallback to Legacy Places API (textsearch & details)
+       let placeId = '';
+ 
++      let lastRequestedUrl = '';
++      let lastStatus = 0;
++      try {
+       // Try textsearch first (best for UK business + postcode query)
+       const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+         searchQuery
+       )}&key=${apiKey}`;
++      lastRequestedUrl = textSearchUrl;
+ 
+       const textRes = await fetch(textSearchUrl, {
+         headers: { 'Referer': refererHeader },
++        signal: AbortSignal.timeout(8000)
+       });
++      lastStatus = textRes.status;
++      if (!textRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
+       const textData = await textRes.json();
+ 
+       if (textData.results && textData.results.length > 0) {
+@@ -164,10 +184,14 @@ export default async function handler(req: any, res: any) {
+         const findUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
+           searchQuery
+         )}&inputtype=textquery&fields=place_id,name,formatted_address&key=${apiKey}`;
++        lastRequestedUrl = findUrl;
+ 
+         const findRes = await fetch(findUrl, {
+           headers: { 'Referer': refererHeader },
++          signal: AbortSignal.timeout(8000)
+         });
++        lastStatus = findRes.status;
++        if (!findRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
+         const findData = await findRes.json();
+         if (findData.candidates && findData.candidates.length > 0) {
+           placeId = findData.candidates[0].place_id;
+@@ -176,10 +200,14 @@ export default async function handler(req: any, res: any) {
+ 
+       if (placeId) {
+         const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_phone_number,international_phone_number,website,rating,formatted_address&key=${apiKey}`;
++        lastRequestedUrl = detailsUrl;
+ 
+         const detailsRes = await fetch(detailsUrl, {
+           headers: { 'Referer': refererHeader },
++          signal: AbortSignal.timeout(8000)
+         });
++        lastStatus = detailsRes.status;
++        if (!detailsRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
+         const detailsData = await detailsRes.json();
+ 
+         if (detailsData.result) {
+@@ -203,8 +231,8 @@ export default async function handler(req: any, res: any) {
+           }
+         }
+       }
+-    } catch (err) {
+-      console.warn('Google Places API fetch error:', err);
++    } catch (err: any) {
++      console.warn(`Google Places API Legacy fetch error for URL: ${lastRequestedUrl}. Status: ${lastStatus}. Error:`, err?.message || err);
+     }
+   }
+ 
+diff --git a/api/send-deferred-upload-link.ts b/api/send-deferred-upload-link.ts
+index 8e7c38d..e9ba1be 100644
+--- a/api/send-deferred-upload-link.ts
++++ b/api/send-deferred-upload-link.ts
+@@ -13,10 +13,12 @@ export default async function handler(req: any, res: any) {
+     'http://localhost:3000'
+   ];
+   
++  let safeOrigin = 'https://factoringfinance.co.uk';
+   if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
++    safeOrigin = origin;
+     res.setHeader('Access-Control-Allow-Origin', origin);
+   } else {
+-    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
++    res.setHeader('Access-Control-Allow-Origin', safeOrigin);
+   }
+   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+   res.setHeader(
+@@ -42,9 +44,8 @@ export default async function handler(req: any, res: any) {
+       return;
+     }
+ 
+-const origin = req.headers.origin || 'https://factoringfinance.co.uk';
+     const token = await createUploadToken(applicationId, 7 * 24 * 60 * 60 * 1000);
+-    const returnLink = `${origin}/?token=${token}`;
++    const returnLink = `${safeOrigin}/?token=${token}`;
+ 
+     const apiKey = process.env.RESEND_API_KEY;
+ 
+diff --git a/api/submit-application.ts b/api/submit-application.ts
+index b399d71..484d532 100644
+--- a/api/submit-application.ts
++++ b/api/submit-application.ts
+@@ -119,9 +119,9 @@ export default async function handler(req: any, res: any) {
+     }
+     
+     // Normalize data for deduplication
+-    const normEmail = normalizeEmail(application.contact.email);
+-    const normPhone = normalizePhone(application.contact.phone);
+-    const companyNum = application.business.company_number || 'UNKNOWN';
++    const normEmail = normalizeEmail(application?.contact?.email || '');
++    const normPhone = normalizePhone(application?.contact?.phone || '');
++    const companyNum = application?.business?.company_number || 'UNKNOWN';
+     
+     // Create a stable deduplication key
+     const dedupKey = `${normEmail}_${normPhone}_${companyNum}`;
+@@ -218,6 +218,7 @@ const docToSave: any = {
+         });
+ 
+         if (!mondayResponse.ok) {
++          console.error('[SubmitAPI] Monday.com error details. Status:', mondayResponse.status, 'Payload:', JSON.stringify({ event: 'new_factoring_enquiry', reference: submissionRef, data: docToSave }));
+           throw new Error(`Monday.com API responded with status: ${mondayResponse.status}`);
+         }
+         
+@@ -285,6 +286,7 @@ const docToSave: any = {
+     });
+   } catch (error: any) {
+     console.error('[SubmitAPI] Unexpected top-level handler error:', error?.message || error);
++    console.error('[SubmitAPI] Request body that caused error:', JSON.stringify(req.body || {}));
+     res.status(500).json({
+       error: 'An unexpected server error occurred while processing your application submission.',
+     });
+diff --git a/src/components/steps/Step1YourBusiness.tsx b/src/components/steps/Step1YourBusiness.tsx
+index d923c14..2cad0e1 100644
+--- a/src/components/steps/Step1YourBusiness.tsx
++++ b/src/components/steps/Step1YourBusiness.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState, useEffect, useRef } from 'react';
+ import { useApplication } from '../../context/ApplicationContext';
+ import { searchCompaniesHouse, getCompanyOfficers, getCompanyProfile, CompaniesHouseCompany, formatOfficerName } from '../../services/companiesHouseService';
++import { mapSicToSector } from '../../utils/sicMapping';
+ import { Check, Search, Building2, User, MapPin, AlertCircle } from 'lucide-react';
+ 
+ export const Step1YourBusiness: React.FC = () => {
+@@ -72,6 +73,8 @@ export const Step1YourBusiness: React.FC = () => {
+     
+     setCompanyConfirmed(true);
+     
++    const mappedIndustry = mapSicToSector(selectedCompany.sic_codes);
++    
+     updateBusiness({
+       company_name: selectedCompany.company_name,
+       company_number: selectedCompany.company_number,
+@@ -81,6 +84,7 @@ export const Step1YourBusiness: React.FC = () => {
+       companies_house_source: 'public_data_api',
+       companies_house_retrieved_at: new Date().toISOString(),
+       sic_codes: selectedCompany.sic_codes || [],
++      industry: mappedIndustry,
+       registered_address: {
+         address_line_1: selectedCompany.registered_office_address.address_line_1 || selectedCompany.registered_office_address.premises,
+         locality: selectedCompany.registered_office_address.locality,
+@@ -90,6 +94,9 @@ export const Step1YourBusiness: React.FC = () => {
+     });
+     clearError('company_name');
+     clearError('entity_type');
++    if (mappedIndustry) {
++      clearError('industry');
++    }
+ 
+     // Fetch officers
+     setIsLoadingOfficers(true);
+diff --git a/src/services/companiesHouseService.ts b/src/services/companiesHouseService.ts
+index 878e19a..0dc03a9 100644
+--- a/src/services/companiesHouseService.ts
++++ b/src/services/companiesHouseService.ts
+@@ -90,31 +90,62 @@ export async function searchCompaniesHouse(query: string): Promise<CompaniesHous
+   return [];
+ }
+ 
++// Cache for profile responses
++const profileCache = new Map<string, CompaniesHouseCompany | null>();
++// Keep track of in-flight requests to prevent duplicates
++const inFlightProfileRequests = new Map<string, Promise<CompaniesHouseCompany | null>>();
++
+ /**
+  * Fetch detailed profile for a specific company registration number
+  */
+ export async function getCompanyProfile(companyNumber: string): Promise<CompaniesHouseCompany | null> {
+   const clean = companyNumber.trim().toUpperCase();
+ 
+-  try {
+-    const response = await fetch(`/api/companies-house?endpoint=company/${encodeURIComponent(clean)}`);
++  if (profileCache.has(clean)) {
++    return profileCache.get(clean) || null;
++  }
+ 
+-    if (response.ok) {
+-      const data = await response.json();
+-      return {
+-        company_name: data.company_name,
+-        company_number: data.company_number,
+-        company_status: data.company_status,
+-        company_type: data.type || data.company_type || 'ltd',
+-        date_of_creation: data.date_of_creation,
+-        registered_office_address: data.registered_office_address || {},
+-        sic_codes: data.sic_codes,
+-      };
+-    }
+-  } catch (e) {
+-    console.warn('Company profile fetch failed:', e);
++  if (inFlightProfileRequests.has(clean)) {
++    return inFlightProfileRequests.get(clean) || null;
+   }
+-  return null;
++
++  const fetchPromise = (async () => {
++    try {
++      const response = await fetch(`/api/companies-house?endpoint=company/${encodeURIComponent(clean)}`);
++
++      if (response.status === 429) {
++        console.warn('Companies House API rate limit exceeded (429). Falling back gracefully.');
++        profileCache.set(clean, null);
++        return null;
++      }
++
++      if (response.ok) {
++        const data = await response.json();
++        const profile = {
++          company_name: data.company_name,
++          company_number: data.company_number,
++          company_status: data.company_status,
++          company_type: data.type || data.company_type || 'ltd',
++          date_of_creation: data.date_of_creation,
++          registered_office_address: data.registered_office_address || {},
++          sic_codes: data.sic_codes,
++        };
++        profileCache.set(clean, profile);
++        return profile;
++      }
++      
++      profileCache.set(clean, null);
++      return null;
++    } catch (e) {
++      console.warn('Company profile fetch failed:', e);
++      return null;
++    } finally {
++      inFlightProfileRequests.delete(clean);
++    }
++  })();
++
++  inFlightProfileRequests.set(clean, fetchPromise);
++  return fetchPromise;
+ }
+ 
+ /**
+diff --git a/src/utils/formatters.test.ts b/src/utils/formatters.test.ts
+index cada995..494121a 100644
+--- a/src/utils/formatters.test.ts
++++ b/src/utils/formatters.test.ts
+@@ -44,10 +44,10 @@ describe('formatters utility', () => {
+   });
+ 
+   describe('generateApplicationRef', () => {
+-    it('generates a reference matching BZL-YYYY-XXXXX', () => {
++    it('generates a reference matching FF-YYYY-XXXXX', () => {
+       const ref = generateApplicationRef();
+       const currentYear = new Date().getFullYear();
+-      expect(ref).toMatch(new RegExp(`^BZL-${currentYear}-\\d{5}$`));
++      expect(ref).toMatch(new RegExp(`^FF-${currentYear}-\\d{5}$`));
+     });
+   });
+ });

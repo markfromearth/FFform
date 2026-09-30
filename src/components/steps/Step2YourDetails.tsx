@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { LockKeyhole } from 'lucide-react';
+import { ErrorSummary } from '../common/ErrorSummary';
 
 export const Step2YourDetails: React.FC = () => {
   const { data, updateContact, nextStep, prevStep, errors, validateField, clearError } = useApplication();
@@ -139,12 +140,14 @@ export const Step2YourDetails: React.FC = () => {
         </fieldset>
       </div>
       
-      <div className="mt-8 flex items-center justify-between border-t border-surface-variant pt-6">
-        <p className="text-body-s text-on-surface-variant flex items-center gap-2">
-          <LockKeyhole className="w-4 h-4 text-on-surface-subtle" aria-hidden="true" />
-          Your details are encrypted and only used to assess your enquiry.
-        </p>
-        <div className="flex gap-3">
+      <div className="mt-8 flex flex-col gap-4 border-t border-surface-variant pt-6">
+        <ErrorSummary errors={errors} />
+        <div className="flex items-center justify-between">
+          <p className="text-body-s text-on-surface-variant flex items-center gap-2">
+            <LockKeyhole className="w-4 h-4 text-on-surface-subtle" aria-hidden="true" />
+            Your details are encrypted and only used to assess your enquiry.
+          </p>
+          <div className="flex gap-3">
           <button
             onClick={prevStep}
             className="min-h-touch px-6 py-2 bg-surface border border-outline text-primary font-medium rounded-full hover:bg-surface-variant transition-colors"
@@ -158,6 +161,7 @@ export const Step2YourDetails: React.FC = () => {
             Continue
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </button>
+        </div>
         </div>
       </div>
     </div>

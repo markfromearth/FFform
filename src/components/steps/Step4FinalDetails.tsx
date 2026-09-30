@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { AlertCircle } from 'lucide-react';
+import { ErrorSummary } from '../common/ErrorSummary';
 
 export const Step4FinalDetails: React.FC = () => {
   const { data, updateInvoices, nextStep, prevStep, errors, validateField, clearError } = useApplication();
@@ -224,7 +225,9 @@ export const Step4FinalDetails: React.FC = () => {
 
       </div>
       
-      <div className="mt-8 flex items-center justify-end border-t border-outline-variant pt-6">
+      <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
+        <ErrorSummary errors={errors} />
+        <div className="flex items-center justify-end">
         <div className="flex gap-3">
           <button
             onClick={prevStep}
@@ -239,6 +242,7 @@ export const Step4FinalDetails: React.FC = () => {
             Continue
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </button>
+        </div>
         </div>
       </div>
     </div>

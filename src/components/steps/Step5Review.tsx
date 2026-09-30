@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
+import { ErrorSummary } from '../common/ErrorSummary';
 import { formatLabel } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
@@ -210,27 +211,30 @@ if (!response.ok) {
         </div>
       )}
       
-      <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between border-t border-outline-variant pt-6 gap-4">
-        <p className="body-l text-on-surface-variant flex items-start gap-2 max-w-sm leading-tight">
-          <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
-          <span>Your data is encrypted and stored securely. We do not sell your data to third parties.</span>
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={prevStep}
-            disabled={isSubmitting}
-            className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-container transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          >
-            Back
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-6 py-3 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-75 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit my enquiry'}
-            {!isSubmitting && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>}
-          </button>
+      <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
+        <ErrorSummary errors={errors} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="body-l text-on-surface-variant flex items-start gap-2 max-w-sm leading-tight">
+            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
+            <span>Your data is encrypted and stored securely. We do not sell your data to third parties.</span>
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={prevStep}
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-surface border border-outline text-primary label-m rounded-full hover:bg-surface-container transition-colors disabled:opacity-50 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-primary text-on-primary label-m rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-75 min-h-touch focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit my enquiry'}
+              {!isSubmitting && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>}
+            </button>
+          </div>
         </div>
       </div>
     </div>
