@@ -524,18 +524,33 @@ export const Step1YourBusiness: React.FC = () => {
         </div>
       </div>
       
-      <div className="mt-8 flex items-center justify-between border-t border-outline-variant pt-6">
-        <p className="text-body-m text-on-surface-variant flex items-center gap-2">
-          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-          Initial enquiry only — this will not affect your credit score.
-        </p>
-        <button
-          onClick={nextStep}
-          className="px-6 py-3 bg-primary text-on-primary font-medium shadow-elevation-1 hover:shadow-elevation-2 rounded-full min-h-touch flex items-center gap-2 transition-colors"
-        >
-          Continue
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-        </button>
+      <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
+        {Object.keys(errors).length > 0 && (
+          <div className="p-4 bg-error/10 border border-error/20 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-error shrink-0 mt-0.5" />
+            <div className="text-body-m text-error">
+              <p className="font-medium mb-1">Please fix the following errors to continue:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                {Object.entries(errors).map(([field, msg]) => (
+                  <li key={field}>{msg} (Field: {field})</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <p className="text-body-m text-on-surface-variant flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Initial enquiry only — this will not affect your credit score.
+          </p>
+          <button
+            onClick={nextStep}
+            className="px-6 py-3 bg-primary text-on-primary font-medium shadow-elevation-1 hover:shadow-elevation-2 rounded-full min-h-touch flex items-center gap-2 transition-colors"
+          >
+            Continue
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </div>
       </div>
     </div>
   );
