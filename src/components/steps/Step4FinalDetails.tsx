@@ -36,7 +36,7 @@ export const Step4FinalDetails: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-title-s text-primary tracking-wide uppercase mb-1">Final details</h2>
         <h1 className="text-display-s text-on-surface mb-3">Anything we should know?</h1>
-        <p className="text-on-surface-variant text-body-l">This helps avoid unsuitable lender approaches and lets us deal with anything important from the outset.</p>
+        <p className="text-white/80 text-body-l">This helps avoid unsuitable lender approaches and lets us deal with anything important from the outset.</p>
       </div>
       
       <div className="space-y-8">
@@ -78,7 +78,7 @@ export const Step4FinalDetails: React.FC = () => {
                 <label htmlFor="current_facility_limit" className="block text-title-s text-on-surface mb-2">Current facility limit</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-on-surface-variant text-body-m">£</span>
+                    <span className="text-white/80 text-body-m">£</span>
                   </div>
                   <input
                     id="current_facility_limit"
@@ -161,7 +161,7 @@ export const Step4FinalDetails: React.FC = () => {
             <label htmlFor="hmrc_arrears_amount" className="block text-title-s text-on-surface mb-2">Approximate HMRC arrears amount</label>
             <div className="relative w-full sm:w-2/3">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-on-surface-variant text-body-m">£</span>
+                <span className="text-white/80 text-body-m">£</span>
               </div>
               <input
                 id="hmrc_arrears_amount"
@@ -211,7 +211,7 @@ export const Step4FinalDetails: React.FC = () => {
 
         <div>
           <label htmlFor="additional_context" className="block text-title-s text-on-surface mb-2">
-            Is there anything else a lender should know at this stage? <span className="text-on-surface-variant font-normal">(optional)</span>
+            Is there anything else a lender should know at this stage? <span className="text-white/80 font-normal">(optional)</span>
           </label>
           <textarea
             id="additional_context"

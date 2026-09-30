@@ -47,9 +47,9 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   const acPfx = autoCompletePrefix ? `${autoCompletePrefix} ` : '';
 
   return (
-    <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5 transition-all">
+    <fieldset className="space-y-4 rounded-xl border border-white/10 bg-slate-50/50 p-4 sm:p-5 transition-all">
       {legend && (
-        <legend className="px-2 text-sm font-semibold text-slate-800 bg-white border border-slate-200 rounded-md shadow-xs">
+        <legend className="px-2 text-sm font-semibold text-white bg-white/10 border border-white/10 rounded-md shadow-xs">
           {legend}
         </legend>
       )}

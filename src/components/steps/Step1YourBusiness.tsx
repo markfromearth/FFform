@@ -133,7 +133,7 @@ export const Step1YourBusiness: React.FC = () => {
       <div className="mb-8">
         <p className="text-title-s text-primary tracking-wide uppercase mb-1">Check your options</p>
         <h1 className="text-display-s text-on-surface mb-3">Tell us about your business</h1>
-        <p className="text-on-surface-variant text-body-l">We'll use these details to see which invoice finance providers are most likely to suit you.</p>
+        <p className="text-white/80 text-body-l">We'll use these details to see which invoice finance providers are most likely to suit you.</p>
       </div>
       
       <div className="space-y-8">
@@ -165,7 +165,7 @@ export const Step1YourBusiness: React.FC = () => {
             <div className="relative">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-on-surface-variant" />
+                  <Search className="h-5 w-5 text-white/80" />
                 </div>
                 <input
                   id="company_search"
@@ -190,14 +190,14 @@ export const Step1YourBusiness: React.FC = () => {
                   {errors.company_name}
                 </p>
               ) : (
-                <p className="mt-2 text-label-s text-on-surface-variant">Search by company name or Companies House number</p>
+                <p className="mt-2 text-label-s text-white/80">Search by company name or Companies House number</p>
               )}
 
               {/* Dropdown Results */}
               {showResults && (
                 <div id="company_results" role="listbox" className="absolute z-10 w-full mt-1 bg-surface border border-outline-variant rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto">
                   {isSearching ? (
-                    <div className="p-4 text-center text-body-m text-on-surface-variant">Searching...</div>
+                    <div className="p-4 text-center text-body-m text-white/80">Searching...</div>
                   ) : results.length > 0 ? (
                     results.map(result => (
                       <button
@@ -209,7 +209,7 @@ export const Step1YourBusiness: React.FC = () => {
                       >
                         <div>
                           <p className="text-label-m text-on-surface">{result.company_name}</p>
-                          <p className="text-label-s text-on-surface-variant mt-1">
+                          <p className="text-label-s text-white/80 mt-1">
                             Company {result.company_number} · {result.registered_office_address?.postal_code || ''}
                           </p>
                         </div>
@@ -219,7 +219,7 @@ export const Step1YourBusiness: React.FC = () => {
                       </button>
                     ))
                   ) : query.length >= 3 ? (
-                    <div className="p-4 text-center text-body-m text-on-surface-variant">No companies found</div>
+                    <div className="p-4 text-center text-body-m text-white/80">No companies found</div>
                   ) : null}
                 </div>
               )}
@@ -239,7 +239,7 @@ export const Step1YourBusiness: React.FC = () => {
                   {selectedCompany.company_status}
                 </span>
               </div>
-              <div className="space-y-1 text-body-m text-on-surface-variant mb-5">
+              <div className="space-y-1 text-body-m text-white/80 mb-5">
                 <p>Company number: {selectedCompany.company_number}</p>
                 <p>Registered office: {[selectedCompany.registered_office_address.address_line_1, selectedCompany.registered_office_address.locality, selectedCompany.registered_office_address.postal_code].filter(Boolean).join(', ')}</p>
               </div>
@@ -271,7 +271,7 @@ export const Step1YourBusiness: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-title-s text-on-surface">{selectedCompany.company_name}</h3>
-                  <p className="text-body-m text-on-surface-variant">Company number: {selectedCompany.company_number}</p>
+                  <p className="text-body-m text-white/80">Company number: {selectedCompany.company_number}</p>
                 </div>
               </div>
               <button
@@ -389,7 +389,7 @@ export const Step1YourBusiness: React.FC = () => {
           <div className="animate-in fade-in slide-in-from-top-4 duration-300 delay-100">
              <label htmlFor="selected_officer_name" className="block text-title-s text-on-surface mb-2">Who is completing this enquiry?</label>
              {isLoadingOfficers ? (
-               <div className="p-3 border border-outline-variant rounded-lg bg-surface-variant text-body-m text-on-surface-variant min-h-touch flex items-center">Loading directors...</div>
+               <div className="p-3 border border-outline-variant rounded-lg bg-surface-variant text-body-m text-white/80 min-h-touch flex items-center">Loading directors...</div>
              ) : (
                <select
                  id="selected_officer_name"
@@ -405,7 +405,7 @@ export const Step1YourBusiness: React.FC = () => {
                  <option value="on_behalf">I am completing this for the business</option>
                </select>
              )}
-             <p className="mt-2 text-label-s text-on-surface-variant">Director names are retrieved from Companies House. This does not verify identity or authority.</p>
+             <p className="mt-2 text-label-s text-white/80">Director names are retrieved from Companies House. This does not verify identity or authority.</p>
           </div>
         )}
 
@@ -439,7 +439,7 @@ export const Step1YourBusiness: React.FC = () => {
             <label htmlFor="annual_turnover" className="block text-title-s text-on-surface mb-2">Approximate annual turnover</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-on-surface-variant text-body-m">£</span>
+                <span className="text-white/80 text-body-m">£</span>
               </div>
               <input
                 id="annual_turnover"
@@ -466,7 +466,7 @@ export const Step1YourBusiness: React.FC = () => {
                   key={btn.label}
                   type="button"
                   onClick={() => { updateBusiness({ annual_turnover: btn.val }); clearError('annual_turnover'); }}
-                  className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-on-surface-variant"
+                  className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-white/80"
                 >
                   {btn.label}
                 </button>
@@ -486,7 +486,7 @@ export const Step1YourBusiness: React.FC = () => {
           <label htmlFor="gross_debtor_book" className="block text-title-s text-on-surface mb-2">How much is currently owed on unpaid invoices?</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-on-surface-variant text-body-m">£</span>
+              <span className="text-white/80 text-body-m">£</span>
             </div>
             <input
               id="gross_debtor_book"
@@ -513,7 +513,7 @@ export const Step1YourBusiness: React.FC = () => {
                 key={btn.label}
                 type="button"
                 onClick={() => { updateBusiness({ gross_debtor_book: btn.val }); clearError('gross_debtor_book'); }}
-                className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-on-surface-variant"
+                className="px-3 py-1.5 text-label-s border border-outline-variant rounded-full hover:bg-surface-variant hover:border-primary transition-colors text-white/80"
               >
                 {btn.label}
               </button>
@@ -526,7 +526,7 @@ export const Step1YourBusiness: React.FC = () => {
                {errors.gross_debtor_book}
              </p>
           ) : (
-             <p className="mt-2 text-label-s text-on-surface-variant">An estimate is fine.</p>
+             <p className="mt-2 text-label-s text-white/80">An estimate is fine.</p>
           )}
         </div>
       </div>
@@ -534,7 +534,7 @@ export const Step1YourBusiness: React.FC = () => {
       <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
         <ErrorSummary errors={errors} />
         <div className="flex items-center justify-between">
-          <p className="text-body-m text-on-surface-variant flex items-center gap-2">
+          <p className="text-body-m text-white/80 flex items-center gap-2">
             <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             Initial enquiry only — this will not affect your credit score.
           </p>

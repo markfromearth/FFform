@@ -72,7 +72,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       placeholder={placeholder}
-      leftAddon={<span className="font-semibold text-slate-500 text-base">£</span>}
+      leftAddon={<span className="font-semibold text-white/70 text-base">£</span>}
       inputMode="numeric"
       autoComplete="off"
       {...props}

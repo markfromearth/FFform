@@ -11,7 +11,7 @@ export const Step2YourDetails: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-label-l text-primary tracking-wide uppercase mb-1">Your details</h2>
         <h1 className="text-display-s text-on-surface mb-3">Where should we send your options?</h1>
-        <p className="text-body-l text-on-surface-variant">A specialist will review your enquiry and contact you to discuss the most suitable routes.</p>
+        <p className="text-body-l text-white/80">A specialist will review your enquiry and contact you to discuss the most suitable routes.</p>
       </div>
       
       <div className="space-y-6">
@@ -143,7 +143,7 @@ export const Step2YourDetails: React.FC = () => {
       <div className="mt-8 flex flex-col gap-4 border-t border-surface-variant pt-6">
         <ErrorSummary errors={errors} />
         <div className="flex items-center justify-between">
-          <p className="text-body-s text-on-surface-variant flex items-center gap-2">
+          <p className="text-body-s text-white/80 flex items-center gap-2">
             <LockKeyhole className="w-4 h-4 text-on-surface-subtle" aria-hidden="true" />
             Your details are encrypted and only used to assess your enquiry.
           </p>

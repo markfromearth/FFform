@@ -31,7 +31,7 @@ export const Step3YourInvoices: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-title-s text-primary tracking-wide uppercase mb-1">Your invoices</h2>
         <h1 className="text-display-s text-on-surface mb-3">What would you like the facility to do?</h1>
-        <p className="text-on-surface-variant text-body-l">Tell us the outcome you want. You do not need to know which invoice finance product is right for you.</p>
+        <p className="text-white/80 text-body-l">Tell us the outcome you want. You do not need to know which invoice finance product is right for you.</p>
       </div>
       
       <div className="space-y-8">
@@ -74,7 +74,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="requested_facility" className="block text-title-s text-on-surface mb-2">Ideal funding limit</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-on-surface-variant text-body-m">£</span>
+                <span className="text-white/80 text-body-m">£</span>
               </div>
               <input
                 id="requested_facility"
@@ -148,7 +148,7 @@ export const Step3YourInvoices: React.FC = () => {
                 {errors.largest_debtor_concentration_pct}
               </p>
             ) : (
-              <p className="mt-2 text-label-s text-on-surface-variant">Your best estimate is fine.</p>
+              <p className="mt-2 text-label-s text-white/80">Your best estimate is fine.</p>
             )}
           </div>
           <div>

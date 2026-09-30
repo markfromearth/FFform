@@ -162,7 +162,7 @@ body: JSON.stringify({
       <div className="max-w-3xl mx-auto px-4">
         <div className="mb-8 text-center">
           <h1 className="display-s text-on-surface mb-3">Upload your documents</h1>
-          <p className="body-l text-on-surface-variant">Providing these now will fast-track your application.</p>
+          <p className="body-l text-white/80">Providing these now will fast-track your application.</p>
         </div>
         
         
@@ -224,7 +224,7 @@ body: JSON.stringify({
         </div>
       </div>
       <h1 className="display-s text-on-surface mb-4">Enquiry submitted successfully</h1>
-      <p className="body-l text-on-surface-variant mb-10">
+      <p className="body-l text-white/80 mb-10">
         We have received your details. To fast-track your assessment, our lenders will need to see some standard financial reports.
       </p>
 
@@ -235,7 +235,7 @@ body: JSON.stringify({
         >
           <UploadCloud className="w-12 h-12 text-primary mb-4 group-hover:-translate-y-1 transition-transform" />
           <h3 className="title-m text-on-surface mb-2">Upload them now</h3>
-          <p className="body-l text-on-surface-variant">I have my reports ready (takes 2 mins)</p>
+          <p className="body-l text-white/80">I have my reports ready (takes 2 mins)</p>
         </button>
 
         <button 
@@ -246,10 +246,10 @@ body: JSON.stringify({
           {linkSent ? (
             <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
           ) : (
-            <Clock className="w-12 h-12 text-on-surface-variant mb-4 group-hover:-translate-y-1 transition-transform" />
+            <Clock className="w-12 h-12 text-white/80 mb-4 group-hover:-translate-y-1 transition-transform" />
           )}
           <h3 className="title-m text-on-surface mb-2">{linkSent ? 'Link sent!' : "I'll provide them later"}</h3>
-          <p className="body-l text-on-surface-variant">Send me a secure link to upload them another time</p>
+          <p className="body-l text-white/80">Send me a secure link to upload them another time</p>
         </button>
       </div>
     </div>

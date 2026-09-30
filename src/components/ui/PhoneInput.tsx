@@ -30,7 +30,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       value={value || ''}
       onChange={handleChange}
       placeholder={placeholder}
-      leftAddon={<Phone className="w-4 h-4 text-slate-400" aria-hidden="true" />}
+      leftAddon={<Phone className="w-4 h-4 text-white/60" aria-hidden="true" />}
       type="tel"
       autoComplete={props.autoComplete || 'tel'}
       {...props}

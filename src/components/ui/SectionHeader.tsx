@@ -24,18 +24,18 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
           </span>
         )}
         {category && (
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
             {category}
           </span>
         )}
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-tight">
         {title}
       </h1>
 
       {description && (
-        <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
+        <p className="mt-2 text-sm sm:text-base text-white/80 max-w-2xl leading-relaxed">
           {description}
         </p>
       )}
