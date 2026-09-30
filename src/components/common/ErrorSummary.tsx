@@ -42,17 +42,39 @@ interface ErrorSummaryProps {
 }
 
 export const ErrorSummary: React.FC<ErrorSummaryProps> = ({ errors }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (errors && Object.keys(errors).length > 0) {
+      containerRef.current?.focus();
+    }
+  }, [errors]);
+
   if (!errors || Object.keys(errors).length === 0) return null;
 
   return (
-    <div className="p-4 bg-error/10 border border-error/20 rounded-lg flex items-start gap-3 w-full mb-4">
+    <div 
+      ref={containerRef}
+      tabIndex={-1}
+      role="alert"
+      className="p-4 bg-error/10 border border-error/20 rounded-lg flex items-start gap-3 w-full mb-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
+    >
       <AlertCircle className="w-5 h-5 text-error shrink-0 mt-0.5" />
       <div className="text-body-m text-error">
         <p className="font-medium mb-1">Please provide the missing information to continue:</p>
         <ul className="list-disc pl-5 space-y-1">
           {Object.entries(errors).map(([field, msg]) => (
             <li key={field}>
-              <span className="font-semibold">{fieldLabels[field] || field}:</span> {msg}
+              <a 
+                href={`#${field}`} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(field)?.focus();
+                }}
+                className="font-semibold hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-error rounded"
+              >
+                {fieldLabels[field] || field}:
+              </a> {msg}
             </li>
           ))}
         </ul>
