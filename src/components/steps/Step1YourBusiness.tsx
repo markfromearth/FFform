@@ -138,16 +138,30 @@ export const Step1YourBusiness: React.FC = () => {
       <div className="space-y-8">
         <fieldset>
           <legend className="block text-title-s text-on-surface mb-2">Does your business invoice other businesses for goods or services already supplied?</legend>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <label htmlFor="b2b_yes" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'yes' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="b2b_yes" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'yes'} onChange={() => { updateBusiness({ b2b_completed_supply: 'yes' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
               <span className="ml-3 text-label-m text-on-surface">Yes</span>
             </label>
             <label htmlFor="b2b_mixture" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'mixture' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
               <input id="b2b_mixture" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'mixture'} onChange={() => { updateBusiness({ b2b_completed_supply: 'mixture' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
-              <span className="ml-3 text-label-m text-on-surface">A mixture of businesses and consumers</span>
+              <span className="ml-3 text-label-m text-on-surface">A mixture</span>
+            </label>
+            <label htmlFor="b2b_no" className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors min-h-touch ${data.business?.b2b_completed_supply === 'no' ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
+              <input id="b2b_no" type="radio" name="b2b" className="h-4 w-4 text-primary focus:ring-accent border-outline" checked={data.business?.b2b_completed_supply === 'no'} onChange={() => { updateBusiness({ b2b_completed_supply: 'no' }); clearError('b2b_completed_supply'); }} aria-invalid={!!errors.b2b_completed_supply} aria-describedby={errors.b2b_completed_supply ? "b2b_completed_supply_error" : undefined} />
+              <span className="ml-3 text-label-m text-on-surface">No</span>
             </label>
           </div>
+          
+          {data.business?.b2b_completed_supply === 'no' && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-body-m text-amber-900">
+                Unfortunately, invoice finance is typically only available to businesses that invoice other businesses (B2B) for completed work. You cannot proceed with this application.
+              </p>
+            </div>
+          )}
+
           {errors.b2b_completed_supply && (
             <p className="mt-2 text-label-s text-error flex items-center gap-1" id="b2b_completed_supply_error">
               <AlertCircle className="w-4 h-4" />
@@ -531,7 +545,12 @@ export const Step1YourBusiness: React.FC = () => {
         </p>
         <button
           onClick={nextStep}
-          className="px-6 py-3 bg-primary text-on-primary font-medium shadow-elevation-1 hover:shadow-elevation-2 rounded-full min-h-touch flex items-center gap-2 transition-colors"
+          disabled={data.business?.b2b_completed_supply === 'no'}
+          className={`px-6 py-3 font-medium shadow-elevation-1 rounded-full min-h-touch flex items-center gap-2 transition-colors ${
+            data.business?.b2b_completed_supply === 'no' 
+              ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed opacity-70 shadow-none' 
+              : 'bg-primary text-on-primary hover:shadow-elevation-2'
+          }`}
         >
           Continue
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
