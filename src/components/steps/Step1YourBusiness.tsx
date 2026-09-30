@@ -174,7 +174,7 @@ export const Step1YourBusiness: React.FC = () => {
                   aria-expanded={showResults}
                   aria-controls="company_results"
                   aria-autocomplete="list"
-                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                  className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white ${errors.company_name ? 'border-error bg-error/10 focus:ring-error focus:border-error' : 'border-outline'}`}
                   placeholder="e.g. Acme Corp or 12345678"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -342,7 +342,7 @@ export const Step1YourBusiness: React.FC = () => {
                     <input
                       id="postal_code"
                       type="text"
-                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                      className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
                       placeholder="e.g. SW1A 1AA"
                       value={data.business?.registered_address?.postal_code || ''}
                       onChange={(e) => updateBusiness({ registered_address: { ...data.business?.registered_address, postal_code: e.target.value }})}
@@ -374,7 +374,7 @@ export const Step1YourBusiness: React.FC = () => {
                 <input
                   id="trading_address_line_1"
                   type="text"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
                   placeholder="e.g. 123 High Street"
                   value={data.business?.trading_address?.address_line_1 || ''}
                   onChange={(e) => updateBusiness({ trading_address: { ...data.business?.trading_address, address_line_1: e.target.value }})}
@@ -393,7 +393,7 @@ export const Step1YourBusiness: React.FC = () => {
              ) : (
                <select
                  id="selected_officer_name"
-                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                 className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
                  value={data.business?.selected_officer_name || ''}
                  onChange={(e) => updateBusiness({ selected_officer_name: e.target.value })}
                >

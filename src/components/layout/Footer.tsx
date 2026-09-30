@@ -4,7 +4,7 @@ import memDigitalLogo from '../../assets/mem-digital-logo.png';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="mt-auto bg-transparent border-t border-outline text-white py-6 px-4 sm:px-6 no-print">
+    <footer className="mt-auto bg-[#0f172a] border-t border-outline text-white py-6 px-4 sm:px-6 no-print">
       <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 text-center md:text-left body-l text-white/80">
           <a href="#" className="hover:text-primary transition-colors min-h-touch flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-accent" aria-label="Privacy Policy">Privacy Policy</a>

@@ -18,6 +18,10 @@
     background-color: #0f172a;
   }
 
+  ::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
   
   /* Custom scrollbar */
   ::-webkit-scrollbar {

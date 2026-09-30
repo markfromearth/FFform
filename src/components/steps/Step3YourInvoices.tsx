@@ -79,7 +79,7 @@ export const Step3YourInvoices: React.FC = () => {
               <input
                 id="requested_facility"
                 type="number"
-                className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white ${errors.requested_facility ? 'border-error bg-error/10 focus:ring-error focus:border-error' : 'border-outline'}`}
                 placeholder="e.g. 150000"
                 value={data.invoices?.requested_facility || ''}
                 onChange={(e) => { updateInvoices({ requested_facility: parseInt(e.target.value) || undefined }); clearError('requested_facility'); }}
@@ -191,7 +191,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="export_sales_pct" className="block text-title-s text-on-surface mb-2">Approximately what percentage of sales is to customers outside the UK?</label>
             <select
               id="export_sales_pct"
-              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
               value={data.invoices?.export_sales_pct || ''}
               onChange={(e) => updateInvoices({ export_sales_pct: e.target.value })}
             >
@@ -206,7 +206,7 @@ export const Step3YourInvoices: React.FC = () => {
             <label htmlFor="invoice_currency" className="block text-title-s text-on-surface mb-2">What currencies do you normally invoice in?</label>
             <select
               id="invoice_currency"
-              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+              className="w-full sm:w-1/2 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
               value={data.invoices?.invoice_currency || ''}
               onChange={(e) => updateInvoices({ invoice_currency: e.target.value })}
             >
@@ -254,7 +254,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_main_contract_or" className="block text-title-s text-on-surface mb-2">How does the business normally work?</label>
                 <select
                   id="construction_main_contract_or"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
                   value={data.invoices?.construction_main_contract_or || ''}
                   onChange={(e) => updateInvoices({ construction_main_contract_or: e.target.value })}
                 >
@@ -268,7 +268,7 @@ export const Step3YourInvoices: React.FC = () => {
                 <label htmlFor="construction_retention" className="block text-title-s text-on-surface mb-2">Are retentions normally deducted?</label>
                 <select
                   id="construction_retention"
-                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                  className="w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white border-outline"
                   value={data.invoices?.construction_retention || ''}
                   onChange={(e) => updateInvoices({ construction_retention: e.target.value })}
                 >

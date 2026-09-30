@@ -213,11 +213,7 @@ if (!response.ok) {
       
       <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
         <ErrorSummary errors={errors} />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="body-l text-white/80 flex items-start gap-2 max-w-sm leading-tight">
-            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
-            <span>Your data is encrypted and stored securely. We do not sell your data to third parties.</span>
-          </p>
+        <div className="flex flex-col items-end gap-4">
           <div className="flex gap-3">
             <button
               onClick={prevStep}
@@ -235,6 +231,10 @@ if (!response.ok) {
               {!isSubmitting && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>}
             </button>
           </div>
+          <p className="body-l text-white/80 flex items-center gap-2 leading-tight">
+            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
+            <span>Your data is encrypted and stored securely. We do not sell your data to third parties.</span>
+          </p>
         </div>
       </div>
     </div>
