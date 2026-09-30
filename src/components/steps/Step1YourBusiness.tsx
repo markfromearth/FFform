@@ -170,11 +170,16 @@ export const Step1YourBusiness: React.FC = () => {
                 <input
                   id="company_search"
                   type="text"
+                  role="combobox"
+                  aria-expanded={showResults}
+                  aria-controls="company_results"
+                  aria-autocomplete="list"
                   className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-primary text-body-l bg-surface ${errors.company_name ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                   placeholder="e.g. Acme Corp or 12345678"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => { if (results.length > 0) setShowResults(true); }}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setShowResults(false); }}
                   aria-invalid={!!errors.company_name}
                   aria-describedby={errors.company_name ? "company_name_error" : undefined}
                 />
@@ -190,7 +195,7 @@ export const Step1YourBusiness: React.FC = () => {
 
               {/* Dropdown Results */}
               {showResults && (
-                <div className="absolute z-10 w-full mt-1 bg-surface border border-outline-variant rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto">
+                <div id="company_results" role="listbox" className="absolute z-10 w-full mt-1 bg-surface border border-outline-variant rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto">
                   {isSearching ? (
                     <div className="p-4 text-center text-body-m text-on-surface-variant">Searching...</div>
                   ) : results.length > 0 ? (
@@ -198,6 +203,7 @@ export const Step1YourBusiness: React.FC = () => {
                       <button
                         key={result.company_number}
                         type="button"
+                        role="option"
                         className="w-full text-left px-4 py-3 border-b border-outline-variant hover:bg-surface-variant focus:bg-surface-variant transition flex justify-between items-center"
                         onClick={() => handleSelectCompany(result)}
                       >
