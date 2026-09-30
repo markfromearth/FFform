@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 
 // In-memory caching for short-term identical requests (lives per-container)
+// NOTE: In-memory state is isolated per-instance in Vercel and is not a true global 
+// rate limit or cache, but acts as a sufficient safety net per-container.
 const cache = new Map<string, { data: any; expiry: number }>();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
@@ -14,7 +16,19 @@ let globalBackoffUntil = 0; // Timestamp when we can resume requests
 export default async function handler(req: any, res: any) {
   // CORS configuration
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://factoringfinance.co.uk',
+    'https://www.factoringfinance.co.uk',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ];
+  
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -27,7 +41,9 @@ export default async function handler(req: any, res: any) {
   }
 
   const { endpoint, ...queryParams } = req.query || {};
-  const targetEndpoint = Array.isArray(endpoint) ? endpoint.join('/') : endpoint || '';
+  let targetEndpoint = Array.isArray(endpoint) ? endpoint.join('/') : endpoint || '';
+  // Mitigate path traversal
+  targetEndpoint = targetEndpoint.replace(/\.\.\//g, '').replace(/\.\//g, '');
 
   const params = new URLSearchParams();
   Object.entries(queryParams).forEach(([key, val]) => {
@@ -88,6 +104,7 @@ export default async function handler(req: any, res: any) {
         Authorization: authHeader,
         Accept: 'application/json',
       },
+      signal: AbortSignal.timeout(8000)
     });
 
     if (response.status === 429) {
@@ -97,7 +114,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!response.ok) {
-      console.warn(`[CompaniesHouseAPI] Integration failure: CH API returned ${response.status}.`);
+      console.warn(`[CompaniesHouseAPI] Integration failure: CH API returned ${response.status} for URL: ${targetUrl}`);
       return serveFallback(targetEndpoint, queryParams, res);
     }
 
@@ -116,7 +133,7 @@ export default async function handler(req: any, res: any) {
     res.status(200).json(data);
 
   } catch (error: any) {
-    console.error('[CompaniesHouseAPI] Integration failure: Network or server error.', error?.message || 'Unknown error');
+    console.error(`[CompaniesHouseAPI] Integration failure for URL: ${targetUrl}. Error:`, error?.message || 'Unknown error');
     // On unexpected failure, ensure form remains usable via fallback
     return serveFallback(targetEndpoint, queryParams, res);
   }

@@ -1,7 +1,19 @@
 export default async function handler(req: any, res: any) {
   // CORS configuration
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://factoringfinance.co.uk',
+    'https://www.factoringfinance.co.uk',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ];
+  
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -92,6 +104,8 @@ export default async function handler(req: any, res: any) {
 
   // 2. If Google Places API key is present, query Google Places live
   if (apiKey) {
+    let lastRequestedUrl = '';
+    let lastStatus = 0;
     try {
       const searchQuery = `${name} ${postcode}`.trim();
       const refererHeader = req.headers['referer'] || req.headers['origin'] || 'https://bizloans4u.vercel.app/';
@@ -110,6 +124,7 @@ export default async function handler(req: any, res: any) {
           body: JSON.stringify({
             textQuery: searchQuery,
           }),
+          signal: AbortSignal.timeout(8000)
         });
 
         if (newPlacesRes.ok) {
@@ -138,23 +153,26 @@ export default async function handler(req: any, res: any) {
           }
         } else {
           const errBody = await newPlacesRes.text();
-          console.warn('Places API (New) non-OK:', newPlacesRes.status, errBody);
+          console.warn(`Places API (New) non-OK for URL: https://places.googleapis.com/v1/places:searchText. Status: ${newPlacesRes.status}. Body:`, errBody);
         }
-      } catch (newErr) {
-        console.warn('Places API (New) error:', newErr);
+      } catch (newErr: any) {
+        console.warn(`Places API (New) error for URL: https://places.googleapis.com/v1/places:searchText. Error:`, newErr?.message || newErr);
       }
 
       // 2b. Fallback to Legacy Places API (textsearch & details)
       let placeId = '';
-
       // Try textsearch first (best for UK business + postcode query)
       const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
         searchQuery
       )}&key=${apiKey}`;
+      lastRequestedUrl = textSearchUrl;
 
       const textRes = await fetch(textSearchUrl, {
         headers: { 'Referer': refererHeader },
+        signal: AbortSignal.timeout(8000)
       });
+      lastStatus = textRes.status;
+      if (!textRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
       const textData = await textRes.json();
 
       if (textData.results && textData.results.length > 0) {
@@ -164,10 +182,14 @@ export default async function handler(req: any, res: any) {
         const findUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
           searchQuery
         )}&inputtype=textquery&fields=place_id,name,formatted_address&key=${apiKey}`;
+        lastRequestedUrl = findUrl;
 
         const findRes = await fetch(findUrl, {
           headers: { 'Referer': refererHeader },
+          signal: AbortSignal.timeout(8000)
         });
+        lastStatus = findRes.status;
+        if (!findRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
         const findData = await findRes.json();
         if (findData.candidates && findData.candidates.length > 0) {
           placeId = findData.candidates[0].place_id;
@@ -176,10 +198,14 @@ export default async function handler(req: any, res: any) {
 
       if (placeId) {
         const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_phone_number,international_phone_number,website,rating,formatted_address&key=${apiKey}`;
+        lastRequestedUrl = detailsUrl;
 
         const detailsRes = await fetch(detailsUrl, {
           headers: { 'Referer': refererHeader },
+          signal: AbortSignal.timeout(8000)
         });
+        lastStatus = detailsRes.status;
+        if (!detailsRes.ok) console.warn(`Google Places Legacy API non-OK for URL: ${lastRequestedUrl}. Status: ${lastStatus}`);
         const detailsData = await detailsRes.json();
 
         if (detailsData.result) {
@@ -203,8 +229,8 @@ export default async function handler(req: any, res: any) {
           }
         }
       }
-    } catch (err) {
-      console.warn('Google Places API fetch error:', err);
+    } catch (err: any) {
+      console.warn(`Google Places API Legacy fetch error for URL: ${lastRequestedUrl}. Status: ${lastStatus}. Error:`, err?.message || err);
     }
   }
 

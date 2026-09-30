@@ -44,10 +44,10 @@ describe('formatters utility', () => {
   });
 
   describe('generateApplicationRef', () => {
-    it('generates a reference matching BZL-YYYY-XXXXX', () => {
+    it('generates a reference matching FF-YYYY-XXXXX', () => {
       const ref = generateApplicationRef();
       const currentYear = new Date().getFullYear();
-      expect(ref).toMatch(new RegExp(`^BZL-${currentYear}-\\d{5}$`));
+      expect(ref).toMatch(new RegExp(`^FF-${currentYear}-\\d{5}$`));
     });
   });
 });

@@ -85,6 +85,43 @@ export default async function handler(req: any, res: any) {
   try {
     const payload = req.body || {};
 
+    // Anti-spam Turnstile Verification
+    const turnstileToken = payload.turnstileToken;
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    
+    if (turnstileSecret) {
+      if (!turnstileToken) {
+        res.status(403).json({ error: 'Missing anti-spam token.' });
+        return;
+      }
+      
+      try {
+        const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `secret=${encodeURIComponent(turnstileSecret)}&response=${encodeURIComponent(turnstileToken)}`,
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (verifyRes.ok) {
+          const outcome = await verifyRes.json();
+          if (!outcome.success) {
+            console.warn('[SubmitAPI] Invalid Turnstile token:', outcome['error-codes']);
+            res.status(403).json({ error: 'Invalid anti-spam token.' });
+            return;
+          }
+        } else {
+          console.error('[SubmitAPI] Turnstile verify endpoint failed. Failing OPEN.', verifyRes.status);
+        }
+      } catch (err) {
+        console.error('[SubmitAPI] Turnstile verify network error. Failing OPEN.', err);
+      }
+    } else {
+      console.warn('[SubmitAPI] TURNSTILE_SECRET_KEY not set. Skipping verification.');
+    }
+
     if (!payload.application || !payload.id) {
       res.status(400).json({
         error: 'Invalid submission payload: application object and id are required.',
@@ -119,9 +156,9 @@ export default async function handler(req: any, res: any) {
     }
     
     // Normalize data for deduplication
-    const normEmail = normalizeEmail(application.contact.email);
-    const normPhone = normalizePhone(application.contact.phone);
-    const companyNum = application.business.company_number || 'UNKNOWN';
+    const normEmail = normalizeEmail(application?.contact?.email || '');
+    const normPhone = normalizePhone(application?.contact?.phone || '');
+    const companyNum = application?.business?.company_number || 'UNKNOWN';
     
     // Create a stable deduplication key
     const dedupKey = `${normEmail}_${normPhone}_${companyNum}`;
@@ -218,6 +255,7 @@ const docToSave: any = {
         });
 
         if (!mondayResponse.ok) {
+          console.error('[SubmitAPI] Monday.com error details. Status:', mondayResponse.status, 'Payload:', JSON.stringify({ event: 'new_factoring_enquiry', reference: submissionRef, data: docToSave }));
           throw new Error(`Monday.com API responded with status: ${mondayResponse.status}`);
         }
         
@@ -285,6 +323,7 @@ const docToSave: any = {
     });
   } catch (error: any) {
     console.error('[SubmitAPI] Unexpected top-level handler error:', error?.message || error);
+    console.error('[SubmitAPI] Request body that caused error:', JSON.stringify(req.body || {}));
     res.status(500).json({
       error: 'An unexpected server error occurred while processing your application submission.',
     });

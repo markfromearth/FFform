@@ -90,31 +90,62 @@ export async function searchCompaniesHouse(query: string): Promise<CompaniesHous
   return [];
 }
 
+// Cache for profile responses
+const profileCache = new Map<string, CompaniesHouseCompany | null>();
+// Keep track of in-flight requests to prevent duplicates
+const inFlightProfileRequests = new Map<string, Promise<CompaniesHouseCompany | null>>();
+
 /**
  * Fetch detailed profile for a specific company registration number
  */
 export async function getCompanyProfile(companyNumber: string): Promise<CompaniesHouseCompany | null> {
   const clean = companyNumber.trim().toUpperCase();
 
-  try {
-    const response = await fetch(`/api/companies-house?endpoint=company/${encodeURIComponent(clean)}`);
-
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        company_name: data.company_name,
-        company_number: data.company_number,
-        company_status: data.company_status,
-        company_type: data.type || data.company_type || 'ltd',
-        date_of_creation: data.date_of_creation,
-        registered_office_address: data.registered_office_address || {},
-        sic_codes: data.sic_codes,
-      };
-    }
-  } catch (e) {
-    console.warn('Company profile fetch failed:', e);
+  if (profileCache.has(clean)) {
+    return profileCache.get(clean) || null;
   }
-  return null;
+
+  if (inFlightProfileRequests.has(clean)) {
+    return inFlightProfileRequests.get(clean) || null;
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const response = await fetch(`/api/companies-house?endpoint=company/${encodeURIComponent(clean)}`);
+
+      if (response.status === 429) {
+        console.warn('Companies House API rate limit exceeded (429). Falling back gracefully.');
+        profileCache.set(clean, null);
+        return null;
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        const profile = {
+          company_name: data.company_name,
+          company_number: data.company_number,
+          company_status: data.company_status,
+          company_type: data.type || data.company_type || 'ltd',
+          date_of_creation: data.date_of_creation,
+          registered_office_address: data.registered_office_address || {},
+          sic_codes: data.sic_codes,
+        };
+        profileCache.set(clean, profile);
+        return profile;
+      }
+      
+      profileCache.set(clean, null);
+      return null;
+    } catch (e) {
+      console.warn('Company profile fetch failed:', e);
+      return null;
+    } finally {
+      inFlightProfileRequests.delete(clean);
+    }
+  })();
+
+  inFlightProfileRequests.set(clean, fetchPromise);
+  return fetchPromise;
 }
 
 /**

@@ -14,7 +14,7 @@ interface UploadTask {
 }
 
 export const Step6Uploads: React.FC = () => {
-  const { data, nextStep, applicationId, addDocument, uploadToken } = useApplication();
+  const { data, nextStep, applicationId, addDocument, uploadToken, turnstileToken } = useApplication();
   const [choice, setChoice] = useState<'now' | 'later' | null>(null);
 
   const [uploadTasks, setUploadTasks] = useState<UploadTask[]>([]);
@@ -138,7 +138,8 @@ export const Step6Uploads: React.FC = () => {
 body: JSON.stringify({
           email: data.contact?.email,
           phone: data.contact?.phone,
-          applicationId
+          applicationId,
+          turnstileToken
         })
       });
       setLinkSent(true);

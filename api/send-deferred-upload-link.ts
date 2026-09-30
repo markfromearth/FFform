@@ -13,10 +13,12 @@ export default async function handler(req: any, res: any) {
     'http://localhost:3000'
   ];
   
+  let safeOrigin = 'https://factoringfinance.co.uk';
   if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
+    safeOrigin = origin;
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://factoringfinance.co.uk');
+    res.setHeader('Access-Control-Allow-Origin', safeOrigin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader(
@@ -35,16 +37,53 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { email, phone, applicationId } = req.body || {};
+    const payload = req.body || {};
+    const { email, phone, applicationId } = payload;
+    
+    // Anti-spam Turnstile Verification
+    const turnstileToken = payload.turnstileToken;
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    
+    if (turnstileSecret) {
+      if (!turnstileToken) {
+        res.status(403).json({ error: 'Missing anti-spam token.' });
+        return;
+      }
+      
+      try {
+        const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `secret=${encodeURIComponent(turnstileSecret)}&response=${encodeURIComponent(turnstileToken)}`,
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (verifyRes.ok) {
+          const outcome = await verifyRes.json();
+          if (!outcome.success) {
+            console.warn('[DeferredLinkAPI] Invalid Turnstile token:', outcome['error-codes']);
+            res.status(403).json({ error: 'Invalid anti-spam token.' });
+            return;
+          }
+        } else {
+          console.error('[DeferredLinkAPI] Turnstile verify endpoint failed. Failing OPEN.', verifyRes.status);
+        }
+      } catch (err) {
+        console.error('[DeferredLinkAPI] Turnstile verify network error. Failing OPEN.', err);
+      }
+    } else {
+      console.warn('[DeferredLinkAPI] TURNSTILE_SECRET_KEY not set. Skipping verification.');
+    }
 
     if (!email || !applicationId) {
       res.status(400).json({ error: 'Email and Application ID are required.' });
       return;
     }
 
-const origin = req.headers.origin || 'https://factoringfinance.co.uk';
     const token = await createUploadToken(applicationId, 7 * 24 * 60 * 60 * 1000);
-    const returnLink = `${origin}/?token=${token}`;
+    const returnLink = `${safeOrigin}/?token=${token}`;
 
     const apiKey = process.env.RESEND_API_KEY;
 

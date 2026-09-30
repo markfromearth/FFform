@@ -38,6 +38,8 @@ interface ApplicationContextType {
   validateField: (step: number, field: string) => void;
   validateStep: (step: number) => boolean;
   clearError: (field: string) => void;
+  turnstileToken: string | null;
+  setTurnstileToken: (token: string | null) => void;
 }
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
@@ -66,6 +68,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
   });
   const [currentStep, setCurrentStep] = useState(tokenFromUrl ? 5 : 0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const clearError = (field: string) => {
     setErrors(prev => {
@@ -182,8 +185,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: applicationId,
-        uploadToken,
-        setUploadToken,
+              turnstileToken,
               status: 'contact_captured',
               application: data
             })
@@ -221,7 +223,9 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
         errors,
         validateField,
         validateStep,
-        clearError
+        clearError,
+        turnstileToken,
+        setTurnstileToken
       }}
     >
       {children}

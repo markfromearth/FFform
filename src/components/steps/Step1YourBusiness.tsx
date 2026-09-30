@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { searchCompaniesHouse, getCompanyOfficers, getCompanyProfile, CompaniesHouseCompany, formatOfficerName } from '../../services/companiesHouseService';
+import { mapSicToSector } from '../../utils/sicMapping';
 import { Check, Search, Building2, User, MapPin, AlertCircle } from 'lucide-react';
 
 export const Step1YourBusiness: React.FC = () => {
@@ -72,6 +73,8 @@ export const Step1YourBusiness: React.FC = () => {
     
     setCompanyConfirmed(true);
     
+    const mappedIndustry = mapSicToSector(selectedCompany.sic_codes);
+    
     updateBusiness({
       company_name: selectedCompany.company_name,
       company_number: selectedCompany.company_number,
@@ -81,6 +84,7 @@ export const Step1YourBusiness: React.FC = () => {
       companies_house_source: 'public_data_api',
       companies_house_retrieved_at: new Date().toISOString(),
       sic_codes: selectedCompany.sic_codes || [],
+      industry: mappedIndustry,
       registered_address: {
         address_line_1: selectedCompany.registered_office_address.address_line_1 || selectedCompany.registered_office_address.premises,
         locality: selectedCompany.registered_office_address.locality,
@@ -90,6 +94,9 @@ export const Step1YourBusiness: React.FC = () => {
     });
     clearError('company_name');
     clearError('entity_type');
+    if (mappedIndustry) {
+      clearError('industry');
+    }
 
     // Fetch officers
     setIsLoadingOfficers(true);

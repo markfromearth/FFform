@@ -4,7 +4,7 @@ import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
 import { formatLabel } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
-  const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, setUploadToken } = useApplication();
+  const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, setUploadToken, turnstileToken } = useApplication();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -27,6 +27,7 @@ export const Step5Review: React.FC = () => {
         body: JSON.stringify({
           application: data,
           id,
+          turnstileToken,
           status: 'introduction_ready'
         })
       });
