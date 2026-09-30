@@ -119,7 +119,7 @@ export const Step2YourDetails: React.FC = () => {
               { id: '1_to_3_months', label: '1–3 months' },
               { id: 'just_exploring', label: 'Just exploring' },
             ].map(option => (
-              <label key={option.id} className={`flex items-center min-h-touch p-4 border rounded-lg cursor-pointer transition-colors ${data.contact?.funding_timescale === option.id ? 'border-primary bg-primary-container ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-container-low'}`}>
+              <label key={option.id} className={`flex items-center min-h-touch p-4 border rounded-lg cursor-pointer transition-colors ${data.contact?.funding_timescale === option.id ? 'border-primary bg-surface-variant ring-1 ring-primary' : 'border-outline-variant hover:bg-surface-variant'}`}>
                 <input
                   type="radio"
                   name="timing"
@@ -127,7 +127,7 @@ export const Step2YourDetails: React.FC = () => {
                   checked={data.contact?.funding_timescale === option.id}
                   onChange={() => { updateContact({ funding_timescale: option.id }); clearError('funding_timescale'); }}
                 />
-                <span className={`ml-3 text-body-l ${data.contact?.funding_timescale === option.id ? 'text-on-primary-container font-medium' : 'text-on-surface'}`}>{option.label}</span>
+                <span className={`ml-3 text-body-l ${data.contact?.funding_timescale === option.id ? 'text-primary font-medium' : 'text-on-surface'}`}>{option.label}</span>
               </label>
             ))}
           </div>

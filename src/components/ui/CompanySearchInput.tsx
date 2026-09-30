@@ -93,18 +93,18 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
     <div ref={containerRef} className="w-full">
       {/* If already selected & verified with Companies House */}
       {isVerified ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 transition-all">
+        <div className="rounded-lg border border-emerald-500/30 bg-surface-variant p-4 transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                     Companies House Verified
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-200/80 text-emerald-900 font-semibold font-mono">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold font-mono">
                     {selectedCompanyNumber}
                   </span>
                 </div>
@@ -190,7 +190,7 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
 
             {/* Results Dropdown */}
             {isOpen && (
-              <div className="absolute top-full left-0 right-0 z-30 bg-surface rounded-b-xl border-x border-b border-brand-400 shadow-elevated max-h-72 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50 duration-100">
+              <div className="absolute top-full left-0 right-0 z-30 bg-[#264673] rounded-b-xl border-x border-b border-brand-400 shadow-elevated max-h-72 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50 duration-100">
                 {results.length > 0 ? (
                   results.map((c) => {
                     const isActive = (c.company_status || '').toLowerCase() === 'active';
@@ -218,8 +218,8 @@ export const CompanySearchInput: React.FC<CompanySearchInputProps> = ({
                               className={clsx(
                                 'text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize',
                                 isActive
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-slate-100 text-white/80'
+                                  ? 'bg-emerald-500/20 text-emerald-300'
+                                  : 'bg-slate-800 text-white/80'
                               )}
                             >
                               {c.company_status || 'Registered'}

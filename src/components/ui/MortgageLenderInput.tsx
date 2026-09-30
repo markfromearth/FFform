@@ -237,7 +237,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-white/10 bg-surface shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
+          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-white/10 bg-[#264673] shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
         >
           <li className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/80 border-b border-slate-100 flex items-center justify-between">
             <span>UK Mortgage Lenders & Administrators</span>

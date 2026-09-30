@@ -79,7 +79,7 @@ export const Step3YourInvoices: React.FC = () => {
               <input
                 id="requested_facility"
                 type="number"
-                className={`w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
+                className={`w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface ${errors.requested_facility ? 'border-error text-error focus:ring-error focus:border-error' : 'border-outline'}`}
                 placeholder="e.g. 150000"
                 value={data.invoices?.requested_facility || ''}
                 onChange={(e) => { updateInvoices({ requested_facility: parseInt(e.target.value) || undefined }); clearError('requested_facility'); }}

@@ -195,7 +195,7 @@ export const Step1YourBusiness: React.FC = () => {
 
               {/* Dropdown Results */}
               {showResults && (
-                <div id="company_results" role="listbox" className="absolute z-10 w-full mt-1 bg-surface border border-outline-variant rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto">
+                <div id="company_results" role="listbox" className="absolute z-10 w-full mt-1 bg-[#264673] border border-outline-variant rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto">
                   {isSearching ? (
                     <div className="p-4 text-center text-body-m text-white/80">Searching...</div>
                   ) : results.length > 0 ? (
@@ -213,7 +213,7 @@ export const Step1YourBusiness: React.FC = () => {
                             Company {result.company_number} · {result.registered_office_address?.postal_code || ''}
                           </p>
                         </div>
-                        <span className={`text-label-s px-2 py-1 rounded-full ${result.company_status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                        <span className={`text-label-s px-2 py-1 rounded-full ${result.company_status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
                           {result.company_status}
                         </span>
                       </button>
@@ -235,7 +235,7 @@ export const Step1YourBusiness: React.FC = () => {
             <div className="bg-surface-variant border border-outline-variant rounded-lg p-5">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-title-s text-on-surface">{selectedCompany.company_name}</h3>
-                <span className={`text-label-s px-2 py-1 rounded-full ${selectedCompany.company_status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                <span className={`text-label-s px-2 py-1 rounded-full ${selectedCompany.company_status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
                   {selectedCompany.company_status}
                 </span>
               </div>
@@ -264,10 +264,10 @@ export const Step1YourBusiness: React.FC = () => {
 
           {/* Confirmed Company Display (API) */}
           {companyConfirmed && selectedCompany && !isManualEntry && (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-5 flex items-start justify-between">
+            <div className="bg-surface-variant border border-emerald-500/30 rounded-lg p-5 flex items-start justify-between">
               <div className="flex gap-3">
                 <div className="mt-1">
-                  <Check className="w-5 h-5 text-emerald-600" />
+                  <Check className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
                   <h3 className="text-title-s text-on-surface">{selectedCompany.company_name}</h3>
@@ -444,7 +444,7 @@ export const Step1YourBusiness: React.FC = () => {
               <input
                 id="annual_turnover"
                 type="number"
-                className={`field ${errors.annual_turnover ? 'has-error' : data.business?.annual_turnover ? 'is-filled' : ''}`}
+                className={`field pl-10 ${errors.annual_turnover ? 'has-error' : data.business?.annual_turnover ? 'is-filled' : ''}`}
                 placeholder="e.g. 500000"
                 value={data.business?.annual_turnover || ''}
                 onChange={(e) => { updateBusiness({ annual_turnover: parseInt(e.target.value) || undefined }); clearError('annual_turnover'); }}
@@ -466,7 +466,7 @@ export const Step1YourBusiness: React.FC = () => {
                   key={btn.label}
                   type="button"
                   onClick={() => { updateBusiness({ annual_turnover: btn.val }); clearError('annual_turnover'); }}
-                  className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
+                  className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business?.annual_turnover === btn.val ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
                 >
                   {btn.label}
                 </button>
@@ -491,7 +491,7 @@ export const Step1YourBusiness: React.FC = () => {
             <input
               id="gross_debtor_book"
               type="number"
-              className={`field ${errors.gross_debtor_book ? 'has-error' : data.business?.gross_debtor_book ? 'is-filled' : ''}`}
+              className={`field pl-10 ${errors.gross_debtor_book ? 'has-error' : data.business?.gross_debtor_book ? 'is-filled' : ''}`}
               placeholder="e.g. 50000"
               value={data.business?.gross_debtor_book || ''}
               onChange={(e) => { updateBusiness({ gross_debtor_book: parseInt(e.target.value) || undefined }); clearError('gross_debtor_book'); }}
@@ -513,7 +513,7 @@ export const Step1YourBusiness: React.FC = () => {
                 key={btn.label}
                 type="button"
                 onClick={() => { updateBusiness({ gross_debtor_book: btn.val }); clearError('gross_debtor_book'); }}
-                className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
+                className={`px-3 py-1.5 text-label-s border rounded-full transition-colors cursor-pointer ${data.business?.gross_debtor_book === btn.val ? 'border-primary bg-primary/10 text-white' : 'border-outline text-white/80 hover:border-outline-variant hover:bg-surface/80 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/35 focus-visible:border-accent'}`}
               >
                 {btn.label}
               </button>

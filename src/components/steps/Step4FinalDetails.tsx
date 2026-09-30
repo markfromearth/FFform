@@ -84,7 +84,7 @@ export const Step4FinalDetails: React.FC = () => {
                     id="current_facility_limit"
                     type="number"
                     placeholder="e.g. 50000"
-                    className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                    className="w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                     value={data.invoices?.current_facility_limit || ''}
                     onChange={(e) => updateInvoices({ current_facility_limit: parseInt(e.target.value) || undefined })}
                   />
@@ -167,7 +167,7 @@ export const Step4FinalDetails: React.FC = () => {
                 id="hmrc_arrears_amount"
                 type="number"
                 placeholder="e.g. 10000"
-                className="w-full pl-8 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
+                className="w-full pl-10 min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface border-outline"
                 value={data.invoices?.hmrc_arrears_amount || ''}
                 onChange={(e) => updateInvoices({ hmrc_arrears_amount: parseInt(e.target.value) || undefined })}
               />
