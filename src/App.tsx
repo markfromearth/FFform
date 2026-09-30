@@ -39,6 +39,16 @@ const JourneyRouter: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { currentStep, setTurnstileToken } = useApplication();
+  const isInitialMount = React.useRef(true);
+
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      document.getElementById('main-content')?.focus();
+    }
+  }, [currentStep]);
+
   const labels = ['Your business', 'Your details', 'Your invoices', 'Final details', 'Review', 'Uploads', 'Complete'];
   const isComplete = currentStep >= 6;
   const isSubmitted = currentStep >= 5;
@@ -67,7 +77,7 @@ const AppContent: React.FC = () => {
                 </span>
                 {!isSubmitted && <span>About 3 minutes</span>}
               </div>
-              <div className="h-1.5 bg-surface-container-high rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+              <div className="h-1.5 bg-surface-container-high rounded-full overflow-hidden" role="progressbar" aria-label="Application progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
                 <div className="h-full bg-accent rounded-full transition-all duration-300 ease-out" style={{ width: `${Math.min(percent, 100)}%` }} />
               </div>
             </div>
