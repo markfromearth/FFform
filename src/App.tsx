@@ -71,7 +71,7 @@ const AppContent: React.FC = () => {
           {/* Progress Bar (omitted on complete) */}
           {!isComplete && (
             <div className="px-7 pt-5">
-              <div className="flex items-center justify-between gap-4 text-label-m text-on-surface-variant mb-2.5">
+              <div className="flex items-center justify-between gap-4 text-label-m text-white/80 mb-2.5">
                 <span>
                   {isSubmitted ? labels[currentStep] : `Step ${currentStep + 1} of 5 · ${labels[currentStep]}`}
                 </span>

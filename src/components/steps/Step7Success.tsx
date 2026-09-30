@@ -10,10 +10,10 @@ export const Step7Success: React.FC = () => {
         </div>
       </div>
       <h1 className="display-s text-on-surface mb-4">You're all set!</h1>
-      <p className="body-l text-on-surface-variant mb-8">
+      <p className="body-l text-white/80 mb-8">
         Your enquiry and documents have been successfully received. A Factoring Finance specialist will review your profile and contact you shortly to discuss the best available lender options.
       </p>
-      <div className="label-m text-on-surface-variant">
+      <div className="label-m text-white/80">
         You can now safely close this window.
       </div>
     </div>

@@ -31,7 +31,7 @@ export const SaveStatus: React.FC<SaveStatusProps> = ({ lastSaved, isSaving }) =
 
   if (isSaving) {
     return (
-      <div className="inline-flex items-center gap-1.5 text-xs text-slate-500" aria-live="polite">
+      <div className="inline-flex items-center gap-1.5 text-xs text-white/70" aria-live="polite">
         <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600" />
         <span>Saving changes...</span>
       </div>
@@ -41,7 +41,7 @@ export const SaveStatus: React.FC<SaveStatusProps> = ({ lastSaved, isSaving }) =
   if (!lastSaved) return null;
 
   return (
-    <div className="inline-flex items-center gap-1.5 text-xs text-slate-500" title={`Last auto-saved: ${lastSaved.toLocaleTimeString()}`}>
+    <div className="inline-flex items-center gap-1.5 text-xs text-white/70" title={`Last auto-saved: ${lastSaved.toLocaleTimeString()}`}>
       <Check className="w-3.5 h-3.5 text-emerald-600" />
       <span>Saved {timeAgo}</span>
     </div>

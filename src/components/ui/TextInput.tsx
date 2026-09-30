@@ -78,13 +78,13 @@ export const TextInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
   };
 
   const baseInputStyles = clsx(
-    'w-full block transition-colors duration-150 text-slate-900 placeholder:text-slate-400 border rounded-xl',
-    'focus:outline-none focus:ring-4 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
+    'w-full block transition-colors duration-150 text-white placeholder:text-white/60 border rounded-xl',
+    'focus:outline-none focus:ring-4 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-white/70 disabled:cursor-not-allowed',
     error
       ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200 bg-rose-50/20'
       : isPrepopulated
-      ? 'border-emerald-300 bg-emerald-50/50 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-400'
-      : 'border-slate-300 bg-white focus:border-accent focus:ring-accent-soft hover:border-slate-400',
+      ? 'border-emerald-300 bg-emerald-50/50 text-white focus:border-emerald-500 focus:ring-emerald-500/20 hover:border-emerald-400'
+      : 'border-white/20 bg-white/10 focus:border-accent focus:ring-accent-soft hover:border-slate-400',
     multiline ? 'p-3 text-base min-h-[92px]' : 'px-[13px] py-[11px] text-base min-h-[48px]',
     leftAddon ? 'pl-10' : '',
     rightAddon ? 'pr-10' : '',
@@ -94,21 +94,21 @@ export const TextInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
   return (
     <div className={twMerge('w-full flex flex-col gap-1.5', wrapperClassName)}>
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={inputId} className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+        <label htmlFor={inputId} className="text-sm font-semibold text-white flex items-center gap-1">
           {label}
           {required && <span className="text-rose-600 font-bold" aria-hidden="true">*</span>}
         </label>
       </div>
 
       {hint && (
-        <p id={hintId} className="text-xs text-slate-500 leading-relaxed">
+        <p id={hintId} className="text-xs text-white/70 leading-relaxed">
           {hint}
         </p>
       )}
 
       <div className="relative">
         {leftAddon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-white/70">
             {leftAddon}
           </div>
         )}
@@ -147,7 +147,7 @@ export const TextInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
         )}
 
         {rightAddon && !error && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-white/60">
             {rightAddon}
           </div>
         )}

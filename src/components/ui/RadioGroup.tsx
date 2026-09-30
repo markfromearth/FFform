@@ -51,10 +51,10 @@ export function RadioGroup<T extends string | number | boolean>({
     <div className={twMerge('space-y-2', className)} role="radiogroup" aria-labelledby={label ? groupId : undefined}>
       {label && (
         <div>
-          <span id={groupId} className="block text-sm font-semibold text-slate-800">
+          <span id={groupId} className="block text-sm font-semibold text-white">
             {label}
           </span>
-          {hint && <p className="text-xs text-slate-500 mt-0.5">{hint}</p>}
+          {hint && <p className="text-xs text-white/70 mt-0.5">{hint}</p>}
         </div>
       )}
 
@@ -74,7 +74,7 @@ export function RadioGroup<T extends string | number | boolean>({
                 'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 has-[:focus-visible]:ring-offset-2',
                 isSelected
                   ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-500'
-                  : 'border-slate-200 bg-white shadow-xs'
+                  : 'border-white/10 bg-white/10 shadow-xs'
               )}
             >
               <input
@@ -94,26 +94,26 @@ export function RadioGroup<T extends string | number | boolean>({
                   'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
                   isSelected
                     ? 'border-emerald-600 bg-emerald-600'
-                    : 'border-slate-300 bg-white'
+                    : 'border-white/20 bg-white/10'
                 )}
                 aria-hidden="true"
               >
-                {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                {isSelected && <div className="w-2 h-2 rounded-full bg-white/10" />}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={clsx('text-sm font-medium', isSelected ? 'text-emerald-950 font-semibold' : 'text-slate-900')}>
+                  <span className={clsx('text-sm font-medium', isSelected ? 'text-emerald-950 font-semibold' : 'text-white')}>
                     {opt.label}
                   </span>
                   {opt.badge && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-white/90">
                       {opt.badge}
                     </span>
                   )}
                 </div>
                 {opt.description && (
-                  <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">
+                  <p className="mt-0.5 text-xs text-white/70 leading-relaxed">
                     {opt.description}
                   </p>
                 )}

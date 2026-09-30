@@ -174,7 +174,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               </>
             )}
           </p>
-          <p className="body-l text-on-surface-variant mt-1">
+          <p className="body-l text-white/80 mt-1">
             {description ? description : 'PDF, CSV, JPG, JPEG, or PNG (up to 20 MB per file)'}
           </p>
         </div>

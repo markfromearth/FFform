@@ -62,7 +62,7 @@ if (!response.ok) {
 
   const ReviewRow = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div className="flex justify-between items-start gap-4 pb-2 border-b border-outline-variant last:border-0 last:pb-0">
-      <span className="body-l text-on-surface-variant w-1/3">{label}</span>
+      <span className="body-l text-white/80 w-1/3">{label}</span>
       <strong className="body-l text-on-surface w-2/3 text-right break-words">{value || 'Not provided'}</strong>
     </div>
   );
@@ -95,7 +95,7 @@ if (!response.ok) {
           </div>
         </div>
         <h1 className="display-s text-on-surface mb-4">Enquiry submitted successfully</h1>
-        <p className="body-l text-on-surface-variant mb-8">
+        <p className="body-l text-white/80 mb-8">
           Thank you for choosing Factoring Finance. A specialist will review your details and contact you shortly at {data.contact?.email}.
         </p>
       </div>
@@ -107,7 +107,7 @@ if (!response.ok) {
       <div className="mb-8">
         <h2 className="label-m text-primary tracking-wide uppercase mb-1">Review</h2>
         <h1 className="display-s text-on-surface mb-3">Check your enquiry</h1>
-        <p className="body-l text-on-surface-variant">These are the details we will use to assess your requirement and identify suitable finance providers.</p>
+        <p className="body-l text-white/80">These are the details we will use to assess your requirement and identify suitable finance providers.</p>
       </div>
       
       
@@ -168,7 +168,7 @@ if (!response.ok) {
                 clearError('processing_notice_acknowledged');
               }}
             />
-            <div className="body-l text-on-surface-variant leading-relaxed">
+            <div className="body-l text-white/80 leading-relaxed">
               <span className="label-m text-on-surface block mb-1">Enquiry Processing Notice</span>
               I acknowledge that my details will be securely processed to assess my funding requirement and match me with suitable lenders, in accordance with the Privacy Policy.
               {errors.processing_notice_acknowledged && (
@@ -179,7 +179,7 @@ if (!response.ok) {
 
           <div className="p-4 border border-outline-variant rounded-xl">
             <span className="label-m text-on-surface block mb-2">Optional: Promotional Contact</span>
-            <p className="body-l text-on-surface-variant mb-3">Factoring Finance may occasionally send you relevant market updates or alternative funding offers. Please select how you'd like to hear from us:</p>
+            <p className="body-l text-white/80 mb-3">Factoring Finance may occasionally send you relevant market updates or alternative funding offers. Please select how you'd like to hear from us:</p>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer min-h-touch">
                 <input 
@@ -188,7 +188,7 @@ if (!response.ok) {
                   checked={data.consents?.marketing_email === true}
                   onChange={(e) => updateConsents({ marketing_email: e.target.checked })}
                 />
-                <span className="body-l text-on-surface-variant">Email</span>
+                <span className="body-l text-white/80">Email</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer min-h-touch">
                 <input 
@@ -197,7 +197,7 @@ if (!response.ok) {
                   checked={data.consents?.marketing_sms === true}
                   onChange={(e) => updateConsents({ marketing_sms: e.target.checked })}
                 />
-                <span className="body-l text-on-surface-variant">SMS</span>
+                <span className="body-l text-white/80">SMS</span>
               </label>
             </div>
           </div>
@@ -214,7 +214,7 @@ if (!response.ok) {
       <div className="mt-8 flex flex-col gap-4 border-t border-outline-variant pt-6">
         <ErrorSummary errors={errors} />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="body-l text-on-surface-variant flex items-start gap-2 max-w-sm leading-tight">
+          <p className="body-l text-white/80 flex items-start gap-2 max-w-sm leading-tight">
             <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
             <span>Your data is encrypted and stored securely. We do not sell your data to third parties.</span>
           </p>

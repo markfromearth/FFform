@@ -51,8 +51,8 @@ const CATEGORY_STYLES: Record<LenderCategory, { bg: string; text: string; border
   },
   'UK Registered Company': {
     bg: 'bg-slate-50',
-    text: 'text-slate-700',
-    border: 'border-slate-200',
+    text: 'text-white/90',
+    border: 'border-white/10',
   },
 };
 
@@ -166,7 +166,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
     <div ref={containerRef} className={twMerge('w-full flex flex-col gap-1.5 relative', wrapperClassName)}>
       {/* Label and Source indicator */}
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={inputId} className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+        <label htmlFor={inputId} className="text-sm font-semibold text-white flex items-center gap-1">
           {label}
           {required && <span className="text-rose-600 font-bold" aria-hidden="true">*</span>}
         </label>
@@ -177,14 +177,14 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
       </div>
 
       {hint && (
-        <p id={hintId} className="text-xs text-slate-500 leading-relaxed">
+        <p id={hintId} className="text-xs text-white/70 leading-relaxed">
           {hint}
         </p>
       )}
 
       {/* Input Field with Left Icon and Clear button */}
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/60">
           <Building2 className="w-4 h-4" />
         </div>
 
@@ -215,11 +215,11 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
           }}
           onKeyDown={handleKeyDown}
           className={clsx(
-            'w-full block pl-10 pr-10 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 border rounded-lg transition-colors duration-150',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
+            'w-full block pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-white/60 border rounded-lg transition-colors duration-150',
+            'focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:bg-slate-50 disabled:text-white/70 disabled:cursor-not-allowed',
             error
               ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200 bg-rose-50/20'
-              : 'border-slate-300 bg-white focus:border-brand-600 focus:ring-brand-100 hover:border-slate-400'
+              : 'border-white/20 bg-white/10 focus:border-brand-600 focus:ring-brand-100 hover:border-slate-400'
           )}
         />
 
@@ -227,7 +227,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white/80 focus:outline-none"
             aria-label="Clear lender name"
           >
             <X className="w-4 h-4" />
@@ -240,11 +240,11 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
+          className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-white/10 shadow-lg py-1.5 focus:outline-none animate-in fade-in-50 duration-100"
         >
-          <li className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-100 flex items-center justify-between">
+          <li className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/80 border-b border-slate-100 flex items-center justify-between">
             <span>UK Mortgage Lenders & Administrators</span>
-            <span className="text-[10px] font-normal lowercase text-slate-500">select to auto-fill</span>
+            <span className="text-[10px] font-normal lowercase text-white/70">select to auto-fill</span>
           </li>
 
           {suggestions.map((lender, index) => {
@@ -261,7 +261,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
                 onClick={() => handleSelect(lender)}
                 className={clsx(
                   'px-3.5 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-b-0 flex flex-col gap-1',
-                  isHighlighted ? 'bg-brand-50/80 text-brand-950' : 'hover:bg-slate-50 text-slate-900'
+                  isHighlighted ? 'bg-brand-50/80 text-brand-950' : 'hover:bg-slate-50 text-white'
                 )}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -280,9 +280,9 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-slate-500">
+                <div className="flex items-center gap-3 text-xs text-white/70">
                   {lender.phone && (
-                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-600">
+                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-white/80">
                       <Phone className="w-3 h-3 text-brand-600" />
                       {lender.phone}
                     </span>
@@ -293,7 +293,7 @@ export const MortgageLenderInput: React.FC<MortgageLenderInputProps> = ({
                     </span>
                   )}
                   {lender.fcaNumber && (
-                    <span className="ml-auto text-[10px] font-mono text-slate-500">
+                    <span className="ml-auto text-[10px] font-mono text-white/70">
                       FRN: {lender.fcaNumber}
                     </span>
                   )}

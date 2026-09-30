@@ -53,7 +53,7 @@ export const DateInput: React.FC<DateInputProps> = ({
       value={value || ''}
       onChange={handleChange}
       placeholder={placeholder || defaultPlaceholder}
-      leftAddon={<Calendar className="w-4 h-4 text-slate-400" aria-hidden="true" />}
+      leftAddon={<Calendar className="w-4 h-4 text-white/60" aria-hidden="true" />}
       maxLength={formatType === 'DD/MM/YYYY' ? 10 : 5}
       inputMode="numeric"
       {...props}
