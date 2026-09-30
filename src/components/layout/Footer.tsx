@@ -10,11 +10,6 @@ export const Footer: React.FC = () => {
           <a href="#" className="hover:text-primary transition-colors min-h-touch flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Privacy Policy">Privacy Policy</a>
           <span className="hidden sm:inline text-outline-variant">•</span>
           <a href="#" className="hover:text-primary transition-colors min-h-touch flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Accessibility">Accessibility</a>
-          <span className="hidden sm:inline text-outline-variant">•</span>
-          <div className="flex items-center gap-1.5 text-on-surface-variant min-h-touch">
-            <Lock className="w-4 h-4" />
-            <span>Need help? 0800 368 7474</span>
-          </div>
         </div>
         
         <div className="flex items-center gap-2 label-m text-on-surface-variant">
