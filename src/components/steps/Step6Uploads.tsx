@@ -375,7 +375,15 @@ export const Step6Uploads: React.FC = () => {
   };
 
   const handleCompleteUploads = async () => {
-    const activeToken = uploadToken || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null);
+    const hasAnyUploads = uploadTasks.some((t) => t.status === 'success');
+    const isStandalone = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('token');
+    const activeToken = uploadToken || (isStandalone ? new URLSearchParams(window.location.search).get('token') : null);
+
+    // If no uploads were performed in the inline flow, skip to the final success screen
+    if (!hasAnyUploads && !isStandalone) {
+      nextStep();
+      return;
+    }
 
     if (activeToken) {
       setIsCompleting(true);
@@ -392,6 +400,7 @@ export const Step6Uploads: React.FC = () => {
       }
     }
 
+    // Show 'Documents Received' success screen inline (or empty session screen for standalone)
     setIsCompleted(true);
   };
 
@@ -468,6 +477,8 @@ export const Step6Uploads: React.FC = () => {
   // Completed View (Applicant confirmed upload completion)
   // -------------------------------------------------------------
   if (isCompleted) {
+    const hasAnyUploads = uploadTasks.some((t) => t.status === 'success');
+
     return (
       <div className="max-w-2xl mx-auto px-4 text-center py-10">
         <div className="flex justify-center mb-6">
@@ -475,9 +486,13 @@ export const Step6Uploads: React.FC = () => {
             <CheckCircle2 className="w-8 h-8 text-green-400" />
           </div>
         </div>
-        <h1 className="display-s text-on-surface mb-3">Documents Received!</h1>
+        <h1 className="display-s text-on-surface mb-3">
+          {hasAnyUploads ? 'Documents Received!' : 'Finished!'}
+        </h1>
         <p className="body-l text-white/80 mb-6">
-          Thank you. Your documents have been securely attached to your application for{' '}
+          {hasAnyUploads 
+            ? 'Thank you. Your documents have been securely attached to your application for '
+            : 'You have chosen to continue without attaching any documents to your application for '}
           <strong className="text-white">{portalData?.companyName || data.business?.company_name || 'your business'}</strong>.
         </p>
 
@@ -492,10 +507,10 @@ export const Step6Uploads: React.FC = () => {
             <FileCheck2 className="w-5 h-5 text-primary" /> What happens next?
           </h3>
           <p className="body-l text-white/80 leading-relaxed mb-4">
-            Our underwriting team has been notified. We will review your reports alongside your facility requirements and reach out to you with tailored invoice finance terms.
+            Our underwriting team has been notified of your application. We will review your profile alongside your facility requirements and reach out to you with tailored invoice finance terms.
           </p>
           <div className="text-body-s text-white/60 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-primary" /> All files are stored with AES-256 bank-grade encryption.
+            <ShieldCheck className="w-4 h-4 text-primary" /> All information is stored with AES-256 bank-grade encryption.
           </div>
         </div>
       </div>

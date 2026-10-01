@@ -196,7 +196,7 @@ describe('Step6Uploads Applicant Upload Interface Component', () => {
     fireEvent.click(completeBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Documents Received!/i)).toBeInTheDocument();
+      expect(screen.getByText(/Finished!/i)).toBeInTheDocument();
       expect(screen.getByText(/FF-2026-DONE/i)).toBeInTheDocument();
       expect(screen.getByText(/What happens next\?/i)).toBeInTheDocument();
     });
