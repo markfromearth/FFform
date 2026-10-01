@@ -50,10 +50,37 @@ export async function generateApplicationPdf(
     }
     
     page.drawText(label + ':', { x: margin, y, size: 10, font: boldFont });
-    // Wrap long strings simply by cutting them off if too long (acceptable for standard fields)
-    const safeDisplayValue = displayValue.length > 70 ? displayValue.substring(0, 67) + '...' : displayValue;
-    page.drawText(safeDisplayValue, { x: margin + 180, y, size: 10, font });
-    y -= 16;
+    
+    // Wrap text logic
+    const maxWidth = width - margin - 180 - margin; // Right margin 50
+    const lines: string[] = [];
+    let currentLine = '';
+    const words = displayValue.split(/\s+/);
+    
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const lineWidth = font.widthOfTextAtSize(testLine, 10);
+      if (lineWidth > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    for (const line of lines) {
+      if (y < margin + 20) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        y = height - margin;
+      }
+      page.drawText(line, { x: margin + 180, y, size: 10, font });
+      y -= 14;
+    }
+    
+    y -= 4; // Add a small gap after the field
   };
 
   // Header
@@ -69,13 +96,33 @@ export async function generateApplicationPdf(
     drawSection('Business Information');
     drawField('Company Name', data.business.company_name);
     drawField('Company Number', data.business.company_number);
+    drawField('Company Status', data.business.company_status);
     drawField('Entity Type', data.business.entity_type);
+    drawField('Incorporation Date', data.business.incorporation_date);
     drawField('Industry', data.business.industry);
+    if (data.business.sic_codes?.length) {
+      drawField('SIC Codes', data.business.sic_codes);
+    }
     drawField('B2B Completed Supply', data.business.b2b_completed_supply);
-    drawField('Annual Turnover', `£${data.business.annual_turnover?.toLocaleString()}`);
-    drawField('Gross Debtor Book', `£${data.business.gross_debtor_book?.toLocaleString()}`);
+    drawField('Annual Turnover', data.business.annual_turnover ? `£${data.business.annual_turnover.toLocaleString()}` : '');
+    drawField('Gross Debtor Book', data.business.gross_debtor_book ? `£${data.business.gross_debtor_book.toLocaleString()}` : '');
     if (data.business.registered_address) {
-       drawField('Registered Postcode', data.business.registered_address.postal_code);
+       const addr = [
+         data.business.registered_address.address_line_1,
+         data.business.registered_address.locality,
+         data.business.registered_address.postal_code
+       ].filter(Boolean).join(', ');
+       drawField('Registered Address', addr);
+    }
+    if (data.business.trading_address && !data.business.trading_address_same_as_registered) {
+       const addr = [
+         data.business.trading_address.address_line_1,
+         data.business.trading_address.locality,
+         data.business.trading_address.postal_code
+       ].filter(Boolean).join(', ');
+       drawField('Trading Address', addr);
+    } else {
+       drawField('Trading Address', 'Same as Registered');
     }
   }
 
@@ -92,14 +139,27 @@ export async function generateApplicationPdf(
   // Invoice Details
   if (data.invoices) {
     drawSection('Invoice / Factoring Requirements');
+    drawField('Funding Purpose', data.invoices.funding_purpose);
     drawField('Desired Outcome', data.invoices.desired_outcome);
-    drawField('Requested Facility', `£${data.invoices.requested_facility?.toLocaleString()}`);
+    drawField('Requested Facility', data.invoices.requested_facility ? `£${data.invoices.requested_facility.toLocaleString()}` : '');
+    drawField('Currency', data.invoices.invoice_currency);
     drawField('Payment Terms', data.invoices.payment_terms_days);
     drawField('Largest Customer %', data.invoices.largest_debtor_concentration_pct);
     drawField('Debtor Geography', data.invoices.debtor_geography);
     drawField('Export Sales %', data.invoices.export_sales_pct);
+    
     drawField('Existing Invoice Finance', data.invoices.existing_invoice_finance);
+    if (data.invoices.existing_invoice_finance) {
+      drawField('Current Provider', data.invoices.current_provider);
+      drawField('Current Facility Limit', data.invoices.current_facility_limit ? `£${data.invoices.current_facility_limit.toLocaleString()}` : '');
+      drawField('Reason for Switch', data.invoices.reason_for_switch);
+      drawField('Notice / Exit Date', data.invoices.notice_or_exit_date);
+    }
+
     drawField('HMRC Arrears', data.invoices.hmrc_status);
+    if (data.invoices.hmrc_status !== 'no_arrears' && data.invoices.hmrc_status !== 'none' && data.invoices.hmrc_arrears_amount) {
+      drawField('HMRC Arrears Amount', `£${data.invoices.hmrc_arrears_amount.toLocaleString()}`);
+    }
     
     if (data.invoices.construction_invoicing_type) {
       drawSection('Construction Specifics');
@@ -112,6 +172,11 @@ export async function generateApplicationPdf(
       drawSection('Recruitment Specifics');
       drawField('Recruitment Type', data.invoices.recruitment_type);
       drawField('Payroll Support', data.invoices.payroll_support_required);
+    }
+    
+    if (data.invoices.additional_context) {
+      drawSection('Additional Context');
+      drawField('Notes', data.invoices.additional_context);
     }
   }
 
