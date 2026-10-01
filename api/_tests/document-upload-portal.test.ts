@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import validateUploadTokenHandler from './validate-upload-token.js';
-import recordDocumentUploadHandler from './record-document-upload.js';
-import completeDocumentUploadHandler from './complete-document-upload.js';
-import getUploadUrlHandler from './get-upload-url.js';
+import validateUploadTokenHandler from '../validate-upload-token.js';
+import recordDocumentUploadHandler from '../record-document-upload.js';
+import completeDocumentUploadHandler from '../complete-document-upload.js';
+import getUploadUrlHandler from '../get-upload-url.js';
 import { 
   createDocumentRequestToken, 
   revokeUploadToken, 
   saveOrUpdateApplication, 
   getApplicationById 
-} from './_lib/applicationRepository.js';
+} from '../_lib/applicationRepository.js';
 
 function createMockReqRes(options: {
   method?: string;
@@ -443,7 +443,7 @@ describe('Applicant Document Upload Portal & Lifecycle Tests', () => {
     );
 
     // Simulate previous failed email status
-    const retryEmailHandler = (await import('./retry-email.js')).default;
+    const retryEmailHandler = (await import('../retry-email.js')).default;
     const { req: retryReq, res: retryRes } = createMockReqRes({
       method: 'POST',
       headers: { authorization: 'Bearer admin_secret_test_key_123' },

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import handler from './submit-application';
-import * as applicationRepository from './_lib/applicationRepository';
-import * as emailService from './_lib/emailService';
-import * as pdfGenerator from './_lib/pdfGenerator';
+import handler from '../submit-application.js';
+import * as applicationRepository from '../_lib/applicationRepository.js';
+import * as emailService from '../_lib/emailService.js';
+import * as pdfGenerator from '../_lib/pdfGenerator.js';
 
 describe('Submit Application API Integration Flow', () => {
   const validSubmissionPayload = {

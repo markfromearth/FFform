@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import submitApplicationHandler from './submit-application.js';
-import requestDocumentsHandler from './request-documents.js';
-import validateUploadTokenHandler from './validate-upload-token.js';
-import getUploadUrlHandler from './get-upload-url.js';
-import recordDocumentUploadHandler from './record-document-upload.js';
-import completeDocumentUploadHandler from './complete-document-upload.js';
-import retryEmailHandler from './retry-email.js';
+import submitApplicationHandler from '../submit-application.js';
+import requestDocumentsHandler from '../request-documents.js';
+import validateUploadTokenHandler from '../validate-upload-token.js';
+import getUploadUrlHandler from '../get-upload-url.js';
+import recordDocumentUploadHandler from '../record-document-upload.js';
+import completeDocumentUploadHandler from '../complete-document-upload.js';
+import retryEmailHandler from '../retry-email.js';
 import { 
   saveOrUpdateApplication, 
   getApplicationById, 
   createDocumentRequestToken,
   revokeUploadToken,
   validateUploadToken
-} from './_lib/applicationRepository.js';
+} from '../_lib/applicationRepository.js';
 
 function createMockReqRes(options: {
   method?: string;

@@ -4,7 +4,7 @@ import {
   sendDocumentRequestEmail,
   sendDocumentsReceivedEmail,
   sendPartialLeadAcknowledgementEmail
-} from './emailService';
+} from '../_lib/emailService.js';
 import type { ApplicationData } from '../../src/schemas/applicationSchemas';
 
 describe('FF Form Reusable Email Service', () => {

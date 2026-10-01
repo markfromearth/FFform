@@ -5,9 +5,9 @@ import {
   revokeUploadToken,
   completeUploadToken,
   saveOrUpdateApplication,
-} from './_lib/applicationRepository';
-import * as emailService from './_lib/emailService';
-import requestDocumentsHandler from './request-documents';
+} from '../_lib/applicationRepository.js';
+import * as emailService from '../_lib/emailService.js';
+import requestDocumentsHandler from '../request-documents.js';
 
 describe('Secure Document Request & Resend Integration Flow', () => {
   const testAppId = 'ff-doc-req-app-777';

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
-import submitApplicationHandler from './submit-application.js';
-import requestDocumentsHandler from './request-documents.js';
-import validateUploadTokenHandler from './validate-upload-token.js';
-import getUploadUrlHandler from './get-upload-url.js';
-import recordDocumentUploadHandler from './record-document-upload.js';
-import completeDocumentUploadHandler from './complete-document-upload.js';
-import retryEmailHandler from './retry-email.js';
+import submitApplicationHandler from '../submit-application.js';
+import requestDocumentsHandler from '../request-documents.js';
+import validateUploadTokenHandler from '../validate-upload-token.js';
+import getUploadUrlHandler from '../get-upload-url.js';
+import recordDocumentUploadHandler from '../record-document-upload.js';
+import completeDocumentUploadHandler from '../complete-document-upload.js';
+import retryEmailHandler from '../retry-email.js';
 import {
   saveOrUpdateApplication,
   getApplicationById,
@@ -13,9 +13,9 @@ import {
   validateUploadToken,
   revokeUploadToken,
   completeUploadToken,
-} from './_lib/applicationRepository.js';
-import * as emailService from './_lib/emailService.js';
-import { fullApplicationSchema } from '../src/schemas/applicationSchemas.js';
+} from '../_lib/applicationRepository.js';
+import * as emailService from '../_lib/emailService.js';
+import { fullApplicationSchema } from '../../src/schemas/applicationSchemas.js';
 
 function createMockReqRes(options: {
   method?: string;
