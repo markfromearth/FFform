@@ -50,6 +50,7 @@ const AppContent: React.FC = () => {
   }, [currentStep]);
 
   const labels = ['Your business', 'Your details', 'Your invoices', 'Final details', 'Review', 'Uploads', 'Complete'];
+  const hasTokenInUrl = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('token');
   const isComplete = currentStep >= 6;
   const isSubmitted = currentStep >= 5;
   const percent = isComplete ? 100 : ((currentStep + 1) / 5) * 100;
@@ -68,8 +69,8 @@ const AppContent: React.FC = () => {
       <main id="main-content" className="flex-1 w-full py-8 flex justify-center px-4 sm:px-6" tabIndex={-1}>
         <section className="w-full max-w-[760px] bg-white/10 backdrop-blur-2xl rounded-[24px] border border-white/20 shadow-2xl overflow-hidden flex flex-col">
           
-          {/* Progress Bar (omitted on complete) */}
-          {!isComplete && (
+          {/* Progress Bar (omitted on complete or direct token portal) */}
+          {!isComplete && !hasTokenInUrl && (
             <div className="px-7 pt-5">
               <div className="flex items-center justify-between gap-4 text-label-m text-white/80 mb-2.5">
                 <span>

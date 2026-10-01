@@ -140,7 +140,7 @@ export default async function handler(req: any, res: any) {
 
       if (result.isDuplicate) {
         // Idempotent immediate 200 OK return (preventing duplicate CRM entry and emails)
-        const uploadToken = await createUploadToken(dbRecord.applicationId, 2 * 60 * 60 * 1000);
+        const uploadToken = await createUploadToken(dbRecord.applicationId, 7 * 24 * 60 * 60 * 1000);
         res.status(200).json({
           success: true,
           message: 'Application already submitted (idempotent duplicate request)',
@@ -239,33 +239,58 @@ const docToSave: any = {
 
     
 
-    // 4. Decoupled Secondary Task: Email Summary Dispatch
+    // 4. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
+    const uploadToken = await createUploadToken(id, 7 * 24 * 60 * 60 * 1000);
+
+    // 5. Decoupled Secondary Task: Email Summary Dispatch
     if (!isPartial) {
       try {
+        const originUrl = req.headers.origin || 'https://factoringfinance.co.uk';
         const emailRes = await sendApplicationNotificationEmail({
           application,
-          applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
+          applicationRef: submissionRef,
+          generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath,
+          uploadedDocuments: application.documents || [],
+          uploadToken,
+          appBaseUrl: originUrl,
         });
+
         if (emailRes.success) {
-          await updateEmailStatus(id, { emailStatus: 'sent', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+          await updateEmailStatus(id, {
+            emailStatus: 'sent',
+            emailMessageId: emailRes.messageId,
+            emailSentAt: new Date().toISOString(),
+          });
         } else {
-          await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
+          await updateEmailStatus(id, {
+            emailStatus: 'failed',
+            emailError: emailRes.error,
+          });
         }
       } catch (emailErr: any) {
         console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
       }
     } else {
-      // Partial lead - send welcome/acknowledgement email to the applicant
+      // Partial lead - send welcome/acknowledgement alert to the broker/applicant
       if (application.contact?.email) {
         try {
           const emailRes = await sendPartialLeadAcknowledgementEmail({
             application,
-            applicationRef: submissionRef, generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath, uploadedDocuments: application.documents,
+            applicationRef: submissionRef,
+            generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath,
+            uploadedDocuments: application.documents || [],
           });
           if (emailRes.success) {
-            await updateEmailStatus(id, { emailStatus: 'sent', emailMessageId: emailRes.messageId, emailSentAt: new Date().toISOString() });
+            await updateEmailStatus(id, {
+              emailStatus: 'sent',
+              emailMessageId: emailRes.messageId,
+              emailSentAt: new Date().toISOString(),
+            });
           } else {
-            await updateEmailStatus(id, { emailStatus: 'failed', emailError: emailRes.error });
+            await updateEmailStatus(id, {
+              emailStatus: 'failed',
+              emailError: emailRes.error,
+            });
           }
         } catch (emailErr: any) {
           console.error('[SubmitAPI] Downstream partial acknowledgement email failed (decoupled):', emailErr?.message || emailErr);
@@ -273,10 +298,7 @@ const docToSave: any = {
       }
     }
 
-    // 5. Return 200 OK
-    const uploadToken = await createUploadToken(id, 2 * 60 * 60 * 1000);
-    
-    // 5. Return 200 OK
+    // 6. Return 200 OK (Application successfully recorded)
     res.status(200).json({
       success: true,
       applicationId: id,
@@ -284,7 +306,7 @@ const docToSave: any = {
       submittedAt,
       crmStatus,
       uploadToken,
-      queued: crmStatus === 'queued_for_retry'
+      queued: crmStatus === 'queued_for_retry',
     });
   } catch (error: any) {
     console.error('[SubmitAPI] Unexpected top-level handler error:', error?.message || error);

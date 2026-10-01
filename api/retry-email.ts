@@ -1,5 +1,5 @@
-import { getApplicationById, updateEmailStatus } from './_lib/applicationRepository.js';
-import { sendApplicationNotificationEmail } from './_lib/emailService.js';
+import { getApplicationById, updateEmailStatus, updateDocsReceivedEmailStatus } from './_lib/applicationRepository.js';
+import { sendApplicationNotificationEmail, sendDocumentsReceivedEmail } from './_lib/emailService.js';
 
 export default async function handler(req: any, res: any) {
   // CORS Headers
@@ -47,7 +47,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { applicationId, force } = req.body || {};
+    const { applicationId, force, type = 'application_submission' } = req.body || {};
 
     if (!applicationId) {
       return res.status(400).json({ error: 'applicationId is required.' });
@@ -59,6 +59,53 @@ export default async function handler(req: any, res: any) {
       return res.status(404).json({ error: 'Application not found.' });
     }
 
+    if (type === 'documents_received') {
+      // Check idempotency
+      if (record.docsReceivedEmailStatus === 'sent' && !force) {
+        return res.status(409).json({
+          error: 'Conflict: Documents received email has already been successfully sent for this application. Use force=true to override.',
+        });
+      }
+
+      console.log(`[RetryEmailAPI] Initiating documents received email resend for Application ID: ${applicationId}`);
+      const uploadedDocs = Array.isArray(record.documentMetadata)
+        ? record.documentMetadata
+        : Array.isArray(record.application?.documents)
+        ? record.application.documents
+        : [];
+
+      const emailRes = await sendDocumentsReceivedEmail({
+        applicationId,
+        submissionRef: record.submissionRef,
+        companyName: record.application?.business?.company_name || 'Your Business',
+        applicantName: record.application?.contact?.contact_full_name,
+        applicantEmail: record.application?.contact?.email,
+        applicantPhone: record.application?.contact?.phone,
+        uploadedDocuments: uploadedDocs,
+      });
+
+      if (emailRes.success) {
+        await updateDocsReceivedEmailStatus(applicationId, {
+          docsReceivedEmailStatus: 'sent',
+          docsReceivedEmailMessageId: emailRes.messageId,
+          docsReceivedEmailSentAt: new Date().toISOString(),
+          docsReceivedEmailError: '',
+        });
+        return res.status(200).json({ success: true, messageId: emailRes.messageId, status: 'sent', type: 'documents_received' });
+      } else {
+        await updateDocsReceivedEmailStatus(applicationId, {
+          docsReceivedEmailStatus: 'failed',
+          docsReceivedEmailError: emailRes.error || 'Failed to dispatch documents received alert',
+        });
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send documents received email during retry phase.',
+          details: emailRes.error,
+        });
+      }
+    }
+
+    // Default: application_submission email retry
     // 3. Check idempotency for sent emails
     if (record.emailStatus === 'sent' && !force) {
       return res.status(409).json({ 
@@ -85,7 +132,7 @@ export default async function handler(req: any, res: any) {
         emailSentAt: new Date().toISOString(),
         emailError: '' // clear any previous error
       });
-      return res.status(200).json({ success: true, messageId: emailRes.messageId, status: 'sent' });
+      return res.status(200).json({ success: true, messageId: emailRes.messageId, status: 'sent', type: 'application_submission' });
     } else {
       await updateEmailStatus(applicationId, {
         emailStatus: 'failed',
@@ -94,7 +141,7 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ 
         success: false, 
         error: 'Failed to send email during retry phase.', 
-        details: "Internal API Error" 
+        details: emailRes.error || "Internal API Error" 
       });
     }
 

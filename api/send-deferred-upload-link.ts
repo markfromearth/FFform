@@ -87,32 +87,44 @@ export default async function handler(req: any, res: any) {
 
     const apiKey = process.env.RESEND_API_KEY;
 
-    // Send email via Resend
+    // Send notification via Resend
     if (apiKey) {
-      const resend = new Resend(apiKey);
-      const fromAddress = process.env.RESEND_FROM_EMAIL || 'Factoring Finance <enquiries@factoringfinance.co.uk>';
+      try {
+        const resend = new Resend(apiKey);
+        const fromAddress = process.env.RESEND_FROM_EMAIL || 'Factoring Finance Application <onboarding@resend.dev>';
+        const verifiedRecipient = process.env.APPLICATION_NOTIFICATION_EMAIL || 'ben@factoringfinance.co.uk';
 
-      const emailResponse = await resend.emails.send({
-        from: fromAddress,
-        to: [email],
-        subject: 'Your Factoring Finance Secure Upload Link',
-        html: `
+        const isSandboxMode = fromAddress.includes('resend.dev');
+        const targetRecipient = isSandboxMode && email !== verifiedRecipient ? verifiedRecipient : email;
+        const emailSubject = isSandboxMode && email !== verifiedRecipient
+          ? `[Deferred Upload Link Requested] Prospect: ${email}`
+          : 'Your Factoring Finance Secure Upload Link';
+
+        const emailHtml = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #0f172a;">Complete your Factoring Finance enquiry</h2>
-            <p>Thank you for submitting your enquiry. To fast-track your assessment, our lenders will need to see some standard financial reports.</p>
-            <p>You can securely upload your Current Aged Debtor Report, Current Aged Creditor Report, and Bank Statements using the link below.</p>
+            <h2 style="color: #0f172a;">Factoring Finance Secure Document Upload Link</h2>
+            ${isSandboxMode && email !== verifiedRecipient ? `<p><strong>Note (Sandbox Mode):</strong> The applicant <strong>${email}</strong> requested a deferred document upload link.</p>` : ''}
+            <p>To fast-track your assessment, financial reports can be securely uploaded using the link below:</p>
             <div style="margin: 30px 0;">
               <a href="${returnLink}" style="background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Upload Documents Now</a>
             </div>
-            <p style="font-size: 14px; color: #64748b;">This secure link will expire in 7 days.</p>
-            <p style="font-size: 14px; color: #64748b;">If you have any questions, simply reply to this email.</p>
+            <p style="font-size: 13px; color: #64748b;">Direct Link URL: <a href="${returnLink}" style="color: #0284c7;">${returnLink}</a></p>
+            <p style="font-size: 13px; color: #64748b;">This secure link will expire in 7 days.</p>
           </div>
-        `
-      });
+        `;
 
-      if (emailResponse.error) {
-        console.error('[SendDeferredLinkAPI] Resend API error:', emailResponse.error);
-        throw new Error(emailResponse.error.message || 'Failed to send email');
+        const emailResponse = await resend.emails.send({
+          from: fromAddress,
+          to: [targetRecipient],
+          subject: emailSubject,
+          html: emailHtml,
+        });
+
+        if (emailResponse.error) {
+          console.warn('[SendDeferredLinkAPI] Resend API note:', emailResponse.error.message);
+        }
+      } catch (emailErr: any) {
+        console.warn('[SendDeferredLinkAPI] Resend dispatch caught:', emailErr?.message || emailErr);
       }
     } else {
       const redactedEmail = email.replace(/(?<=^.{2}).*(?=@)/, '***');
@@ -127,7 +139,7 @@ export default async function handler(req: any, res: any) {
 
     res.status(200).json({ success: true, returnLink });
   } catch (error: any) {
-    console.error('[SendDeferredLinkAPI] Error:', error?.message || 'Unknown error');
-    res.status(500).json({ error: 'Failed to generate and send deferred upload link.' });
+    console.error('[SendDeferredLinkAPI] Top-level handler error:', error?.message || 'Unknown error');
+    res.status(500).json({ error: 'Failed to generate deferred upload link.' });
   }
 }
