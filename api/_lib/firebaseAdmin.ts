@@ -1,6 +1,10 @@
 import { getApps, initializeApp, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
+import { EventEmitter } from 'events';
+
+// Prevent Node PassThrough stream warning in warm serverless containers during GCS file writes
+EventEmitter.defaultMaxListeners = 30;
 
 /**
  * Server-only Firebase Admin initialization module.
