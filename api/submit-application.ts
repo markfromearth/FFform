@@ -240,7 +240,12 @@ const docToSave: any = {
     
 
     // 4. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
-    const uploadToken = await createUploadToken(id, 7 * 24 * 60 * 60 * 1000);
+    let uploadToken: string | undefined;
+    try {
+      uploadToken = await createUploadToken(id, 7 * 24 * 60 * 60 * 1000, submissionRef);
+    } catch (tokenErr: any) {
+      console.warn('[SubmitAPI] Non-fatal: Failed to create upload token during submission:', tokenErr?.message || tokenErr);
+    }
 
     // 5. Decoupled Secondary Task: Email Summary Dispatch
     if (!isPartial) {

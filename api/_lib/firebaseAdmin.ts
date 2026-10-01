@@ -85,15 +85,27 @@ export function getFirebaseAdminApp(): App | null {
   }
 }
 
+let cachedFirestore: Firestore | null = null;
+
 /**
  * Returns the Firestore instance if configured.
  */
 export function getAdminFirestore(): Firestore | null {
+  if (cachedFirestore) {
+    return cachedFirestore;
+  }
   const app = getFirebaseAdminApp();
   if (!app) {
     return null;
   }
-  return getFirestore(app);
+  const db = getFirestore(app);
+  try {
+    db.settings({ ignoreUndefinedProperties: true });
+  } catch (e) {
+    // Settings can only be set once per Firestore instance
+  }
+  cachedFirestore = db;
+  return cachedFirestore;
 }
 
 /**

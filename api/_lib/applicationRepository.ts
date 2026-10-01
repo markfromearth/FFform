@@ -67,7 +67,7 @@ export async function createDocumentRequestToken(options: CreateTokenOptions): P
   const record: UploadTokenRecord = {
     token,
     applicationId,
-    submissionRef,
+    ...(submissionRef ? { submissionRef } : {}),
     purpose: 'DOCUMENT_UPLOAD',
     status: 'ACTIVE',
     createdAt: now,
@@ -107,10 +107,12 @@ export async function createDocumentRequestToken(options: CreateTokenOptions): P
  */
 export async function createUploadToken(
   applicationId: string,
-  expiresInMs: number = 7 * 24 * 60 * 60 * 1000
+  expiresInMs: number = 7 * 24 * 60 * 60 * 1000,
+  submissionRef?: string
 ): Promise<string> {
   const result = await createDocumentRequestToken({
     applicationId,
+    submissionRef,
     expiresInMs,
   });
   return result.token;
