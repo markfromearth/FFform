@@ -1,4 +1,5 @@
 import { validateUploadToken, addDocumentToApplication } from './_lib/applicationRepository.js';
+import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -55,6 +56,24 @@ export default async function handler(req: any, res: any) {
       storagePath: String(document.storagePath),
       uploadedAt: document.uploadedAt || new Date().toISOString()
     };
+
+    // If file payload was sent directly (e.g. CORS fallback), persist directly to Cloud Storage
+    if (document.base64Data && isFirebaseConfigured()) {
+      try {
+        const storage = getAdminStorage();
+        if (storage) {
+          const bucket = storage.bucket();
+          const file = bucket.file(sanitizedDoc.storagePath);
+          const buffer = Buffer.from(document.base64Data, 'base64');
+          await file.save(buffer, {
+            metadata: { contentType: document.fileType || 'application/pdf' },
+            resumable: false,
+          });
+        }
+      } catch (storageErr: any) {
+        console.error('[RecordDocumentUploadAPI] Direct storage fallback save error:', storageErr?.message || storageErr);
+      }
+    }
 
     const updatedDocuments = await addDocumentToApplication(tokenValidation.applicationId, sanitizedDoc);
 

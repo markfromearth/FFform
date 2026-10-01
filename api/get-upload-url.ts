@@ -131,10 +131,6 @@ const { token, fileName, fileType, fileSize, documentType } = req.body || {};
         action: 'write',
         expires: Date.now() + expiresInSeconds * 1000,
         contentType: fileType,
-        extensionHeaders: {
-          // Strictly enforce content length limit on the cloud storage side
-          'x-goog-content-length-range': `0,${MAX_FILE_SIZE_BYTES}`
-        }
       });
 
       res.status(200).json({

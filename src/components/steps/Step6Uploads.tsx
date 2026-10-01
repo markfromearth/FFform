@@ -168,36 +168,57 @@ export const Step6Uploads: React.FC = () => {
         throw new Error(dataRes.error || dataRes.message || 'Failed to initialize secure upload session.');
       }
 
-      // 2. Direct PUT to Cloud Storage Signed URL
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', dataRes.uploadUrl, true);
-        if (task.file?.type) {
-          xhr.setRequestHeader('Content-Type', task.file.type);
-        }
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const progress = (e.loaded / e.total) * 100;
-            setUploadTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, progress } : t)));
+      // 2. Direct PUT to Cloud Storage Signed URL with automatic fallback
+      let directPutSucceeded = false;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', dataRes.uploadUrl, true);
+          if (task.file?.type) {
+            xhr.setRequestHeader('Content-Type', task.file.type);
           }
-        };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed with status code ${xhr.status}`));
-          }
-        };
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const progress = (e.loaded / e.total) * 90;
+              setUploadTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, progress } : t)));
+            }
+          };
 
-        xhr.onerror = () => reject(new Error('Network connection interrupted during upload.'));
-        xhr.send((task as any).rawFile);
-      });
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              directPutSucceeded = true;
+              resolve();
+            } else {
+              reject(new Error(`Direct storage upload returned status ${xhr.status}`));
+            }
+          };
 
-      // 3. Record document metadata in Firestore backend
+          xhr.onerror = () => reject(new Error('Direct storage upload failed (CORS or network)'));
+          xhr.send((task as any).rawFile);
+        });
+      } catch (directErr) {
+        console.warn('[Upload] Direct storage upload encountered error, falling back to server-side save:', directErr);
+      }
+
+      // 3. Record document metadata (and send file payload if direct upload encountered CORS / network rejection)
       const uploadedAt = new Date().toISOString();
-      await fetch('/api/record-document-upload', {
+      let base64Data: string | undefined;
+
+      if (!directPutSucceeded && (task as any).rawFile) {
+        base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64 = result.includes(',') ? result.split(',')[1] : result;
+            resolve(base64);
+          };
+          reader.onerror = () => reject(new Error('Failed to read file for upload fallback.'));
+          reader.readAsDataURL((task as any).rawFile);
+        });
+      }
+
+      const recordRes = await fetch('/api/record-document-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -206,11 +227,18 @@ export const Step6Uploads: React.FC = () => {
             documentType: task.documentType,
             fileName: task.file.name,
             fileSize: task.file.size,
+            fileType: task.file.type || 'application/pdf',
             storagePath: dataRes.storagePath,
             uploadedAt,
+            ...(base64Data ? { base64Data } : {}),
           },
         }),
-      }).catch((e) => console.warn('[Upload] Failed to record document metadata:', e));
+      });
+
+      if (!recordRes.ok) {
+        const recErr = await recordRes.json().catch(() => ({}));
+        throw new Error(recErr.error || 'Failed to record uploaded document metadata.');
+      }
 
       // 4. Update state to successful
       setUploadTasks((prev) =>
