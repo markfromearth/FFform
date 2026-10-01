@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas.js';
-import { sendApplicationNotificationEmail, sendPartialLeadAcknowledgementEmail } from './_lib/emailService.js';
+import { sendApplicationNotificationEmail } from './_lib/emailService.js';
 
 import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken } from './_lib/applicationRepository.js';
 import { generateApplicationPdf } from './_lib/pdfGenerator.js';
@@ -171,6 +171,7 @@ const docToSave: any = {
 
     // 2.5 PDF Generation and Storage (Full submissions only)
     if (!isPartial) {
+      let pdfPath: string | undefined;
       try {
         console.log('[SubmitAPI] Generating completed application PDF...');
         const pdfBytes = await generateApplicationPdf(id, submissionRef, submittedAt, application);
@@ -178,7 +179,7 @@ const docToSave: any = {
         const storage = getAdminStorage();
         if (storage) {
           const bucket = storage.bucket();
-          const pdfPath = `applications/ff/${id}/generated/${submissionRef}-application.pdf`;
+          pdfPath = `applications/ff/${id}/generated/${submissionRef}-application.pdf`;
           const file = bucket.file(pdfPath);
           
           await file.save(pdfBytes, {
@@ -194,14 +195,53 @@ const docToSave: any = {
           });
           
           docToSave.documentMetadata = { generatedPdfPath: pdfPath };
+        } else {
+          throw new Error('Firebase Admin Storage is not configured.');
         }
       } catch (pdfError: any) {
         console.error('[SubmitAPI] Failed to generate or upload PDF:', pdfError.message);
         // We do not fail the entire submission if the PDF fails, but we log the error.
+        // Email will fail safely because pdfPath is undefined.
+      }
+
+      // 3. Email Dispatch (Strictly dependent on PDF)
+      if (!pdfPath) {
+        console.error('[SubmitAPI] Cannot dispatch email: PDF generation failed.');
+        await updateEmailStatus(id, {
+          emailStatus: 'failed',
+          emailError: 'PDF generation failed, email not attempted.',
+        });
+      } else {
+        try {
+          const emailRes = await sendApplicationNotificationEmail({
+            application,
+            applicationRef: submissionRef,
+            generatedPdfPath: pdfPath
+          });
+
+          if (emailRes.success) {
+            await updateEmailStatus(id, {
+              emailStatus: 'sent',
+              emailMessageId: emailRes.messageId,
+              emailSentAt: new Date().toISOString(),
+            });
+          } else {
+            await updateEmailStatus(id, {
+              emailStatus: 'failed',
+              emailError: emailRes.error,
+            });
+          }
+        } catch (emailErr: any) {
+          console.error('[SubmitAPI] Downstream email notification failed:', emailErr?.message || emailErr);
+          await updateEmailStatus(id, {
+            emailStatus: 'failed',
+            emailError: emailErr?.message || 'Unknown email dispatch error',
+          });
+        }
       }
     }
 
-    // 3. CRM Routing to Monday.com
+    // 4. CRM Routing to Monday.com
     let crmStatus = 'pending';
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
     
@@ -237,70 +277,12 @@ const docToSave: any = {
       crmStatus = 'delivered';
     }
 
-    
-
-    // 4. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
+    // 5. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
     let uploadToken: string | undefined;
     try {
       uploadToken = await createUploadToken(id, 7 * 24 * 60 * 60 * 1000, submissionRef);
     } catch (tokenErr: any) {
       console.warn('[SubmitAPI] Non-fatal: Failed to create upload token during submission:', tokenErr?.message || tokenErr);
-    }
-
-    // 5. Decoupled Secondary Task: Email Summary Dispatch
-    if (!isPartial) {
-      try {
-        const originUrl = req.headers.origin || 'https://factoringfinance.co.uk';
-        const emailRes = await sendApplicationNotificationEmail({
-          application,
-          applicationRef: submissionRef,
-          generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath,
-          uploadedDocuments: application.documents || [],
-          uploadToken,
-          appBaseUrl: originUrl,
-        });
-
-        if (emailRes.success) {
-          await updateEmailStatus(id, {
-            emailStatus: 'sent',
-            emailMessageId: emailRes.messageId,
-            emailSentAt: new Date().toISOString(),
-          });
-        } else {
-          await updateEmailStatus(id, {
-            emailStatus: 'failed',
-            emailError: emailRes.error,
-          });
-        }
-      } catch (emailErr: any) {
-        console.error('[SubmitAPI] Downstream email notification failed (decoupled):', emailErr?.message || emailErr);
-      }
-    } else {
-      // Partial lead - send welcome/acknowledgement alert to the broker/applicant
-      if (application.contact?.email) {
-        try {
-          const emailRes = await sendPartialLeadAcknowledgementEmail({
-            application,
-            applicationRef: submissionRef,
-            generatedPdfPath: docToSave.documentMetadata?.generatedPdfPath,
-            uploadedDocuments: application.documents || [],
-          });
-          if (emailRes.success) {
-            await updateEmailStatus(id, {
-              emailStatus: 'sent',
-              emailMessageId: emailRes.messageId,
-              emailSentAt: new Date().toISOString(),
-            });
-          } else {
-            await updateEmailStatus(id, {
-              emailStatus: 'failed',
-              emailError: emailRes.error,
-            });
-          }
-        } catch (emailErr: any) {
-          console.error('[SubmitAPI] Downstream partial acknowledgement email failed (decoupled):', emailErr?.message || emailErr);
-        }
-      }
     }
 
     // 6. Return 200 OK (Application successfully recorded)

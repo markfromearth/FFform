@@ -1,5 +1,4 @@
-import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus, updateDocsReceivedEmailStatus } from './_lib/applicationRepository.js';
-import { sendDocumentsReceivedEmail } from './_lib/emailService.js';
+import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus } from './_lib/applicationRepository.js';
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -48,18 +47,6 @@ export default async function handler(req: any, res: any) {
     }
 
     const applicationId = tokenValidation.applicationId;
-    const app = await getApplicationById(applicationId);
-
-    const submissionRef = tokenValidation.record?.submissionRef || app?.submissionRef || 'FF-Application';
-    const companyName = app?.application?.business?.company_name || 'Your Business';
-    const applicantName = app?.application?.contact?.contact_full_name || 'Applicant';
-    const applicantEmail = app?.application?.contact?.email || 'enquiries@factoringfinance.co.uk';
-
-    const uploadedDocuments = Array.isArray(app?.documentMetadata)
-      ? app.documentMetadata
-      : Array.isArray(tokenValidation.record?.metadata?.uploadedDocuments)
-      ? tokenValidation.record.metadata.uploadedDocuments
-      : [];
 
     // Mark upload status in Firestore via DAL
     await updateApplicationUploadStatus(applicationId, 'uploaded');
@@ -67,49 +54,9 @@ export default async function handler(req: any, res: any) {
     // Mark token as completed
     await completeUploadToken(token);
 
-    // Send underwriter notification email (zero failure impact if email service has downstream issues)
-    let emailStatus = 'skipped_no_docs';
-    let emailMessageId: string | undefined;
-    let emailError: string | undefined;
-
-    if (uploadedDocuments.length > 0) {
-      const emailResult = await sendDocumentsReceivedEmail({
-        applicationId,
-        submissionRef,
-        companyName,
-        applicantName,
-        applicantEmail,
-        applicantPhone: app?.application?.contact?.phone,
-        uploadedDocuments
-      });
-
-      if (emailResult.success) {
-        emailStatus = 'sent';
-        emailMessageId = emailResult.messageId;
-        await updateDocsReceivedEmailStatus(applicationId, {
-          docsReceivedEmailStatus: 'sent',
-          docsReceivedEmailMessageId: emailResult.messageId,
-          docsReceivedEmailSentAt: new Date().toISOString(),
-          docsReceivedEmailError: '',
-        });
-      } else {
-        emailStatus = 'failed';
-        emailError = emailResult.error || 'Failed to dispatch documents received alert';
-        await updateDocsReceivedEmailStatus(applicationId, {
-          docsReceivedEmailStatus: 'failed',
-          docsReceivedEmailError: emailError,
-        });
-        console.warn(`[CompleteUploadAPI] Documents received alert email failed for ${submissionRef}. Recorded for retry:`, emailError);
-      }
-    }
-
     res.status(200).json({
       success: true,
-      message: 'Uploads successfully recorded and underwriter team notified.',
-      documentsCount: uploadedDocuments.length,
-      emailStatus,
-      emailMessageId,
-      emailError,
+      message: 'Uploads successfully recorded.',
     });
   } catch (error: any) {
     console.error('[CompleteUploadAPI] Error completing uploads:', error?.message || error);

@@ -11,7 +11,7 @@ import {
   revokeUploadToken, 
   completeUploadToken 
 } from '../_lib/applicationRepository.js';
-import { escapeHtml, sendApplicationNotificationEmail, sendDocumentsReceivedEmail } from '../_lib/emailService.js';
+import { escapeHtml, sendApplicationNotificationEmail } from '../_lib/emailService.js';
 
 function createMockReqRes(options: {
   method?: string;

@@ -368,27 +368,10 @@ export const Step6Uploads: React.FC = () => {
   const [linkSent, setLinkSent] = useState(false);
 
   const handleDefer = async () => {
-    setIsSendingLink(true);
-    try {
-      await fetch('/api/send-deferred-upload-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.contact?.email,
-          phone: data.contact?.phone,
-          applicationId,
-          turnstileToken,
-        }),
-      });
-      setLinkSent(true);
-      setTimeout(() => {
-        nextStep();
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSendingLink(false);
-    }
+    // Under the new architecture, deferred uploads do not trigger an email.
+    // The user will simply skip this step and upload via a link provided manually
+    // by the underwriter if needed.
+    nextStep();
   };
 
   const handleCompleteUploads = async () => {
@@ -647,18 +630,13 @@ export const Step6Uploads: React.FC = () => {
             setChoice('later');
             handleDefer();
           }}
-          disabled={isSendingLink}
-          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-variant transition-colors group disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch cursor-pointer"
+          className="flex flex-col items-center justify-center p-8 border-2 border-outline rounded-2xl hover:bg-surface-variant transition-colors group focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-h-touch cursor-pointer"
         >
-          {linkSent ? (
-            <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
-          ) : (
-            <Clock className="w-12 h-12 text-white/80 mb-4 group-hover:-translate-y-1 transition-transform" />
-          )}
+          <Clock className="w-12 h-12 text-white/80 mb-4 group-hover:-translate-y-1 transition-transform" />
           <h3 className="title-m text-on-surface mb-2">
-            {linkSent ? 'Link sent!' : "I'll provide them later"}
+            I'll provide them later
           </h3>
-          <p className="body-l text-white/80">Send me a secure link to upload them another time</p>
+          <p className="body-l text-white/80">Skip this step for now</p>
         </button>
       </div>
     </div>

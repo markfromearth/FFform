@@ -278,10 +278,6 @@ export interface FFApplicationRecord {
   emailMessageId?: string;
   emailSentAt?: string;
   emailError?: string;
-  docsReceivedEmailStatus?: string;
-  docsReceivedEmailMessageId?: string;
-  docsReceivedEmailSentAt?: string;
-  docsReceivedEmailError?: string;
   crmStatus?: string;
   crmMessage?: string;
   documentMetadata?: any;
@@ -385,21 +381,6 @@ export async function updateEmailStatus(
   }).catch(e => console.error('[Firestore DAL] Failed to update email status', e.message));
 }
 
-export async function updateDocsReceivedEmailStatus(
-  applicationId: string,
-  update: { docsReceivedEmailStatus: string; docsReceivedEmailMessageId?: string; docsReceivedEmailSentAt?: string; docsReceivedEmailError?: string }
-) {
-  const db = getAdminFirestore();
-  if (!db) {
-    const record = inMemoryApplicationStore.get(applicationId);
-    if (record) Object.assign(record, update);
-    return;
-  }
-  await db.collection(APPLICATION_COLLECTION).doc(applicationId).update({
-    ...update,
-    updatedAt: new Date().toISOString(),
-  }).catch(e => console.error('[Firestore DAL] Failed to update docsReceivedEmail status', e.message));
-}
 
 export async function updateCrmStatus(
   applicationId: string,
