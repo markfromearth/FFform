@@ -1,4 +1,6 @@
 import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus } from './_lib/applicationRepository.js';
+import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
+import crypto from 'crypto';
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -53,6 +55,123 @@ export default async function handler(req: any, res: any) {
 
     // Mark token as completed
     await completeUploadToken(token);
+
+    // Retrieve application details and documents for CRM webhook update event
+    try {
+      const app = await getApplicationById(applicationId);
+      const submissionRef = app?.submissionRef || tokenValidation.record?.submissionRef || applicationId;
+      const businessName = app?.application?.business?.company_name || 'Business Applicant';
+      const contactName = app?.application?.contact?.contact_full_name || 'Applicant';
+      const contactEmail = app?.application?.contact?.email || '';
+
+      const rawDocs = Array.isArray(app?.documentMetadata)
+        ? app!.documentMetadata
+        : Array.isArray(tokenValidation.record?.metadata?.uploadedDocuments)
+        ? tokenValidation.record!.metadata!.uploadedDocuments
+        : [];
+
+      let bucket: any = null;
+      if (isFirebaseConfigured()) {
+        const storage = getAdminStorage();
+        if (storage) {
+          bucket = storage.bucket();
+        }
+      }
+
+      const documentsWithUrls = await Promise.all(
+        rawDocs.map(async (doc: any) => {
+          const documentId = doc.documentId || `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+          let documentVersion = doc.documentVersion || 'v1';
+          let contentType = doc.contentType || 'application/pdf';
+          let fileSize = doc.fileSize;
+          let downloadUrl = doc.downloadUrl;
+          let downloadUrlExpiresAt = doc.downloadUrlExpiresAt;
+
+          if (bucket && doc.storagePath) {
+            try {
+              const file = bucket.file(doc.storagePath);
+              if (!doc.documentVersion || doc.documentVersion === 'v1') {
+                try {
+                  const [meta] = await file.getMetadata();
+                  if (meta.generation) documentVersion = String(meta.generation);
+                  if (meta.contentType) contentType = meta.contentType;
+                  if (meta.size) fileSize = Number(meta.size);
+                } catch (metaErr: any) {
+                  // Fallback
+                }
+              }
+
+              if (!downloadUrl) {
+                const expiresInMs = 7 * 24 * 60 * 60 * 1000;
+                const expiresAtDate = new Date(Date.now() + expiresInMs);
+                downloadUrlExpiresAt = expiresAtDate.toISOString();
+
+                const [url] = await file.getSignedUrl({
+                  version: 'v4',
+                  action: 'read',
+                  expires: expiresAtDate.getTime(),
+                });
+                downloadUrl = url;
+              }
+            } catch (signErr: any) {
+              console.warn('[CompleteUploadAPI] Failed to generate signed download URL for doc:', doc.fileName, signErr?.message);
+            }
+          }
+
+          if (!downloadUrlExpiresAt && downloadUrl) {
+            downloadUrlExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          }
+
+          return {
+            documentId,
+            documentVersion,
+            documentType: doc.documentType || 'other_supporting_document',
+            fileName: doc.fileName,
+            fileSize,
+            contentType,
+            storagePath: doc.storagePath,
+            downloadUrl: downloadUrl || null,
+            downloadUrlExpiresAt: downloadUrlExpiresAt || null,
+            uploadedAt: doc.uploadedAt || new Date().toISOString(),
+          };
+        })
+      );
+
+      const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
+      if (mondayWebhookUrl && documentsWithUrls.length > 0) {
+        const eventId = `evt_docs_${applicationId}_${Date.now()}`;
+        const updatePayload = {
+          event: 'documents_uploaded',
+          eventId,
+          reference: submissionRef,
+          data: {
+            eventId,
+            applicationId,
+            submissionRef,
+            companyName: businessName,
+            applicantName: contactName,
+            applicantEmail: contactEmail,
+            status: 'documents_received',
+            uploadedAt: new Date().toISOString(),
+            documents: documentsWithUrls,
+          },
+        };
+
+        const mondayResponse = await fetch(mondayWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatePayload),
+        });
+
+        if (!mondayResponse.ok) {
+          console.error('[CompleteUploadAPI] Monday webhook returned status:', mondayResponse.status);
+        } else {
+          console.log('[CompleteUploadAPI] Successfully notified CRM of uploaded documents for ref:', submissionRef);
+        }
+      }
+    } catch (crmErr: any) {
+      console.warn('[CompleteUploadAPI] Non-fatal CRM document update notification error:', crmErr?.message || crmErr);
+    }
 
     res.status(200).json({
       success: true,

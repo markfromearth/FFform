@@ -459,4 +459,75 @@ describe('Applicant Document Upload Portal & Lifecycle Tests', () => {
     // Confirm updated status in DB
     const app = await getApplicationById(retryAppId);
   });
+
+  it('12. CRM Integration: Dispatches documents_uploaded update event with download URLs to MONDAY_WEBHOOK_URL on upload completion', async () => {
+    const crmAppId = 'ff_test_crm_update_app';
+    const crmRef = 'FF-2026-CRMUPDATE1';
+
+    await saveOrUpdateApplication(crmAppId, crmRef, 'submitted', {
+      business: { company_name: 'Apex Transport Group' },
+      contact: { contact_full_name: 'Jane Smith', email: 'jane@apextransport.co.uk' },
+    } as any);
+
+    const { token } = await createDocumentRequestToken({
+      applicationId: crmAppId,
+      submissionRef: crmRef,
+    });
+
+    // Record uploaded document
+    await recordDocumentUploadHandler(
+      createMockReqRes({
+        method: 'POST',
+        body: {
+          token,
+          document: {
+            documentType: 'bank_statement',
+            fileName: 'Apex_Bank_Statements_Oct2026.pdf',
+            fileSize: 500000,
+            storagePath: `applications/ff/${crmAppId}/documents/bank_statement/Apex_Bank_Statements.pdf`,
+            uploadedAt: new Date().toISOString(),
+          },
+        },
+      }).req,
+      createMockReqRes({}).res
+    );
+
+    // Mock fetch for MONDAY_WEBHOOK_URL
+    let webhookCalled = false;
+    let dispatchedPayload: any = null;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === 'https://crm-mock.example.com/webhook') {
+        webhookCalled = true;
+        dispatchedPayload = JSON.parse(options.body);
+        return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    process.env.MONDAY_WEBHOOK_URL = 'https://crm-mock.example.com/webhook';
+
+    try {
+      const { req: compReq, res: compRes } = createMockReqRes({
+        method: 'POST',
+        body: { token },
+      });
+
+      await completeDocumentUploadHandler(compReq, compRes);
+
+      expect(compRes._getStatusCode()).toBe(200);
+      expect(webhookCalled).toBe(true);
+      expect(dispatchedPayload).toBeDefined();
+      expect(dispatchedPayload.event).toBe('documents_uploaded');
+      expect(dispatchedPayload.reference).toBe(crmRef);
+      expect(dispatchedPayload.data.applicationId).toBe(crmAppId);
+      expect(dispatchedPayload.data.companyName).toBe('Apex Transport Group');
+      expect(dispatchedPayload.data.status).toBe('documents_received');
+      expect(dispatchedPayload.data.documents.length).toBeGreaterThan(0);
+      expect(dispatchedPayload.data.documents[0].fileName).toBe('Apex_Bank_Statements_Oct2026.pdf');
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
+  });
 });

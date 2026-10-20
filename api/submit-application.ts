@@ -188,13 +188,72 @@ const docToSave: any = {
           });
           
           console.log('[SubmitAPI] Saved PDF to', pdfPath);
-          
-          await updateDocumentMetadata(id, {
+
+          let documentVersion = 'v1';
+          let contentType = 'application/pdf';
+          let fileSize = pdfBytes.length;
+          try {
+            const [fileMeta] = await file.getMetadata();
+            if (fileMeta.generation) documentVersion = String(fileMeta.generation);
+            if (fileMeta.contentType) contentType = fileMeta.contentType;
+            if (fileMeta.size) fileSize = Number(fileMeta.size);
+          } catch (metaErr: any) {
+            documentVersion = `gen_${Date.now()}`;
+          }
+
+          let pdfDownloadUrl: string | undefined;
+          let downloadUrlExpiresAt: string | undefined;
+          try {
+            const expiresInMs = 7 * 24 * 60 * 60 * 1000; // 7 days validity
+            const expiresAtDate = new Date(Date.now() + expiresInMs);
+            downloadUrlExpiresAt = expiresAtDate.toISOString();
+
+            const [signedUrl] = await file.getSignedUrl({
+              version: 'v4',
+              action: 'read',
+              expires: expiresAtDate.getTime(),
+            });
+            pdfDownloadUrl = signedUrl;
+          } catch (signErr: any) {
+            console.warn('[SubmitAPI] Could not generate signed download URL for PDF:', signErr?.message || signErr);
+          }
+
+          const docMeta: any = {
+            documentId: `doc_app_pdf_${id}`,
+            documentVersion,
+            documentType: 'completed_application',
+            fileName: `${submissionRef}-application.pdf`,
+            fileSize,
+            contentType,
+            storagePath: pdfPath,
             generatedPdfPath: pdfPath,
+            pdfDownloadUrl,
+            downloadUrl: pdfDownloadUrl,
+            downloadUrlExpiresAt,
             generatedAt: new Date().toISOString()
-          });
+          };
+
+          await updateDocumentMetadata(id, docMeta);
           
-          docToSave.documentMetadata = { generatedPdfPath: pdfPath };
+          docToSave.documentMetadata = docMeta;
+          if (pdfDownloadUrl) {
+            docToSave.pdfDownloadUrl = pdfDownloadUrl;
+            docToSave.downloadUrlExpiresAt = downloadUrlExpiresAt;
+          }
+          docToSave.documents = [
+            {
+              documentId: docMeta.documentId,
+              documentVersion: docMeta.documentVersion,
+              documentType: 'completed_application',
+              fileName: docMeta.fileName,
+              fileSize: docMeta.fileSize,
+              contentType: docMeta.contentType,
+              storagePath: docMeta.storagePath,
+              downloadUrl: docMeta.downloadUrl,
+              downloadUrlExpiresAt: docMeta.downloadUrlExpiresAt,
+              uploadedAt: docMeta.generatedAt
+            }
+          ];
         } else {
           throw new Error('Firebase Admin Storage is not configured.');
         }
@@ -247,6 +306,7 @@ const docToSave: any = {
     
     if (mondayWebhookUrl) {
       try {
+        const eventId = `evt_sub_${id}`;
         const mondayResponse = await fetch(mondayWebhookUrl, {
           method: 'POST',
           headers: {
@@ -254,8 +314,12 @@ const docToSave: any = {
           },
           body: JSON.stringify({
             event: 'new_factoring_enquiry',
+            eventId,
             reference: submissionRef,
-            data: docToSave
+            data: {
+              ...docToSave,
+              eventId,
+            }
           })
         });
 

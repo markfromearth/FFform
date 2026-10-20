@@ -1,5 +1,6 @@
-import { validateUploadToken, addDocumentToApplication } from './_lib/applicationRepository.js';
+import { validateUploadToken, addDocumentToApplication, getApplicationById } from './_lib/applicationRepository.js';
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
+import crypto from 'crypto';
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -75,17 +76,82 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const updatedDocuments = await addDocumentToApplication(tokenValidation.applicationId, sanitizedDoc);
+    // Assign permanent server-side documentId (or preserve existing on re-upload)
+    let documentId = document.documentId;
+    if (!documentId) {
+      const app = await getApplicationById(tokenValidation.applicationId);
+      if (app && Array.isArray(app.documentMetadata)) {
+        const existing = app.documentMetadata.find((d: any) => 
+          (d.storagePath && d.storagePath === sanitizedDoc.storagePath) ||
+          (d.fileName === sanitizedDoc.fileName && d.documentType === sanitizedDoc.documentType)
+        );
+        if (existing?.documentId) {
+          documentId = existing.documentId;
+        }
+      }
+    }
+    if (!documentId) {
+      documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    }
+
+    // Verify stored object metadata and generate signed download URL with explicit expiry
+    let documentVersion = 'v1';
+    let contentType = document.fileType || 'application/pdf';
+    let verifiedSize = typeof document.fileSize === 'number' ? document.fileSize : undefined;
+    let downloadUrl: string | undefined;
+    let downloadUrlExpiresAt: string | undefined;
+
+    if (isFirebaseConfigured()) {
+      try {
+        const storage = getAdminStorage();
+        if (storage) {
+          const bucket = storage.bucket();
+          const file = bucket.file(sanitizedDoc.storagePath);
+
+          try {
+            const [meta] = await file.getMetadata();
+            if (meta.generation) documentVersion = String(meta.generation);
+            if (meta.contentType) contentType = meta.contentType;
+            if (meta.size) verifiedSize = Number(meta.size);
+          } catch (metaErr: any) {
+            documentVersion = `gen_${Date.now()}`;
+          }
+
+          const expiresInMs = 7 * 24 * 60 * 60 * 1000; // 7 days validity
+          const expiresAtDate = new Date(Date.now() + expiresInMs);
+          downloadUrlExpiresAt = expiresAtDate.toISOString();
+
+          const [url] = await file.getSignedUrl({
+            version: 'v4',
+            action: 'read',
+            expires: expiresAtDate.getTime(),
+          });
+          downloadUrl = url;
+        }
+      } catch (signErr: any) {
+        console.warn('[RecordDocumentUploadAPI] Non-fatal: Could not generate signed download URL:', signErr?.message || signErr);
+      }
+    }
+
+    const docToPersist = {
+      documentId,
+      documentVersion,
+      documentType: sanitizedDoc.documentType,
+      fileName: sanitizedDoc.fileName,
+      fileSize: verifiedSize,
+      contentType,
+      storagePath: sanitizedDoc.storagePath,
+      downloadUrl,
+      downloadUrlExpiresAt,
+      uploadedAt: sanitizedDoc.uploadedAt,
+    };
+
+    const updatedDocuments = await addDocumentToApplication(tokenValidation.applicationId, docToPersist);
 
     res.status(200).json({
       success: true,
       count: updatedDocuments.length,
-      document: {
-        documentType: sanitizedDoc.documentType,
-        fileName: sanitizedDoc.fileName,
-        fileSize: sanitizedDoc.fileSize,
-        uploadedAt: sanitizedDoc.uploadedAt
-      }
+      document: docToPersist
     });
   } catch (error: any) {
     console.error('[RecordDocumentUploadAPI] Error:', error?.message || error);

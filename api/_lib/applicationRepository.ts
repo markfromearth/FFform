@@ -2,6 +2,21 @@ import { getAdminFirestore } from './firebaseAdmin.js';
 import crypto from 'crypto';
 import type { ApplicationData } from '../../src/schemas/applicationSchemas.js';
 
+export interface StoredDocumentMetadata {
+  documentId: string;
+  documentVersion: string;
+  documentType: string;
+  fileName: string;
+  fileSize?: number;
+  contentType?: string;
+  storagePath: string;
+  downloadUrl?: string;
+  downloadUrlExpiresAt?: string;
+  uploadedAt: string;
+  mondayItemId?: string;
+  mondayAssetId?: string;
+}
+
 export type TokenPurpose = 'DOCUMENT_UPLOAD';
 export type TokenStatus = 'REQUESTED' | 'ACTIVE' | 'USED' | 'COMPLETED' | 'EXPIRED' | 'REVOKED';
 
@@ -405,7 +420,20 @@ export async function updateDocumentMetadata(
   const db = getAdminFirestore();
   if (!db) {
     const record = inMemoryApplicationStore.get(applicationId);
-    if (record) record.documentMetadata = documentMetadata;
+    if (record) {
+      if (Array.isArray(record.documentMetadata)) {
+        record.documentMetadata = [
+          ...record.documentMetadata.filter((d: any) => 
+            documentMetadata.documentId 
+              ? d.documentId !== documentMetadata.documentId 
+              : (d.documentType !== 'completed_application' && d.generatedPdfPath !== documentMetadata.generatedPdfPath)
+          ),
+          documentMetadata
+        ];
+      } else {
+        record.documentMetadata = documentMetadata;
+      }
+    }
     return;
   }
   await db.collection(APPLICATION_COLLECTION).doc(applicationId).update({
@@ -416,15 +444,33 @@ export async function updateDocumentMetadata(
 
 export async function addDocumentToApplication(
   applicationId: string,
-  doc: { documentType: string; fileName: string; fileSize?: number; storagePath: string; uploadedAt: string }
+  doc: any
 ): Promise<any[]> {
   const now = new Date().toISOString();
   const db = getAdminFirestore();
   if (!db) {
     const record = inMemoryApplicationStore.get(applicationId);
     if (record) {
-      const existingDocs = Array.isArray(record.documentMetadata) ? record.documentMetadata : [];
-      const updatedDocs = [...existingDocs.filter(d => d.fileName !== doc.fileName || d.documentType !== doc.documentType), doc];
+      let existingDocs: any[] = [];
+      if (Array.isArray(record.documentMetadata)) {
+        existingDocs = record.documentMetadata;
+      } else if (record.documentMetadata && typeof record.documentMetadata === 'object') {
+        existingDocs = [record.documentMetadata];
+      }
+
+      const isSameDoc = (d: any) => {
+        if (doc.documentId && d.documentId && d.documentId === doc.documentId) return true;
+        if (doc.storagePath && d.storagePath && d.storagePath === doc.storagePath) return true;
+        if (doc.fileName && d.fileName && doc.documentType && d.documentType) {
+          return d.fileName === doc.fileName && d.documentType === doc.documentType;
+        }
+        return false;
+      };
+
+      const updatedDocs = [
+        ...existingDocs.filter((d: any) => !isSameDoc(d)),
+        doc
+      ];
       record.documentMetadata = updatedDocs;
       record.uploadStatus = 'partial';
       record.updatedAt = now;
@@ -438,14 +484,75 @@ export async function addDocumentToApplication(
     const snap = await t.get(docRef);
     if (!snap.exists) return [doc];
     const data = snap.data() as FFApplicationRecord;
-    const existingDocs = Array.isArray(data.documentMetadata) ? data.documentMetadata : [];
-    const updatedDocs = [...existingDocs.filter(d => d.fileName !== doc.fileName || d.documentType !== doc.documentType), doc];
+    let existingDocs: any[] = [];
+    if (Array.isArray(data.documentMetadata)) {
+      existingDocs = data.documentMetadata;
+    } else if (data.documentMetadata && typeof data.documentMetadata === 'object') {
+      existingDocs = [data.documentMetadata];
+    }
+
+    const isSameDoc = (d: any) => {
+      if (doc.documentId && d.documentId && d.documentId === doc.documentId) return true;
+      if (doc.storagePath && d.storagePath && d.storagePath === doc.storagePath) return true;
+      if (doc.fileName && d.fileName && doc.documentType && d.documentType) {
+        return d.fileName === doc.fileName && d.documentType === doc.documentType;
+      }
+      return false;
+    };
+
+    const updatedDocs = [
+      ...existingDocs.filter((d: any) => !isSameDoc(d)),
+      doc
+    ];
     t.update(docRef, {
       documentMetadata: updatedDocs,
       uploadStatus: 'partial',
       updatedAt: now
     });
     return updatedDocs;
+  });
+}
+
+export async function updateDocumentInApplication(
+  applicationId: string,
+  documentId: string,
+  updates: Partial<StoredDocumentMetadata>
+): Promise<StoredDocumentMetadata | null> {
+  const now = new Date().toISOString();
+  const db = getAdminFirestore();
+
+  if (!db) {
+    const record = inMemoryApplicationStore.get(applicationId);
+    if (!record || !Array.isArray(record.documentMetadata)) return null;
+    const docIdx = record.documentMetadata.findIndex((d: any) => d.documentId === documentId);
+    if (docIdx === -1) return null;
+    record.documentMetadata[docIdx] = {
+      ...record.documentMetadata[docIdx],
+      ...updates,
+      updatedAt: now,
+    };
+    record.updatedAt = now;
+    return record.documentMetadata[docIdx];
+  }
+
+  const docRef = db.collection(APPLICATION_COLLECTION).doc(applicationId);
+  return await db.runTransaction(async (t) => {
+    const snap = await t.get(docRef);
+    if (!snap.exists) return null;
+    const data = snap.data() as FFApplicationRecord;
+    const docs = Array.isArray(data.documentMetadata) ? [...data.documentMetadata] : [];
+    const docIdx = docs.findIndex((d: any) => d.documentId === documentId);
+    if (docIdx === -1) return null;
+    docs[docIdx] = {
+      ...docs[docIdx],
+      ...updates,
+      updatedAt: now,
+    };
+    t.update(docRef, {
+      documentMetadata: docs,
+      updatedAt: now,
+    });
+    return docs[docIdx];
   });
 }
 
