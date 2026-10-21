@@ -1,4 +1,4 @@
-import { getApplicationById, updateDocumentInApplication, updateDocumentMetadata } from './_lib/applicationRepository.js';
+import { getApplicationById, updateDocumentInApplication, updateDocumentMetadata, logFailedWebhook } from './_lib/applicationRepository.js';
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
 
 export default async function handler(req: any, res: any) {
@@ -158,11 +158,14 @@ export default async function handler(req: any, res: any) {
         version: 'v4',
         action: 'read',
         expires: expiresAtDate.getTime(),
+        queryParams: {
+          generation: verifiedGeneration,
+        },
       });
       newDownloadUrl = url;
     } else {
       // Local mock fallback for testing without GCS
-      newDownloadUrl = `https://mock-local-storage.example.invalid/${storagePath}?renewed=true&expires=${expiresAtDate.getTime()}`;
+      newDownloadUrl = `https://mock-local-storage.example.invalid/${storagePath}?renewed=true&expires=${expiresAtDate.getTime()}&generation=${verifiedGeneration}`;
     }
 
     // 6. Update Application Record with Renewed URL
@@ -176,10 +179,26 @@ export default async function handler(req: any, res: any) {
       renewedAt: new Date().toISOString(),
     };
 
-    if (isApplicationPdf) {
+    if (Array.isArray(app.documentMetadata)) {
+      const updatedDocs = app.documentMetadata.map((d: any) => {
+        if (d.documentId === targetDoc.documentId) {
+          return {
+            ...d,
+            downloadUrl: newDownloadUrl,
+            downloadUrlExpiresAt,
+            documentVersion: verifiedGeneration,
+            ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl } : {}),
+            renewedAt: new Date().toISOString(),
+          };
+        }
+        return d;
+      });
+      await updateDocumentMetadata(applicationId, updatedDocs);
+    } else if (isApplicationPdf) {
       await updateDocumentMetadata(applicationId, {
         ...app.documentMetadata,
         pdfDownloadUrl: newDownloadUrl,
+        downloadUrl: newDownloadUrl,
         downloadUrlExpiresAt,
         documentVersion: verifiedGeneration,
         renewedAt: new Date().toISOString(),
@@ -197,19 +216,24 @@ export default async function handler(req: any, res: any) {
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
     if (replayWebhook && mondayWebhookUrl) {
       try {
-        const eventId = `evt_renew_${applicationId}_${targetDoc.documentId}_${Date.now()}`;
+        const currentApp = await getApplicationById(applicationId);
+        const resolvedEventId = currentApp?.crmEventId || app.crmEventId || `evt_renew_${applicationId}_${targetDoc.documentId}_${Date.now()}`;
+        const allDocs = Array.isArray(currentApp?.documentMetadata)
+          ? currentApp!.documentMetadata
+          : [updatedDocData];
+
         const replayPayload = {
           event: isApplicationPdf ? 'new_factoring_enquiry' : 'documents_uploaded',
-          eventId,
+          eventId: resolvedEventId,
           reference: submissionRef,
           data: {
-            eventId,
+            eventId: resolvedEventId,
             applicationId,
             submissionRef,
             companyName: app.application?.business?.company_name || 'Business Applicant',
             status: isApplicationPdf ? 'submitted' : 'documents_received',
             uploadedAt: new Date().toISOString(),
-            documents: [updatedDocData],
+            documents: allDocs,
             ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl, downloadUrlExpiresAt } : {})
           }
         };
@@ -220,8 +244,15 @@ export default async function handler(req: any, res: any) {
           body: JSON.stringify(replayPayload),
         });
         replayed = mondayResponse.ok;
+        if (!mondayResponse.ok) {
+          const errMsg = `Monday webhook replay returned status: ${mondayResponse.status}`;
+          console.warn('[RenewDocumentUrlAPI]', errMsg);
+          await logFailedWebhook(applicationId, replayPayload, errMsg);
+        }
       } catch (replayErr: any) {
-        console.warn('[RenewDocumentUrlAPI] Replay webhook error:', replayErr?.message || replayErr);
+        const errMsg = replayErr?.message || String(replayErr);
+        console.warn('[RenewDocumentUrlAPI] Replay webhook error:', errMsg);
+        await logFailedWebhook(applicationId, { applicationId, submissionRef, documentId }, errMsg);
       }
     }
 

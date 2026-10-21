@@ -37,9 +37,9 @@ export default async function handler(req: any, res: any) {
   try {
     const { token, document } = req.body || {};
 
-    if (!token || !document || !document.fileName || !document.documentType || !document.storagePath) {
+    if (!token || !document || !document.fileName || !document.documentType) {
       res.status(400).json({
-        error: 'Missing required parameters: token and document details (fileName, documentType, storagePath) are required.'
+        error: 'Missing required parameters: token and document details (fileName, documentType) are required.'
       });
       return;
     }
@@ -50,11 +50,27 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    // Enforce server-side deterministic storage path and server-side documentId
+    const storagePath = `applications/ff/${tokenValidation.applicationId}/documents/${document.documentType}/${document.fileName}`;
+    
+    // Assign permanent server-side documentId (preserving existing documentId if this file is being re-uploaded)
+    let documentId: string | undefined;
+    const app = await getApplicationById(tokenValidation.applicationId);
+    if (app && Array.isArray(app.documentMetadata)) {
+      const existing = app.documentMetadata.find((d: any) => d.storagePath === storagePath);
+      if (existing?.documentId) {
+        documentId = existing.documentId;
+      }
+    }
+    if (!documentId) {
+      documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    }
+
     const sanitizedDoc = {
       documentType: String(document.documentType),
       fileName: String(document.fileName),
       fileSize: typeof document.fileSize === 'number' ? document.fileSize : undefined,
-      storagePath: String(document.storagePath),
+      storagePath,
       uploadedAt: document.uploadedAt || new Date().toISOString()
     };
 
@@ -76,25 +92,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    // Assign permanent server-side documentId (or preserve existing on re-upload)
-    let documentId = document.documentId;
-    if (!documentId) {
-      const app = await getApplicationById(tokenValidation.applicationId);
-      if (app && Array.isArray(app.documentMetadata)) {
-        const existing = app.documentMetadata.find((d: any) => 
-          (d.storagePath && d.storagePath === sanitizedDoc.storagePath) ||
-          (d.fileName === sanitizedDoc.fileName && d.documentType === sanitizedDoc.documentType)
-        );
-        if (existing?.documentId) {
-          documentId = existing.documentId;
-        }
-      }
-    }
-    if (!documentId) {
-      documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
-    }
-
-    // Verify stored object metadata and generate signed download URL with explicit expiry
+    // Verify stored object existence and generation metadata via GCS SDK
     let documentVersion = 'v1';
     let contentType = document.fileType || 'application/pdf';
     let verifiedSize = typeof document.fileSize === 'number' ? document.fileSize : undefined;
@@ -102,32 +100,44 @@ export default async function handler(req: any, res: any) {
     let downloadUrlExpiresAt: string | undefined;
 
     if (isFirebaseConfigured()) {
+      const storage = getAdminStorage();
+      if (!storage) {
+        res.status(500).json({ error: 'Storage service unavailable.' });
+        return;
+      }
+
+      const bucket = storage.bucket();
+      const file = bucket.file(sanitizedDoc.storagePath);
+
+      const [exists] = await file.exists();
+      if (!exists) {
+        res.status(404).json({ error: 'Stored file object not found in storage bucket.' });
+        return;
+      }
+
       try {
-        const storage = getAdminStorage();
-        if (storage) {
-          const bucket = storage.bucket();
-          const file = bucket.file(sanitizedDoc.storagePath);
+        const [meta] = await file.getMetadata();
+        if (meta.generation) documentVersion = String(meta.generation);
+        if (meta.contentType) contentType = meta.contentType;
+        if (meta.size) verifiedSize = Number(meta.size);
+      } catch (metaErr: any) {
+        documentVersion = `gen_${Date.now()}`;
+      }
 
-          try {
-            const [meta] = await file.getMetadata();
-            if (meta.generation) documentVersion = String(meta.generation);
-            if (meta.contentType) contentType = meta.contentType;
-            if (meta.size) verifiedSize = Number(meta.size);
-          } catch (metaErr: any) {
-            documentVersion = `gen_${Date.now()}`;
-          }
+      const expiresInMs = 7 * 24 * 60 * 60 * 1000; // 7 days validity
+      const expiresAtDate = new Date(Date.now() + expiresInMs);
+      downloadUrlExpiresAt = expiresAtDate.toISOString();
 
-          const expiresInMs = 7 * 24 * 60 * 60 * 1000; // 7 days validity
-          const expiresAtDate = new Date(Date.now() + expiresInMs);
-          downloadUrlExpiresAt = expiresAtDate.toISOString();
-
-          const [url] = await file.getSignedUrl({
-            version: 'v4',
-            action: 'read',
-            expires: expiresAtDate.getTime(),
-          });
-          downloadUrl = url;
-        }
+      try {
+        const [url] = await file.getSignedUrl({
+          version: 'v4',
+          action: 'read',
+          expires: expiresAtDate.getTime(),
+          queryParams: {
+            generation: documentVersion,
+          },
+        });
+        downloadUrl = url;
       } catch (signErr: any) {
         console.warn('[RecordDocumentUploadAPI] Non-fatal: Could not generate signed download URL:', signErr?.message || signErr);
       }

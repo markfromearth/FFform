@@ -295,6 +295,8 @@ export interface FFApplicationRecord {
   emailError?: string;
   crmStatus?: string;
   crmMessage?: string;
+  crmEventId?: string;
+  webhook_failures?: any[];
   documentMetadata?: any;
   documentRequest?: {
     status: string;
@@ -399,7 +401,7 @@ export async function updateEmailStatus(
 
 export async function updateCrmStatus(
   applicationId: string,
-  update: { crmStatus: string; crmMessage?: string }
+  update: { crmStatus: string; crmMessage?: string; crmEventId?: string }
 ) {
   const db = getAdminFirestore();
   if (!db) {
@@ -421,7 +423,9 @@ export async function updateDocumentMetadata(
   if (!db) {
     const record = inMemoryApplicationStore.get(applicationId);
     if (record) {
-      if (Array.isArray(record.documentMetadata)) {
+      if (Array.isArray(documentMetadata)) {
+        record.documentMetadata = documentMetadata;
+      } else if (Array.isArray(record.documentMetadata)) {
         record.documentMetadata = [
           ...record.documentMetadata.filter((d: any) => 
             documentMetadata.documentId 
@@ -433,6 +437,7 @@ export async function updateDocumentMetadata(
       } else {
         record.documentMetadata = documentMetadata;
       }
+      record.updatedAt = new Date().toISOString();
     }
     return;
   }
@@ -459,11 +464,7 @@ export async function addDocumentToApplication(
       }
 
       const isSameDoc = (d: any) => {
-        if (doc.documentId && d.documentId && d.documentId === doc.documentId) return true;
-        if (doc.storagePath && d.storagePath && d.storagePath === doc.storagePath) return true;
-        if (doc.fileName && d.fileName && doc.documentType && d.documentType) {
-          return d.fileName === doc.fileName && d.documentType === doc.documentType;
-        }
+        if (doc.documentId && d.documentId) return d.documentId === doc.documentId;
         return false;
       };
 
@@ -492,11 +493,7 @@ export async function addDocumentToApplication(
     }
 
     const isSameDoc = (d: any) => {
-      if (doc.documentId && d.documentId && d.documentId === doc.documentId) return true;
-      if (doc.storagePath && d.storagePath && d.storagePath === doc.storagePath) return true;
-      if (doc.fileName && d.fileName && doc.documentType && d.documentType) {
-        return d.fileName === doc.fileName && d.documentType === doc.documentType;
-      }
+      if (doc.documentId && d.documentId) return d.documentId === doc.documentId;
       return false;
     };
 
@@ -622,6 +619,51 @@ export async function getApplicationById(applicationId: string): Promise<FFAppli
   const doc = await db.collection(APPLICATION_COLLECTION).doc(applicationId).get();
   if (!doc.exists) return null;
   return doc.data() as FFApplicationRecord;
+}
+
+export interface WebhookFailureRecord {
+  payload: any;
+  error: string;
+  timestamp: string;
+}
+
+export async function logFailedWebhook(
+  applicationId: string,
+  payload: any,
+  error: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  const failureRecord: WebhookFailureRecord = {
+    payload,
+    error: typeof error === 'string' ? error : (error as any)?.message || String(error),
+    timestamp: now,
+  };
+
+  const db = getAdminFirestore();
+  if (!db) {
+    const record = inMemoryApplicationStore.get(applicationId);
+    if (record) {
+      if (!Array.isArray(record.webhook_failures)) {
+        record.webhook_failures = [];
+      }
+      record.webhook_failures.push(failureRecord);
+      record.updatedAt = now;
+    }
+    return;
+  }
+
+  const docRef = db.collection(APPLICATION_COLLECTION).doc(applicationId);
+  await db.runTransaction(async (t) => {
+    const snap = await t.get(docRef);
+    if (!snap.exists) return;
+    const data = snap.data() as FFApplicationRecord;
+    const failures = Array.isArray(data.webhook_failures) ? [...data.webhook_failures] : [];
+    failures.push(failureRecord);
+    t.update(docRef, {
+      webhook_failures: failures,
+      updatedAt: now,
+    });
+  }).catch((e: any) => console.error('[Firestore DAL] Failed to log webhook failure:', e.message));
 }
 
 

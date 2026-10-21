@@ -1,4 +1,4 @@
-import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus } from './_lib/applicationRepository.js';
+import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus, logFailedWebhook } from './_lib/applicationRepository.js';
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
 import crypto from 'crypto';
 
@@ -110,6 +110,9 @@ export default async function handler(req: any, res: any) {
                   version: 'v4',
                   action: 'read',
                   expires: expiresAtDate.getTime(),
+                  queryParams: {
+                    generation: documentVersion,
+                  },
                 });
                 downloadUrl = url;
               }
@@ -139,7 +142,7 @@ export default async function handler(req: any, res: any) {
 
       const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
       if (mondayWebhookUrl && documentsWithUrls.length > 0) {
-        const eventId = `evt_docs_${applicationId}_${Date.now()}`;
+        const eventId = app?.crmEventId || `evt_docs_${applicationId}_${Date.now()}`;
         const updatePayload = {
           event: 'documents_uploaded',
           eventId,
@@ -157,16 +160,24 @@ export default async function handler(req: any, res: any) {
           },
         };
 
-        const mondayResponse = await fetch(mondayWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatePayload),
-        });
+        try {
+          const mondayResponse = await fetch(mondayWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatePayload),
+          });
 
-        if (!mondayResponse.ok) {
-          console.error('[CompleteUploadAPI] Monday webhook returned status:', mondayResponse.status);
-        } else {
-          console.log('[CompleteUploadAPI] Successfully notified CRM of uploaded documents for ref:', submissionRef);
+          if (!mondayResponse.ok) {
+            const errMsg = `Monday webhook returned status: ${mondayResponse.status}`;
+            console.error('[CompleteUploadAPI]', errMsg);
+            await logFailedWebhook(applicationId, updatePayload, errMsg);
+          } else {
+            console.log('[CompleteUploadAPI] Successfully notified CRM of uploaded documents for ref:', submissionRef);
+          }
+        } catch (fetchErr: any) {
+          const errMsg = fetchErr?.message || String(fetchErr);
+          console.error('[CompleteUploadAPI] Monday webhook network error:', errMsg);
+          await logFailedWebhook(applicationId, updatePayload, errMsg);
         }
       }
     } catch (crmErr: any) {

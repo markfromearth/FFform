@@ -212,6 +212,9 @@ const docToSave: any = {
               version: 'v4',
               action: 'read',
               expires: expiresAtDate.getTime(),
+              queryParams: {
+                generation: documentVersion,
+              },
             });
             pdfDownloadUrl = signedUrl;
           } catch (signErr: any) {
@@ -303,10 +306,11 @@ const docToSave: any = {
     // 4. CRM Routing to Monday.com
     let crmStatus = 'pending';
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
+    const eventId = dbRecord?.crmEventId || `evt_sub_${id}`;
+    await updateCrmStatus(id, { crmStatus: 'pending', crmEventId: eventId });
     
     if (mondayWebhookUrl) {
       try {
-        const eventId = `evt_sub_${id}`;
         const mondayResponse = await fetch(mondayWebhookUrl, {
           method: 'POST',
           headers: {
@@ -329,16 +333,17 @@ const docToSave: any = {
         }
         
         crmStatus = 'delivered';
-        await updateCrmStatus(id, { crmStatus });
+        await updateCrmStatus(id, { crmStatus, crmEventId: eventId });
       } catch (crmError: any) {
         console.error('[SubmitAPI] Monday.com routing failed. Queuing for retry.', crmError.message);
         crmStatus = 'queued_for_retry';
-        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message });
+        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message, crmEventId: eventId });
       }
     } else {
       // Mocking successful CRM delivery if URL is not set (e.g., local dev)
       console.log('[SubmitAPI] MONDAY_WEBHOOK_URL not configured. Mocking successful CRM routing.');
       crmStatus = 'delivered';
+      await updateCrmStatus(id, { crmStatus, crmEventId: eventId });
     }
 
     // 5. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
