@@ -1,5 +1,6 @@
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
-import { validateUploadToken } from './_lib/applicationRepository.js';
+import { validateUploadToken, registerUploadRecord } from './_lib/applicationRepository.js';
+import crypto from 'crypto';
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.csv'];
@@ -118,7 +119,17 @@ const { token, fileName, fileType, fileSize, documentType } = req.body || {};
     // We add a timestamp to the file name to allow multiple uploads of the same type without overwriting
     const timestamp = Date.now();
     const storagePath = `applications/ff/${cleanAppId}/documents/${documentType}/${timestamp}_${cleanFileName}`;
+    const documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
     const expiresInSeconds = 15 * 60; // 15 minutes
+
+    // Register server-stored upload record with unique identity
+    await registerUploadRecord({
+      documentId,
+      applicationId: cleanAppId,
+      documentType,
+      fileName: cleanFileName,
+      storagePath,
+    });
 
     const storage = getAdminStorage();
 
@@ -137,6 +148,7 @@ const { token, fileName, fileType, fileSize, documentType } = req.body || {};
         success: true,
         uploadUrl,
         storagePath,
+        documentId,
         expiresInSeconds,
       });
       return;
@@ -149,6 +161,7 @@ const { token, fileName, fileType, fileSize, documentType } = req.body || {};
       success: true,
       uploadUrl: mockUploadUrl,
       storagePath,
+      documentId,
       expiresInSeconds,
       isMock: true,
       warning: 'WARNING: Firebase Storage is not configured. This is a local mock URL.'

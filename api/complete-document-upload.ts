@@ -1,4 +1,4 @@
-import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus, logFailedWebhook } from './_lib/applicationRepository.js';
+import { validateUploadToken, getApplicationById, completeUploadToken, updateApplicationUploadStatus, logFailedWebhook, updateUploadTokenMetadata } from './_lib/applicationRepository.js';
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
 import crypto from 'crypto';
 
@@ -42,8 +42,14 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const tokenValidation = await validateUploadToken(token);
-    if (!tokenValidation.valid || !tokenValidation.applicationId) {
+    let tokenValidation = await validateUploadToken(token);
+    if (!tokenValidation.valid && tokenValidation.record?.status === 'COMPLETED') {
+      tokenValidation = {
+        valid: true,
+        record: tokenValidation.record,
+        applicationId: tokenValidation.record.applicationId,
+      };
+    } else if (!tokenValidation.valid || !tokenValidation.applicationId) {
       res.status(403).json({ error: tokenValidation.error || 'Invalid or expired upload token.' });
       return;
     }
@@ -142,13 +148,20 @@ export default async function handler(req: any, res: any) {
 
       const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
       if (mondayWebhookUrl && documentsWithUrls.length > 0) {
-        const eventId = app?.crmEventId || `evt_docs_${applicationId}_${Date.now()}`;
+        // Each new upload batch gets its own persistent event ID; retries retain that batch's ID
+        let batchEventId = tokenValidation.record?.metadata?.uploadBatchEventId || (app as any)?.lastUploadBatchEventId;
+        if (!batchEventId) {
+          batchEventId = `evt_docs_${applicationId}_${Date.now()}`;
+          await updateUploadTokenMetadata(token, { uploadBatchEventId: batchEventId });
+          await updateApplicationUploadStatus(applicationId, 'uploaded', batchEventId);
+        }
+
         const updatePayload = {
           event: 'documents_uploaded',
-          eventId,
+          eventId: batchEventId,
           reference: submissionRef,
           data: {
-            eventId,
+            eventId: batchEventId,
             applicationId,
             submissionRef,
             companyName: businessName,

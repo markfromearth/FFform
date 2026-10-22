@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas.js';
 import { sendApplicationNotificationEmail } from './_lib/emailService.js';
 
-import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken } from './_lib/applicationRepository.js';
+import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken, logFailedWebhook } from './_lib/applicationRepository.js';
 import { generateApplicationPdf } from './_lib/pdfGenerator.js';
 import { getAdminStorage } from './_lib/firebaseAdmin.js';
 
@@ -306,9 +306,19 @@ const docToSave: any = {
     // 4. CRM Routing to Monday.com
     let crmStatus = 'pending';
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
-    const eventId = dbRecord?.crmEventId || `evt_sub_${id}`;
-    await updateCrmStatus(id, { crmStatus: 'pending', crmEventId: eventId });
+    const eventId = dbRecord?.submissionEventId || dbRecord?.crmEventId || `evt_sub_${id}`;
+    await updateCrmStatus(id, { crmStatus: 'pending', crmEventId: eventId, submissionEventId: eventId });
     
+    const submitPayload = {
+      event: 'new_factoring_enquiry',
+      eventId,
+      reference: submissionRef,
+      data: {
+        ...docToSave,
+        eventId,
+      }
+    };
+
     if (mondayWebhookUrl) {
       try {
         const mondayResponse = await fetch(mondayWebhookUrl, {
@@ -316,34 +326,28 @@ const docToSave: any = {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            event: 'new_factoring_enquiry',
-            eventId,
-            reference: submissionRef,
-            data: {
-              ...docToSave,
-              eventId,
-            }
-          })
+          body: JSON.stringify(submitPayload)
         });
 
         if (!mondayResponse.ok) {
-          console.error('[SubmitAPI] Monday.com error details. Status:', mondayResponse.status, 'Payload:', JSON.stringify({ event: 'new_factoring_enquiry', reference: submissionRef, data: docToSave }));
-          throw new Error(`Monday.com API responded with status: ${mondayResponse.status}`);
+          console.error('[SubmitAPI] Monday.com error details. Status:', mondayResponse.status, 'Payload:', JSON.stringify(submitPayload));
+          const errMsg = `Monday.com API responded with status: ${mondayResponse.status}`;
+          throw new Error(errMsg);
         }
         
         crmStatus = 'delivered';
-        await updateCrmStatus(id, { crmStatus, crmEventId: eventId });
+        await updateCrmStatus(id, { crmStatus, crmEventId: eventId, submissionEventId: eventId });
       } catch (crmError: any) {
         console.error('[SubmitAPI] Monday.com routing failed. Queuing for retry.', crmError.message);
         crmStatus = 'queued_for_retry';
-        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message, crmEventId: eventId });
+        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message, crmEventId: eventId, submissionEventId: eventId });
+        await logFailedWebhook(id, submitPayload, crmError.message || 'Monday.com routing failed');
       }
     } else {
       // Mocking successful CRM delivery if URL is not set (e.g., local dev)
       console.log('[SubmitAPI] MONDAY_WEBHOOK_URL not configured. Mocking successful CRM routing.');
       crmStatus = 'delivered';
-      await updateCrmStatus(id, { crmStatus, crmEventId: eventId });
+      await updateCrmStatus(id, { crmStatus, crmEventId: eventId, submissionEventId: eventId });
     }
 
     // 5. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)

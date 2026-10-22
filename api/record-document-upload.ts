@@ -1,4 +1,4 @@
-import { validateUploadToken, addDocumentToApplication, getApplicationById } from './_lib/applicationRepository.js';
+import { validateUploadToken, addDocumentToApplication, getApplicationById, resolveUploadRecord } from './_lib/applicationRepository.js';
 import { getAdminStorage, isFirebaseConfigured } from './_lib/firebaseAdmin.js';
 import crypto from 'crypto';
 
@@ -50,20 +50,45 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // Enforce server-side deterministic storage path and server-side documentId
-    const storagePath = `applications/ff/${tokenValidation.applicationId}/documents/${document.documentType}/${document.fileName}`;
-    
-    // Assign permanent server-side documentId (preserving existing documentId if this file is being re-uploaded)
-    let documentId: string | undefined;
-    const app = await getApplicationById(tokenValidation.applicationId);
-    if (app && Array.isArray(app.documentMetadata)) {
-      const existing = app.documentMetadata.find((d: any) => d.storagePath === storagePath);
-      if (existing?.documentId) {
-        documentId = existing.documentId;
+    // Resolve server-stored upload record created by get-upload-url
+    const uploadRecord = await resolveUploadRecord(
+      tokenValidation.applicationId,
+      document.storagePath,
+      document.fileName,
+      document.documentType
+    );
+
+    let storagePath: string;
+    let documentId: string;
+
+    if (uploadRecord) {
+      // Both endpoints resolve the exact same server-stored upload record
+      storagePath = uploadRecord.storagePath;
+      documentId = uploadRecord.documentId;
+    } else {
+      // Validate client-supplied storagePath against application namespace to prevent spoofing
+      const clientPath = typeof document.storagePath === 'string' ? document.storagePath : '';
+      const expectedPrefix = `applications/ff/${tokenValidation.applicationId}/`;
+
+      if (clientPath && clientPath.startsWith(expectedPrefix) && !clientPath.includes('..')) {
+        storagePath = clientPath;
+      } else {
+        // Ignore spoofed or invalid client path and enforce server-side deterministic path
+        storagePath = `applications/ff/${tokenValidation.applicationId}/documents/${document.documentType}/${document.fileName}`;
       }
-    }
-    if (!documentId) {
-      documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+
+      // Assign permanent server-side documentId (preserving existing documentId if this file is being re-uploaded)
+      const app = await getApplicationById(tokenValidation.applicationId);
+      if (app && Array.isArray(app.documentMetadata)) {
+        const existing = app.documentMetadata.find((d: any) => d.storagePath === storagePath);
+        if (existing?.documentId) {
+          documentId = existing.documentId;
+        } else {
+          documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+        }
+      } else {
+        documentId = `doc_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      }
     }
 
     const sanitizedDoc = {

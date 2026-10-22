@@ -281,8 +281,8 @@ describe('FF Form Full Workflow Audit & Idempotency Tests', () => {
     await recordDocumentUploadHandler(createMockReqRes({ body: { token, document: { ...docPayload, storagePath: `applications/ff/${appId}/documents/aged_debtor_report/2_Debtors_Sept2026.pdf` } } }).req, createMockReqRes({}).res);
 
     const app = await getApplicationById(appId);
-    // Metadata deduplicates matching filename + doctype to prevent duplicate entries
-    expect(app?.documentMetadata.filter((d: any) => d.fileName === 'Debtors_Sept2026.pdf').length).toBe(1);
+    // Distinct document uploads with the same filename are preserved by documentId rather than overwritten
+    expect(app?.documentMetadata.filter((d: any) => d.fileName === 'Debtors_Sept2026.pdf').length).toBe(2);
   });
 
   // -------------------------------------------------------------

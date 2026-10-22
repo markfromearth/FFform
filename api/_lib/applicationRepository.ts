@@ -296,6 +296,8 @@ export interface FFApplicationRecord {
   crmStatus?: string;
   crmMessage?: string;
   crmEventId?: string;
+  submissionEventId?: string;
+  lastUploadBatchEventId?: string;
   webhook_failures?: any[];
   documentMetadata?: any;
   documentRequest?: {
@@ -401,7 +403,7 @@ export async function updateEmailStatus(
 
 export async function updateCrmStatus(
   applicationId: string,
-  update: { crmStatus: string; crmMessage?: string; crmEventId?: string }
+  update: { crmStatus: string; crmMessage?: string; crmEventId?: string; submissionEventId?: string }
 ) {
   const db = getAdminFirestore();
   if (!db) {
@@ -622,6 +624,7 @@ export async function getApplicationById(applicationId: string): Promise<FFAppli
 }
 
 export interface WebhookFailureRecord {
+  eventId?: string;
   payload: any;
   error: string;
   timestamp: string;
@@ -633,7 +636,9 @@ export async function logFailedWebhook(
   error: string
 ): Promise<void> {
   const now = new Date().toISOString();
+  const eventId = payload?.eventId || payload?.data?.eventId;
   const failureRecord: WebhookFailureRecord = {
+    eventId,
     payload,
     error: typeof error === 'string' ? error : (error as any)?.message || String(error),
     timestamp: now,
@@ -664,6 +669,101 @@ export async function logFailedWebhook(
       updatedAt: now,
     });
   }).catch((e: any) => console.error('[Firestore DAL] Failed to log webhook failure:', e.message));
+}
+
+// -------------------------------------------------------------
+// Upload Session & Batch Identity Management
+// -------------------------------------------------------------
+
+export interface UploadRecord {
+  documentId: string;
+  applicationId: string;
+  documentType: string;
+  fileName: string;
+  storagePath: string;
+  createdAt: string;
+}
+
+const inMemoryUploadStore = new Map<string, UploadRecord>();
+const UPLOAD_RECORD_COLLECTION = 'ffUploadRecords';
+
+export async function registerUploadRecord(record: {
+  documentId: string;
+  applicationId: string;
+  documentType: string;
+  fileName: string;
+  storagePath: string;
+}): Promise<UploadRecord> {
+  const fullRecord: UploadRecord = {
+    ...record,
+    createdAt: new Date().toISOString(),
+  };
+
+  const db = getAdminFirestore();
+  if (db) {
+    const docKey = `${record.applicationId}_${Buffer.from(record.storagePath).toString('base64url')}`;
+    await db.collection(UPLOAD_RECORD_COLLECTION).doc(docKey).set(fullRecord).catch(() => {});
+  }
+  inMemoryUploadStore.set(record.storagePath, fullRecord);
+  return fullRecord;
+}
+
+export async function resolveUploadRecord(
+  applicationId: string,
+  storagePath?: string,
+  fileName?: string,
+  documentType?: string
+): Promise<UploadRecord | null> {
+  if (storagePath) {
+    // 1. In-memory check
+    const mem = inMemoryUploadStore.get(storagePath);
+    if (mem && mem.applicationId === applicationId) {
+      return mem;
+    }
+
+    // 2. Firestore check
+    const db = getAdminFirestore();
+    if (db) {
+      const docKey = `${applicationId}_${Buffer.from(storagePath).toString('base64url')}`;
+      const snap = await db.collection(UPLOAD_RECORD_COLLECTION).doc(docKey).get().catch(() => null);
+      if (snap && snap.exists) {
+        const data = snap.data() as UploadRecord;
+        if (data.applicationId === applicationId) return data;
+      }
+    }
+  }
+
+  // Fallback: match by fileName and documentType for this application
+  for (const rec of inMemoryUploadStore.values()) {
+    if (rec.applicationId === applicationId && rec.fileName === fileName && rec.documentType === documentType) {
+      return rec;
+    }
+  }
+
+  return null;
+}
+
+export async function updateUploadTokenMetadata(
+  token: string,
+  metadataUpdate: Record<string, any>
+): Promise<void> {
+  const db = getAdminFirestore();
+  if (db) {
+    const docRef = db.collection(TOKEN_COLLECTION).doc(token);
+    const snap = await docRef.get();
+    if (snap.exists) {
+      const existing = (snap.data() as UploadTokenRecord).metadata || {};
+      await docRef.update({
+        metadata: { ...existing, ...metadataUpdate },
+        updatedAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
+  } else {
+    const rec = inMemoryTokenStore.get(token);
+    if (rec) {
+      rec.metadata = { ...(rec.metadata || {}), ...metadataUpdate };
+    }
+  }
 }
 
 

@@ -215,29 +215,29 @@ export default async function handler(req: any, res: any) {
     let replayed = false;
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
     if (replayWebhook && mondayWebhookUrl) {
-      try {
-        const currentApp = await getApplicationById(applicationId);
-        const resolvedEventId = currentApp?.crmEventId || app.crmEventId || `evt_renew_${applicationId}_${targetDoc.documentId}_${Date.now()}`;
-        const allDocs = Array.isArray(currentApp?.documentMetadata)
-          ? currentApp!.documentMetadata
-          : [updatedDocData];
+      const currentApp = await getApplicationById(applicationId);
+      const resolvedEventId = currentApp?.submissionEventId || currentApp?.crmEventId || app.submissionEventId || app.crmEventId || `evt_renew_${applicationId}_${Date.now()}`;
+      const allDocs = Array.isArray(currentApp?.documentMetadata)
+        ? currentApp!.documentMetadata
+        : [updatedDocData];
 
-        const replayPayload = {
-          event: isApplicationPdf ? 'new_factoring_enquiry' : 'documents_uploaded',
+      const replayPayload = {
+        event: isApplicationPdf ? 'new_factoring_enquiry' : 'documents_uploaded',
+        eventId: resolvedEventId,
+        reference: submissionRef,
+        data: {
           eventId: resolvedEventId,
-          reference: submissionRef,
-          data: {
-            eventId: resolvedEventId,
-            applicationId,
-            submissionRef,
-            companyName: app.application?.business?.company_name || 'Business Applicant',
-            status: isApplicationPdf ? 'submitted' : 'documents_received',
-            uploadedAt: new Date().toISOString(),
-            documents: allDocs,
-            ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl, downloadUrlExpiresAt } : {})
-          }
-        };
+          applicationId,
+          submissionRef,
+          companyName: app.application?.business?.company_name || 'Business Applicant',
+          status: isApplicationPdf ? 'submitted' : 'documents_received',
+          uploadedAt: new Date().toISOString(),
+          documents: allDocs,
+          ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl, downloadUrlExpiresAt } : {})
+        }
+      };
 
+      try {
         const mondayResponse = await fetch(mondayWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ export default async function handler(req: any, res: any) {
       } catch (replayErr: any) {
         const errMsg = replayErr?.message || String(replayErr);
         console.warn('[RenewDocumentUrlAPI] Replay webhook error:', errMsg);
-        await logFailedWebhook(applicationId, { applicationId, submissionRef, documentId }, errMsg);
+        await logFailedWebhook(applicationId, replayPayload, errMsg);
       }
     }
 
