@@ -170,4 +170,62 @@ describe('Submit Application API Integration Flow', () => {
     expect(getStatus()).toBe(400);
     expect(getJson().error).toBeDefined();
   });
+
+  it('5. Accepts ordinary UK phone number (07700 900123) and automatically normalizes to +447700900123', async () => {
+    const saveSpy = vi.spyOn(applicationRepository, 'saveOrUpdateApplication');
+
+    const payloadWithUkPhone = {
+      ...validSubmissionPayload,
+      id: 'ff-app-phone-uk-07700',
+      application: {
+        ...validSubmissionPayload.application,
+        contact: {
+          ...validSubmissionPayload.application.contact,
+          phone: '07700 900123',
+        },
+      },
+    };
+
+    const { req, res, getStatus, getJson } = createMockReqRes(payloadWithUkPhone);
+
+    await handler(req, res);
+
+    expect(getStatus()).toBe(200);
+    expect(getJson().success).toBe(true);
+
+    // Verify persisted application has normalized phone (+447700900123)
+    expect(saveSpy).toHaveBeenCalledWith(
+      'ff-app-phone-uk-07700',
+      expect.any(String),
+      'submitted',
+      expect.objectContaining({
+        contact: expect.objectContaining({
+          phone: '+447700900123',
+        }),
+      })
+    );
+  });
+
+  it('6. Rejects invalid telephone number with a clear, helpful message instead of generic server error', async () => {
+    const payloadWithInvalidPhone = {
+      ...validSubmissionPayload,
+      id: 'ff-app-phone-invalid',
+      application: {
+        ...validSubmissionPayload.application,
+        contact: {
+          ...validSubmissionPayload.application.contact,
+          phone: '0770', // Invalid / incomplete
+        },
+      },
+    };
+
+    const { req, res, getStatus, getJson } = createMockReqRes(payloadWithInvalidPhone);
+
+    await handler(req, res);
+
+    expect(getStatus()).toBe(400);
+    const body = getJson();
+    expect(body.error).toBe('Please enter a valid UK phone number (e.g. 07700 900123 or +447700900123)');
+    expect(body.error).not.toBe('Server-side validation failed.');
+  });
 });

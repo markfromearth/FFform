@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { isValidPhone, normalizePhone } from '../utils/formatters.js';
+
+export { isValidPhone, normalizePhone };
 
 export const businessDetailsSchema = z.object({
   b2b_completed_supply: z.enum(['yes', 'no', 'mixture'], { required_error: 'Please select an option' }),
@@ -34,7 +37,11 @@ export const businessDetailsSchema = z.object({
 export const contactDetailsSchema = z.object({
   contact_full_name: z.string().min(1, 'Name is required'),
   contact_role: z.string().min(1, 'Role is required'),
-  phone: z.string().min(1, 'Phone number is required'),
+  phone: z.string()
+    .min(1, 'Phone number is required')
+    .refine((val) => isValidPhone(val), {
+      message: 'Please enter a valid UK phone number (e.g. 07700 900123 or +447700900123)',
+    }),
   email: z.string().email('Please enter a valid email address'),
   funding_timescale: z.string().min(1, 'Please select a timescale'),
 });

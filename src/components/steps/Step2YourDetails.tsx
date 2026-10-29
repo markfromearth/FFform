@@ -2,6 +2,7 @@ import React from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { LockKeyhole } from 'lucide-react';
 import { ErrorSummary } from '../common/ErrorSummary';
+import { normalizePhone, isValidPhone } from '../../utils/formatters';
 
 export const Step2YourDetails: React.FC = () => {
   const { data, updateContact, nextStep, prevStep, errors, validateField, clearError } = useApplication();
@@ -75,9 +76,17 @@ export const Step2YourDetails: React.FC = () => {
               aria-describedby={errors.phone ? "phone_error" : undefined}
               className={`w-full min-h-touch p-3 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent text-body-l bg-surface text-white ${errors.phone ? 'border-error bg-error/10 focus:ring-error focus:border-error' : 'border-outline-variant text-on-surface'}`}
               value={data.contact?.phone || ''}
-              placeholder="e.g. 07700 900000"
+              placeholder="e.g. 07700 900123"
               onChange={(e) => { updateContact({ phone: e.target.value }); clearError('phone'); }}
-              onBlur={() => validateField(1, 'phone')}
+              onBlur={() => {
+                if (data.contact?.phone) {
+                  const cleaned = data.contact.phone.trim();
+                  if (cleaned && isValidPhone(cleaned)) {
+                    updateContact({ phone: normalizePhone(cleaned) });
+                  }
+                }
+                validateField(1, 'phone');
+              }}
             />
             {errors.phone && (
               <p id="phone_error" className="field-error">

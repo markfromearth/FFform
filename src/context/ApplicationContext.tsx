@@ -11,6 +11,7 @@ import {
   consentsSchema
 } from '../schemas/applicationSchemas';
 import { z } from 'zod';
+import { normalizePhone } from '../utils/formatters';
 
 interface PartialApplicationData {
   business: Partial<BusinessDetails>;
@@ -180,6 +181,8 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Partial Save Logic: Save after Step 2 (index 1) is completed
       if (currentStep === 1) {
         try {
+          const rawPhone = data.contact?.phone || '';
+          const normalizedPhone = normalizePhone(rawPhone) || rawPhone;
           fetch('/api/submit-application', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -187,7 +190,13 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
               id: applicationId,
               turnstileToken,
               status: 'contact_captured',
-              application: data
+              application: {
+                ...data,
+                contact: {
+                  ...data.contact,
+                  phone: normalizedPhone,
+                },
+              }
             })
           }).catch(err => console.error('Partial save failed', err));
         } catch (e) {}

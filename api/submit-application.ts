@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fullApplicationSchema } from '../src/schemas/applicationSchemas.js';
+import { normalizePhone, isValidPhone } from '../src/utils/formatters.js';
 import { sendApplicationNotificationEmail } from './_lib/emailService.js';
 
 import { saveOrUpdateApplication, updateCrmStatus, updateEmailStatus, updateDocumentMetadata, createUploadToken, logFailedWebhook } from './_lib/applicationRepository.js';
@@ -15,13 +16,6 @@ function normalizeEmail(email: string): string {
 }
 
 /**
- * Normalizes phone number to E.164 format (simplified for UK + international)
- */
-function normalizePhone(phone: string): string {
-  return phone.replace(/[^\d+]/g, '');
-}
-
-/**
  * Generates a standard canonical submission reference if one was not supplied.
  */
 function generateFallbackReference(appId: string): string {
@@ -34,8 +28,12 @@ function generateFallbackReference(appId: string): string {
 const serverValidationSchema = z.object({
   application: fullApplicationSchema.extend({
     contact: fullApplicationSchema.shape.contact.extend({
-      // Strict E.164 validation for server-side
-      phone: z.string().regex(/^\+?[1-9]\d{6,14}$/, 'Phone number must be a valid E.164 format'),
+      // Validate phone number (E.164 / UK format) with friendly, actionable error
+      phone: z.string()
+        .min(1, 'Phone number is required')
+        .refine((val) => isValidPhone(val), {
+          message: 'Please enter a valid UK phone number (e.g. 07700 900123 or +447700900123)',
+        }),
     }),
     business: fullApplicationSchema.shape.business.extend({
       // Strict currency validation (ensure they are positive integers/numbers)
@@ -94,6 +92,11 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    // Automatically normalize phone number to standard E.164 (e.g. 07700 900123 -> +447700900123)
+    if (payload.application?.contact?.phone) {
+      payload.application.contact.phone = normalizePhone(payload.application.contact.phone);
+    }
+
     // If this is a partial save, skip full schema validation
     const isPartial = payload.status === 'contact_captured';
     
@@ -103,8 +106,22 @@ export default async function handler(req: any, res: any) {
       validationResult = serverValidationSchema.safeParse(payload);
 
       if (!validationResult.success) {
+        // Extract specific, user-friendly error message rather than generic "Server-side validation failed."
+        const issues = validationResult.error.issues;
+        const phoneIssue = issues.find(i => i.path.includes('phone'));
+        let errorMessage = 'Validation failed. Please check your details.';
+        
+        if (phoneIssue) {
+          errorMessage = 'Please enter a valid UK phone number (e.g. 07700 900123 or +447700900123)';
+        } else if (issues[0]?.message && issues[0].message !== 'Required' && !issues[0].message.includes('Expected')) {
+          errorMessage = issues[0].message;
+        } else if (issues[0]?.path?.length) {
+          const fieldName = issues[0].path[issues[0].path.length - 1];
+          errorMessage = `Please provide a valid value for ${fieldName}`;
+        }
+
         res.status(400).json({
-          error: 'Server-side validation failed.',
+          error: errorMessage,
           details: validationResult.error.format(),
         });
         return;

@@ -27,9 +27,58 @@ export function parseCurrencyInput(value: string): number | null {
 }
 
 /**
+ * Normalizes a phone number to standard E.164 format.
+ * Automatically converts UK local numbers (e.g. 07700 900123) to +447700900123,
+ * preserves numbers already entered with +44, and handles international numbers.
+ */
+export function normalizePhone(rawPhone: string | null | undefined): string {
+  if (!rawPhone || typeof rawPhone !== 'string') return '';
+  // Remove all whitespace, hyphens, brackets, dots
+  let cleaned = rawPhone.trim().replace(/[\s\-\(\)\.]/g, '');
+
+  // Handle international prefix '00' (e.g. 0044... -> +44...)
+  if (cleaned.startsWith('00')) {
+    cleaned = '+' + cleaned.slice(2);
+  }
+  // Standard UK local numbers starting with '0' (e.g. 07700 900123 -> +447700900123)
+  else if (cleaned.startsWith('0')) {
+    cleaned = '+44' + cleaned.slice(1);
+  }
+  // UK numbers starting with '44' without plus (e.g. 447700900123)
+  else if (/^44\d{9,10}$/.test(cleaned)) {
+    cleaned = '+' + cleaned;
+  }
+  // If numeric string without leading plus or zero
+  else if (!cleaned.startsWith('+') && /^\d+$/.test(cleaned)) {
+    cleaned = '+' + cleaned;
+  }
+
+  // Handle +44(0)... where (0) was stripped, leaving +440...
+  if (cleaned.startsWith('+440')) {
+    cleaned = '+44' + cleaned.slice(4);
+  }
+
+  return cleaned;
+}
+
+/**
+ * Validates whether a phone number (raw or normalized) is a valid UK or international number.
+ * Valid UK numbers: +44 followed by 9 to 10 digits (e.g. +447700900123).
+ * Valid international numbers: + followed by 7 to 15 digits.
+ */
+export function isValidPhone(phone: string | null | undefined): boolean {
+  if (!phone || typeof phone !== 'string') return false;
+  const normalized = normalizePhone(phone);
+  // UK numbers: +44 followed by 9 or 10 digits, beginning with 1-9 (e.g. +447..., +441..., +442...)
+  // or general E.164: + followed by country code [1-9] and 6-14 digits
+  return /^\+(?:44[1-9]\d{8,9}|[1-9]\d{6,14})$/.test(normalized);
+}
+
+/**
  * Format raw digits into a readable telephone representation
  */
 export function formatPhone(phone: string): string {
+  if (!phone) return '';
   return phone.trim();
 }
 

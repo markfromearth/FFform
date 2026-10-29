@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApplication } from '../../context/ApplicationContext';
 import { ShieldCheck, CheckCircle2, Pencil } from 'lucide-react';
 import { ErrorSummary } from '../common/ErrorSummary';
-import { formatLabel } from '../../utils/formatters';
+import { formatLabel, normalizePhone } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
   const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, setUploadToken, turnstileToken } = useApplication();
@@ -22,11 +22,22 @@ export const Step5Review: React.FC = () => {
     try {
       const id = applicationId;
       
+      // Ensure phone is normalized to standard E.164 (e.g. 07700 900123 -> +447700900123)
+      const rawPhone = data.contact?.phone || '';
+      const normalizedPhone = normalizePhone(rawPhone) || rawPhone;
+      const submissionData = {
+        ...data,
+        contact: {
+          ...data.contact,
+          phone: normalizedPhone,
+        },
+      };
+
       const response = await fetch('/api/submit-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          application: data,
+          application: submissionData,
           id,
           turnstileToken,
           status: 'introduction_ready'
