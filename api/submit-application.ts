@@ -149,15 +149,24 @@ export default async function handler(req: any, res: any) {
     const submittedAt = payload.submittedAt || new Date().toISOString();
     const appStatus = isPartial ? 'draft' : 'submitted';
 
+    // Extract optional opaque leadReference (correlates to existing Monday lead item)
+    const rawLeadRef = typeof payload.leadReference === 'string' ? payload.leadReference.trim() : undefined;
+    const leadReference = rawLeadRef && rawLeadRef.length > 0 ? rawLeadRef : undefined;
+
     // 2. Persist to Firestore and Idempotency Check
     let dbRecord;
     try {
-      const result = await saveOrUpdateApplication(id, submissionRef, appStatus, application);
+      const result = await saveOrUpdateApplication(id, submissionRef, appStatus, application, leadReference);
       dbRecord = result.record;
 
       if (result.isDuplicate) {
         // Idempotent immediate 200 OK return (preventing duplicate CRM entry and emails)
-        const uploadToken = await createUploadToken(dbRecord.applicationId, 7 * 24 * 60 * 60 * 1000);
+        const uploadToken = await createUploadToken(
+          dbRecord.applicationId,
+          7 * 24 * 60 * 60 * 1000,
+          dbRecord.submissionRef,
+          { ...(dbRecord.leadReference ? { leadReference: dbRecord.leadReference } : {}) }
+        );
         res.status(200).json({
           success: true,
           message: 'Application already submitted (idempotent duplicate request)',
@@ -177,13 +186,16 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-const docToSave: any = {
+    const effectiveLeadRef = leadReference || dbRecord?.leadReference;
+
+    const docToSave: any = {
       ...application,
       id,
       submissionRef,
       submittedAt,
       status: appStatus,
       crmStatus: 'pending',
+      ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
     };
 
     // 2.5 PDF Generation and Storage (Full submissions only)
@@ -370,7 +382,12 @@ const docToSave: any = {
     // 5. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)
     let uploadToken: string | undefined;
     try {
-      uploadToken = await createUploadToken(id, 7 * 24 * 60 * 60 * 1000, submissionRef);
+      uploadToken = await createUploadToken(
+        id,
+        7 * 24 * 60 * 60 * 1000,
+        submissionRef,
+        { ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}) }
+      );
     } catch (tokenErr: any) {
       console.warn('[SubmitAPI] Non-fatal: Failed to create upload token during submission:', tokenErr?.message || tokenErr);
     }

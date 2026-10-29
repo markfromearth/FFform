@@ -5,7 +5,7 @@ import { ErrorSummary } from '../common/ErrorSummary';
 import { formatLabel, normalizePhone } from '../../utils/formatters';
 
 export const Step5Review: React.FC = () => {
-  const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, setUploadToken, turnstileToken } = useApplication();
+  const { data, prevStep, setCurrentStep, nextStep, updateConsents, validateStep, clearError, errors, applicationId, leadReference, setUploadToken, turnstileToken } = useApplication();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -40,7 +40,8 @@ export const Step5Review: React.FC = () => {
           application: submissionData,
           id,
           turnstileToken,
-          status: 'introduction_ready'
+          status: 'introduction_ready',
+          ...(leadReference ? { leadReference } : {})
         })
       });
 

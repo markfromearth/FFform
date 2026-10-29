@@ -156,6 +156,8 @@ export default async function handler(req: any, res: any) {
           await updateApplicationUploadStatus(applicationId, 'uploaded', batchEventId);
         }
 
+        const effectiveLeadRef = (app as any)?.leadReference || tokenValidation.record?.metadata?.leadReference;
+
         const updatePayload = {
           event: 'documents_uploaded',
           eventId: batchEventId,
@@ -170,6 +172,7 @@ export default async function handler(req: any, res: any) {
             status: 'documents_received',
             uploadedAt: new Date().toISOString(),
             documents: documentsWithUrls,
+            ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
           },
         };
 

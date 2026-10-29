@@ -23,6 +23,7 @@ interface PartialApplicationData {
 
 interface ApplicationContextType {
   applicationId: string;
+  leadReference: string | null;
   uploadToken: string | null;
   setUploadToken: (token: string) => void;
   data: PartialApplicationData;
@@ -48,7 +49,9 @@ const ApplicationContext = createContext<ApplicationContextType | undefined>(und
 export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const tokenFromUrl = searchParams.get('token');
+  const leadRefFromUrl = searchParams.get('leadReference') || searchParams.get('lead_reference') || null;
   
+  const [leadReference] = useState<string | null>(leadRefFromUrl ? leadRefFromUrl.trim() : null);
   const [uploadToken, setUploadToken] = useState<string | null>(tokenFromUrl);
   const [applicationId] = useState(() => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36));
   const [data, setData] = useState<PartialApplicationData>({
@@ -190,6 +193,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
               id: applicationId,
               turnstileToken,
               status: 'contact_captured',
+              ...(leadReference ? { leadReference } : {}),
               application: {
                 ...data,
                 contact: {
@@ -217,6 +221,7 @@ export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ childre
     <ApplicationContext.Provider
       value={{
         applicationId,
+        leadReference,
         uploadToken,
         setUploadToken,
         data,

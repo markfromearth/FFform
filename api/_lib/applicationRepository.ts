@@ -123,12 +123,14 @@ export async function createDocumentRequestToken(options: CreateTokenOptions): P
 export async function createUploadToken(
   applicationId: string,
   expiresInMs: number = 7 * 24 * 60 * 60 * 1000,
-  submissionRef?: string
+  submissionRef?: string,
+  metadata: Record<string, any> = {}
 ): Promise<string> {
   const result = await createDocumentRequestToken({
     applicationId,
     submissionRef,
     expiresInMs,
+    metadata,
   });
   return result.token;
 }
@@ -299,6 +301,7 @@ export interface FFApplicationRecord {
   submissionEventId?: string;
   lastUploadBatchEventId?: string;
   webhook_failures?: any[];
+  leadReference?: string;
   documentMetadata?: any;
   documentRequest?: {
     status: string;
@@ -316,7 +319,8 @@ export async function saveOrUpdateApplication(
   applicationId: string,
   submissionRef: string,
   applicationStatus: string,
-  applicationData: Partial<ApplicationData>
+  applicationData: Partial<ApplicationData>,
+  leadReference?: string
 ): Promise<{ isDuplicate: boolean; record: FFApplicationRecord }> {
   const db = getAdminFirestore();
   if (!db) {
@@ -326,6 +330,7 @@ export async function saveOrUpdateApplication(
     if (existing && applicationStatus === 'submitted' && existing.applicationStatus === 'submitted') {
       return { isDuplicate: true, record: existing };
     }
+    const effectiveLeadRef = leadReference || existing?.leadReference;
     const record: FFApplicationRecord = {
       applicationId,
       submissionRef,
@@ -334,6 +339,7 @@ export async function saveOrUpdateApplication(
       updatedAt: now,
       submittedAt: applicationStatus === 'submitted' ? (existing?.submittedAt || now) : undefined,
       application: applicationData,
+      ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
     };
     inMemoryApplicationStore.set(applicationId, record);
     return {
@@ -355,10 +361,12 @@ export async function saveOrUpdateApplication(
         return { isDuplicate: true, record: existingData };
       }
 
+      const effectiveLeadRef = leadReference || existingData.leadReference;
       const updatedRecord: Partial<FFApplicationRecord> = {
         applicationStatus,
         updatedAt: new Date().toISOString(),
         application: applicationData,
+        ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
         ...(applicationStatus === 'submitted' && !existingData.submittedAt ? { submittedAt: new Date().toISOString() } : {}),
       };
 
@@ -377,6 +385,7 @@ export async function saveOrUpdateApplication(
         uploadStatus: 'pending',
         emailStatus: 'pending',
         crmStatus: 'pending',
+        ...(leadReference ? { leadReference } : {}),
       };
       t.set(docRef, newRecord);
       return { isDuplicate: false, record: newRecord };

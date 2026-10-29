@@ -202,7 +202,8 @@ describe('Submit Application API Integration Flow', () => {
         contact: expect.objectContaining({
           phone: '+447700900123',
         }),
-      })
+      }),
+      undefined
     );
   });
 
@@ -227,5 +228,92 @@ describe('Submit Application API Integration Flow', () => {
     const body = getJson();
     expect(body.error).toBe('Please enter a valid UK phone number (e.g. 07700 900123 or +447700900123)');
     expect(body.error).not.toBe('Server-side validation failed.');
+  });
+
+  it('7. Captures and persists leadReference, attaches data.leadReference to CRM webhook payload, and includes in upload token metadata', async () => {
+    const mondayWebhookUrl = 'https://crm-mock.example.com/webhook';
+    process.env.MONDAY_WEBHOOK_URL = mondayWebhookUrl;
+
+    const dispatchedPayloads: any[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === mondayWebhookUrl) {
+        dispatchedPayloads.push(JSON.parse(options.body));
+        return { ok: true, status: 200, json: async () => ({ status: 'received' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    const saveSpy = vi.spyOn(applicationRepository, 'saveOrUpdateApplication');
+
+    try {
+      const payloadWithLeadRef = {
+        ...validSubmissionPayload,
+        id: 'ff-app-lead-ref-1001',
+        leadReference: 'MON-LEAD-991',
+      };
+
+      const { req, res, getStatus, getJson } = createMockReqRes(payloadWithLeadRef);
+      await handler(req, res);
+
+      expect(getStatus()).toBe(200);
+      const body = getJson();
+      expect(body.success).toBe(true);
+
+      // Verify saveOrUpdateApplication received leadReference
+      expect(saveSpy).toHaveBeenCalledWith(
+        'ff-app-lead-ref-1001',
+        expect.any(String),
+        'submitted',
+        expect.any(Object),
+        'MON-LEAD-991'
+      );
+
+      // Verify webhook payload includes data.leadReference
+      expect(dispatchedPayloads.length).toBe(1);
+      const webhookBody = dispatchedPayloads[0];
+      expect(webhookBody.event).toBe('new_factoring_enquiry');
+      expect(webhookBody.data.leadReference).toBe('MON-LEAD-991');
+
+      // Verify upload token was created with leadReference metadata
+      const validatedToken = await applicationRepository.validateUploadToken(body.uploadToken);
+      expect(validatedToken.record?.metadata?.leadReference).toBe('MON-LEAD-991');
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('8. Leaves leadReference undefined when omitted (no silent inference from company or context)', async () => {
+    const mondayWebhookUrl = 'https://crm-mock.example.com/webhook';
+    process.env.MONDAY_WEBHOOK_URL = mondayWebhookUrl;
+
+    const dispatchedPayloads: any[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === mondayWebhookUrl) {
+        dispatchedPayloads.push(JSON.parse(options.body));
+        return { ok: true, status: 200, json: async () => ({ status: 'received' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    try {
+      const payloadWithoutLeadRef = {
+        ...validSubmissionPayload,
+        id: 'ff-app-no-lead-ref-2002',
+      };
+
+      const { req, res, getStatus, getJson } = createMockReqRes(payloadWithoutLeadRef);
+      await handler(req, res);
+
+      expect(getStatus()).toBe(200);
+      expect(dispatchedPayloads.length).toBe(1);
+      const webhookBody = dispatchedPayloads[0];
+      expect(webhookBody.data.leadReference).toBeUndefined();
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
   });
 });

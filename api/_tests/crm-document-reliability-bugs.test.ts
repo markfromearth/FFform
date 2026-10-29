@@ -725,4 +725,66 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
       consoleWarnSpy.mockRestore();
     }
   });
+
+  it('Test 10: Retains leadReference in documents_uploaded CRM webhook event on document completion', async () => {
+    const appId = 'app_lead_ref_docs_10';
+    const ref = 'FF-2026-LEAD10';
+    const mondayWebhookUrl = 'https://crm-mock.example.com/webhook';
+    process.env.MONDAY_WEBHOOK_URL = mondayWebhookUrl;
+
+    const dispatchedPayloads: any[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === mondayWebhookUrl) {
+        dispatchedPayloads.push(JSON.parse(options.body));
+        return { ok: true, status: 200, json: async () => ({ status: 'received' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    try {
+      await saveOrUpdateApplication(
+        appId,
+        ref,
+        'submitted',
+        {
+          business: { company_name: 'Lead Tracked Logistics Ltd' } as any,
+          contact: { contact_full_name: 'Jane Doe', email: 'jane@leadtrack.co.uk' } as any,
+        },
+        'MON-LEAD-555'
+      );
+
+      const { token } = await createDocumentRequestToken({
+        applicationId: appId,
+        submissionRef: ref,
+        metadata: { leadReference: 'MON-LEAD-555' },
+      });
+
+      await addDocumentToApplication(appId, {
+        documentId: 'doc_stmt_10',
+        documentVersion: 'gen_10',
+        documentType: 'bank_statement',
+        fileName: 'Statement_10.pdf',
+        storagePath: `applications/ff/${appId}/documents/bank_statement/Statement_10.pdf`,
+        downloadUrl: 'https://mock.example.invalid/url10',
+        downloadUrlExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      const { req, res } = createMockReqRes({
+        body: { token },
+      });
+
+      await completeDocumentUploadHandler(req, res);
+      expect(res._getStatusCode()).toBe(200);
+
+      expect(dispatchedPayloads.length).toBe(1);
+      const docsPayload = dispatchedPayloads[0];
+      expect(docsPayload.event).toBe('documents_uploaded');
+      expect(docsPayload.data.submissionRef).toBe(ref);
+      expect(docsPayload.data.leadReference).toBe('MON-LEAD-555');
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
+  });
 });

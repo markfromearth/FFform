@@ -217,6 +217,7 @@ export default async function handler(req: any, res: any) {
     if (replayWebhook && mondayWebhookUrl) {
       const currentApp = await getApplicationById(applicationId);
       const resolvedEventId = currentApp?.submissionEventId || currentApp?.crmEventId || app.submissionEventId || app.crmEventId || `evt_renew_${applicationId}_${Date.now()}`;
+      const effectiveLeadRef = currentApp?.leadReference || (app as any)?.leadReference;
       const allDocs = Array.isArray(currentApp?.documentMetadata)
         ? currentApp!.documentMetadata
         : [updatedDocData];
@@ -233,7 +234,8 @@ export default async function handler(req: any, res: any) {
           status: isApplicationPdf ? 'submitted' : 'documents_received',
           uploadedAt: new Date().toISOString(),
           documents: allDocs,
-          ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl, downloadUrlExpiresAt } : {})
+          ...(isApplicationPdf ? { pdfDownloadUrl: newDownloadUrl, downloadUrlExpiresAt } : {}),
+          ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
         }
       };
 
