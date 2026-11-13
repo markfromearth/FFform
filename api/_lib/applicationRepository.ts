@@ -113,7 +113,10 @@ export async function createDocumentRequestToken(options: CreateTokenOptions): P
     inMemoryTokenStore.set(token, record);
   }
 
-  const uploadUrl = `${baseUrl}/?token=${token}`;
+  const leadRefParam = metadata?.leadReference
+    ? `&leadReference=${encodeURIComponent(String(metadata.leadReference))}`
+    : '';
+  const uploadUrl = `${baseUrl}/?token=${token}${leadRefParam}`;
   return { token, record, uploadUrl };
 }
 
@@ -630,6 +633,30 @@ export async function getApplicationById(applicationId: string): Promise<FFAppli
   const doc = await db.collection(APPLICATION_COLLECTION).doc(applicationId).get();
   if (!doc.exists) return null;
   return doc.data() as FFApplicationRecord;
+}
+
+export async function getApplicationBySubmissionRef(submissionRef: string): Promise<FFApplicationRecord | null> {
+  if (!submissionRef || typeof submissionRef !== 'string') return null;
+  const trimmedRef = submissionRef.trim();
+  if (!trimmedRef) return null;
+
+  const db = getAdminFirestore();
+  if (!db) {
+    for (const record of inMemoryApplicationStore.values()) {
+      if (record.submissionRef === trimmedRef) {
+        return record;
+      }
+    }
+    return null;
+  }
+
+  const snap = await db
+    .collection(APPLICATION_COLLECTION)
+    .where('submissionRef', '==', trimmedRef)
+    .limit(1)
+    .get();
+  if (snap.empty) return null;
+  return snap.docs[0].data() as FFApplicationRecord;
 }
 
 export interface WebhookFailureRecord {

@@ -1,4 +1,4 @@
-import { getApplicationById, createDocumentRequestToken, validateUploadToken, updateApplicationDocumentRequest } from './_lib/applicationRepository.js';
+import { getApplicationById, getApplicationBySubmissionRef, createDocumentRequestToken, validateUploadToken, updateApplicationDocumentRequest } from './_lib/applicationRepository.js';
 import { sendDocumentRequestEmail } from './_lib/emailService.js';
 
 export default async function handler(req: any, res: any) {
@@ -45,20 +45,52 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { applicationId, requestedDocumentTypes, expiresInDays = 7, force = false } = req.body || {};
+    const {
+      applicationId: rawApplicationId,
+      submissionRef: rawSubmissionRef,
+      requestedDocumentTypes,
+      expiresInDays = 7,
+      force = false,
+      sendEmail = true,
+    } = req.body || {};
 
-    if (!applicationId || typeof applicationId !== 'string') {
-      res.status(400).json({ error: 'applicationId is required.' });
+    const reqAppId = typeof rawApplicationId === 'string' && rawApplicationId.trim() ? rawApplicationId.trim() : undefined;
+    const reqSubRef = typeof rawSubmissionRef === 'string' && rawSubmissionRef.trim() ? rawSubmissionRef.trim() : undefined;
+
+    if (!reqAppId && !reqSubRef) {
+      res.status(400).json({ error: 'applicationId is required (or provide submissionRef).' });
       return;
     }
 
-    // 2. Identify the application in Firestore
-    const applicationRecord = await getApplicationById(applicationId);
+    // 2. Identify the application in Firestore (by applicationId or submissionRef)
+    let applicationRecord = null;
+    if (reqAppId) {
+      applicationRecord = await getApplicationById(reqAppId);
+      if (!applicationRecord) {
+        res.status(404).json({ error: 'Application not found.' });
+        return;
+      }
+      if (reqSubRef && applicationRecord.submissionRef !== reqSubRef) {
+        res.status(403).json({
+          error: 'Forbidden: Case association mismatch. submissionRef does not match application record.',
+        });
+        return;
+      }
+    } else if (reqSubRef) {
+      applicationRecord = await getApplicationBySubmissionRef(reqSubRef);
+      if (!applicationRecord) {
+        res.status(404).json({ error: 'Application not found.' });
+        return;
+      }
+    }
+
     if (!applicationRecord) {
       res.status(404).json({ error: 'Application not found.' });
       return;
     }
 
+    const applicationId = applicationRecord.applicationId;
+    const effectiveLeadRef = applicationRecord.leadReference;
     const originUrl = req.headers.origin || 'https://factoringfinance.co.uk';
 
     // 2.5 Idempotency: Prevent duplicate emails from rapid double-clicks
@@ -69,19 +101,23 @@ export default async function handler(req: any, res: any) {
         const requestedAtMs = existingReq.requestedAt ? new Date(existingReq.requestedAt).getTime() : 0;
         const isRecent = Date.now() - requestedAtMs < 60 * 1000; // 60-second cooldown
         if (isRecent) {
+          const reuseLeadParam = effectiveLeadRef
+            ? `&leadReference=${encodeURIComponent(effectiveLeadRef)}`
+            : '';
           return res.status(200).json({
             success: true,
             isDuplicate: true,
             message: 'Recent active document request reused (idempotent request)',
             applicationId,
             submissionRef: applicationRecord.submissionRef,
+            ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
             token: existingReq.activeToken,
-            uploadUrl: `${originUrl}/?token=${existingReq.activeToken}`,
+            uploadUrl: `${originUrl}/?token=${existingReq.activeToken}${reuseLeadParam}`,
             purpose: tokenVal.record?.purpose || 'DOCUMENT_UPLOAD',
             status: tokenVal.record?.status || 'ACTIVE',
             expiresAt: existingReq.expiresAt || tokenVal.record?.expiresAt,
             requestedDocumentTypes: existingReq.requestedDocumentTypes || tokenVal.record?.requestedDocumentTypes,
-            emailStatus: (existingReq as any).emailStatus || 'sent',
+            emailStatus: (existingReq as any).emailStatus || (sendEmail === false ? 'suppressed' : 'sent'),
           });
         }
       }
@@ -98,9 +134,12 @@ export default async function handler(req: any, res: any) {
       ],
       expiresInMs,
       baseUrl: originUrl,
+      metadata: {
+        ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
+      },
     });
 
-    // 4. Dispatch the Document Request Email via Resend
+    // 4. Dispatch the Document Request Email via Resend (unless suppressed via sendEmail: false)
     const applicantName = applicationRecord.application?.contact?.contact_full_name || 'Applicant';
     const applicantEmail = applicationRecord.application?.contact?.email || '';
     const companyName = applicationRecord.application?.business?.company_name || 'Your Business';
@@ -109,28 +148,32 @@ export default async function handler(req: any, res: any) {
     let emailMessageId: string | undefined;
     let emailError: string | undefined;
 
-    try {
-      const emailResult = await sendDocumentRequestEmail({
-        applicationId,
-        submissionRef: applicationRecord.submissionRef,
-        companyName,
-        applicantName,
-        applicantEmail,
-        uploadUrl,
-        requestedDocumentTypes: record.requestedDocumentTypes,
-      });
+    if (sendEmail === false) {
+      emailStatus = 'suppressed';
+    } else {
+      try {
+        const emailResult = await sendDocumentRequestEmail({
+          applicationId,
+          submissionRef: applicationRecord.submissionRef,
+          companyName,
+          applicantName,
+          applicantEmail,
+          uploadUrl,
+          requestedDocumentTypes: record.requestedDocumentTypes,
+        });
 
-      if (emailResult.success) {
-        emailStatus = 'sent';
-        emailMessageId = emailResult.messageId;
-      } else {
+        if (emailResult.success) {
+          emailStatus = 'sent';
+          emailMessageId = emailResult.messageId;
+        } else {
+          emailStatus = 'failed';
+          emailError = emailResult.error;
+        }
+      } catch (err: any) {
+        console.warn('[RequestDocumentsAPI] Email dispatch caught (non-fatal):', err.message);
         emailStatus = 'failed';
-        emailError = emailResult.error;
+        emailError = err.message;
       }
-    } catch (err: any) {
-      console.warn('[RequestDocumentsAPI] Email dispatch caught (non-fatal):', err.message);
-      emailStatus = 'failed';
-      emailError = err.message;
     }
 
     // 5. Record that the request was sent in Firestore via DAL
@@ -142,8 +185,8 @@ export default async function handler(req: any, res: any) {
       requestedDocumentTypes: record.requestedDocumentTypes,
       expiresAt: record.expiresAt,
       emailStatus,
-      emailMessageId,
-      emailError,
+      ...(emailMessageId ? { emailMessageId } : {}),
+      ...(emailError ? { emailError } : {}),
     });
 
     // 6. Return response
@@ -151,6 +194,7 @@ export default async function handler(req: any, res: any) {
       success: true,
       applicationId,
       submissionRef: applicationRecord.submissionRef,
+      ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
       token,
       uploadUrl,
       purpose: record.purpose,
@@ -158,7 +202,7 @@ export default async function handler(req: any, res: any) {
       expiresAt: record.expiresAt,
       requestedDocumentTypes: record.requestedDocumentTypes,
       emailStatus,
-      emailMessageId,
+      ...(emailMessageId ? { emailMessageId } : {}),
     });
   } catch (error: any) {
     console.error('[RequestDocumentsAPI] Unexpected error:', error?.message || error);

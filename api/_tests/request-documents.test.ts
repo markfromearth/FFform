@@ -152,6 +152,61 @@ describe('Secure Document Request & Resend Integration Flow', () => {
       expect(getStatus()).toBe(400);
       expect(getJson().error).toContain('applicationId is required');
     });
+
+    it('resolves application by submissionRef alone, suppresses email when sendEmail: false, and retains leadReference', async () => {
+      const chaseAppId = 'ff-doc-req-chase-888';
+      await saveOrUpdateApplication(
+        chaseAppId,
+        'FF-2026-C3BB8',
+        'submitted',
+        {
+          business: { company_name: 'Chase Logistics Ltd' },
+          contact: { contact_full_name: 'John Smith', email: 'john@chaselogistics.co.uk' },
+        } as any,
+        'MON-LEAD-3309505102'
+      );
+
+      const emailSpy = vi.spyOn(emailService, 'sendDocumentRequestEmail');
+
+      const { req, res, getStatus, getJson } = createMockReqRes({
+        submissionRef: 'FF-2026-C3BB8',
+        sendEmail: false,
+        force: true,
+      });
+
+      await requestDocumentsHandler(req, res);
+
+      expect(getStatus()).toBe(200);
+      const body = getJson();
+      expect(body.success).toBe(true);
+      expect(body.applicationId).toBe(chaseAppId);
+      expect(body.submissionRef).toBe('FF-2026-C3BB8');
+      expect(body.leadReference).toBe('MON-LEAD-3309505102');
+      expect(body.token).toMatch(/^[a-f0-9]{64}$/);
+      expect(body.uploadUrl).toBe(
+        `https://factoringfinance.co.uk/?token=${body.token}&leadReference=MON-LEAD-3309505102`
+      );
+      expect(body.emailStatus).toBe('suppressed');
+      expect(emailSpy).not.toHaveBeenCalled();
+
+      // Verify token metadata also persists leadReference
+      const validated = await validateUploadToken(body.token);
+      expect(validated.valid).toBe(true);
+      expect(validated.record?.metadata?.leadReference).toBe('MON-LEAD-3309505102');
+    });
+
+    it('rejects cross-case mismatch when both applicationId and submissionRef are provided but do not match', async () => {
+      const { req, res, getStatus, getJson } = createMockReqRes({
+        applicationId: testAppId,
+        submissionRef: 'FF-2026-WRONG9',
+        sendEmail: false,
+      });
+
+      await requestDocumentsHandler(req, res);
+
+      expect(getStatus()).toBe(403);
+      expect(getJson().error).toContain('Case association mismatch');
+    });
   });
 
   describe('2. Token Lifecycle & Direct Upload Verification', () => {
