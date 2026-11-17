@@ -379,9 +379,10 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
       expect(dispatchedPayloads.length).toBe(2);
       const payload2 = dispatchedPayloads[1];
 
-      // TDD Assertion: Replay must reuse the persistent eventId from initial dispatch
-      expect(payload1.eventId).toBeDefined();
-      expect(payload2.eventId).toBe(payload1.eventId);
+      // TDD Assertion: Replay of completed application PDF uses the submission eventId (evt_sub_<id>),
+      // which is distinct from the Step 2 draft eventId (evt_draft_<id>)
+      expect(payload1.eventId).toBe(`evt_draft_${appId}`);
+      expect(payload2.eventId).toBe(`evt_sub_${appId}`);
     } finally {
       delete process.env.MONDAY_WEBHOOK_URL;
       global.fetch = originalFetch;
@@ -558,7 +559,7 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
     });
 
     try {
-      // 1. Initial application submission
+      // 1. Initial application submission (Step 2 draft capture)
       const { req: subReq, res: subRes } = createMockReqRes({
         body: {
           id: appId,
@@ -574,7 +575,7 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
       expect(dispatchedPayloads.length).toBe(1);
       const appPayload = dispatchedPayloads[0];
       expect(appPayload.event).toBe('new_factoring_enquiry');
-      expect(appPayload.eventId).toMatch(/^evt_sub_/);
+      expect(appPayload.eventId).toMatch(/^evt_draft_/);
 
       // 2. Create upload token and add document for upload batch
       const { token } = await createDocumentRequestToken({
@@ -675,7 +676,7 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
       expect(app!.webhook_failures!.length).toBe(1);
 
       const subFailure = app!.webhook_failures![0];
-      expect(subFailure.eventId).toMatch(/^evt_sub_/);
+      expect(subFailure.eventId).toMatch(/^evt_draft_/);
       expect(subFailure.payload).toBeDefined();
       expect(subFailure.payload.event).toBe('new_factoring_enquiry');
       expect(subFailure.payload.data.business.company_name).toBe('Failure Record Ltd');
@@ -782,6 +783,204 @@ describe('Replication Suite: Document Reliability & CRM Integration Remediation 
       expect(docsPayload.event).toBe('documents_uploaded');
       expect(docsPayload.data.submissionRef).toBe(ref);
       expect(docsPayload.data.leadReference).toBe('MON-LEAD-555');
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('Test 11: Draft (Step 2) and Submitted (Step 5) dispatches have distinct eventIds (evt_draft_ vs evt_sub_) and stage indicators', async () => {
+    const appId = 'app_draft_vs_sub_11';
+    const mondayWebhookUrl = 'https://crm-mock.example.com/webhook';
+    process.env.MONDAY_WEBHOOK_URL = mondayWebhookUrl;
+
+    const dispatchedPayloads: any[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === mondayWebhookUrl) {
+        dispatchedPayloads.push(JSON.parse(options.body));
+        return { ok: true, status: 200, json: async () => ({ status: 'received' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    try {
+      // 1. Step 2 Draft save
+      const { req: draftReq, res: draftRes } = createMockReqRes({
+        body: {
+          id: appId,
+          status: 'contact_captured',
+          leadReference: 'MON-LEAD-3309505102',
+          application: {
+            business: { company_name: 'Draft To Final Ltd' },
+            contact: { contact_full_name: 'Alex Test', email: 'alex@drafttofinal.co.uk', phone: '07700900123' },
+          },
+        },
+      });
+      await submitApplicationHandler(draftReq, draftRes);
+      expect(draftRes._getStatusCode()).toBe(200);
+
+      // 2. Step 5 Full submission for the same application ID
+      const { req: finalReq, res: finalRes } = createMockReqRes({
+        body: {
+          id: appId,
+          status: 'introduction_ready',
+          leadReference: 'MON-LEAD-3309505102',
+          application: {
+            business: {
+              company_name: 'Draft To Final Ltd',
+              company_number: '12345678',
+              company_status: 'active',
+              entity_type: 'limited_company',
+              industry: 'manufacturing',
+              annual_turnover: 500000,
+              gross_debtor_book: 100000,
+              b2b_completed_supply: 'yes',
+              registered_address: {
+                address_line_1: '1 High St',
+                locality: 'London',
+                postal_code: 'SW1A 1AA',
+                country: 'UK',
+              },
+            },
+            contact: {
+              contact_full_name: 'Alex Test',
+              contact_role: 'director_or_owner',
+              email: 'alex@drafttofinal.co.uk',
+              phone: '07700900123',
+              funding_timescale: 'asap',
+            },
+            invoices: {
+              desired_outcome: 'release_cash_all',
+              requested_facility: 80000,
+              funding_purpose: ['support_growth'],
+              payment_terms_days: '31_to_60_days',
+              largest_debtor_concentration_pct: '20_to_39_pct',
+              debtor_geography: ['uk'],
+              hmrc_status: 'up_to_date',
+              existing_invoice_finance: false,
+            },
+            consents: {
+              processing_notice_acknowledged: true,
+              marketing_email: false,
+              marketing_sms: false,
+            },
+          },
+        },
+      });
+      await submitApplicationHandler(finalReq, finalRes);
+      expect(finalRes._getStatusCode()).toBe(200);
+
+      expect(dispatchedPayloads.length).toBe(2);
+      const draftPayload = dispatchedPayloads[0];
+      const finalPayload = dispatchedPayloads[1];
+
+      expect(draftPayload.eventId).toBe(`evt_draft_${appId}`);
+      expect(draftPayload.stage).toBe('draft');
+      expect(draftPayload.data.status).toBe('draft');
+      expect(draftPayload.data.leadReference).toBe('MON-LEAD-3309505102');
+
+      expect(finalPayload.eventId).toBe(`evt_sub_${appId}`);
+      expect(finalPayload.stage).toBe('submitted');
+      expect(finalPayload.data.status).toBe('submitted');
+      expect(finalPayload.data.leadReference).toBe('MON-LEAD-3309505102');
+      expect(finalPayload.eventId).not.toBe(draftPayload.eventId);
+    } finally {
+      delete process.env.MONDAY_WEBHOOK_URL;
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('Test 12: Server-side base64 upload fallback records document metadata and dispatches only supporting documents on completion', async () => {
+    const appId = 'app_fallback_upload_12';
+    const ref = 'FF-2026-FALL12';
+    const mondayWebhookUrl = 'https://crm-mock.example.com/webhook';
+    process.env.MONDAY_WEBHOOK_URL = mondayWebhookUrl;
+
+    const dispatchedPayloads: any[] = [];
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string, options: any) => {
+      if (url === mondayWebhookUrl) {
+        dispatchedPayloads.push(JSON.parse(options.body));
+        return { ok: true, status: 200, json: async () => ({ status: 'received' }) };
+      }
+      return originalFetch(url, options);
+    });
+
+    try {
+      await saveOrUpdateApplication(
+        appId,
+        ref,
+        'submitted',
+        {
+          business: { company_name: 'Fallback Upload Ltd' } as any,
+          contact: { contact_full_name: 'Alex Integration', email: 'alex@fallback.co.uk' } as any,
+        },
+        'MON-LEAD-3309505102'
+      );
+
+      // Seed application PDF in documentMetadata
+      await updateDocumentMetadata(appId, {
+        documentId: `doc_app_pdf_${appId}`,
+        documentVersion: '1794845313908449',
+        documentType: 'completed_application',
+        fileName: `${ref}-application.pdf`,
+        storagePath: `applications/ff/${appId}/generated/${ref}-application.pdf`,
+        downloadUrl: 'https://storage.googleapis.com/bucket/app.pdf',
+      });
+
+      const { token } = await createDocumentRequestToken({
+        applicationId: appId,
+        submissionRef: ref,
+        metadata: { leadReference: 'MON-LEAD-3309505102' },
+      });
+
+      const mockSave = vi.fn().mockResolvedValue(undefined);
+      const mockFile = {
+        save: mockSave,
+        exists: vi.fn().mockResolvedValue([true]),
+        getMetadata: vi.fn().mockResolvedValue([{ generation: '1794845429088039', contentType: 'application/pdf', size: 1693 }]),
+        getSignedUrl: vi.fn().mockResolvedValue(['https://storage.googleapis.com/bucket/bank_stmt.pdf?generation=1794845429088039']),
+      };
+      vi.spyOn(firebaseAdmin, 'isFirebaseConfigured').mockReturnValue(true);
+      vi.spyOn(firebaseAdmin, 'getAdminStorage').mockReturnValue({
+        bucket: () => ({ file: () => mockFile }),
+      } as any);
+
+      // Record upload via base64 fallback
+      const { req: recReq, res: recRes } = createMockReqRes({
+        body: {
+          token,
+          document: {
+            documentType: 'bank_statement',
+            fileName: 'TEST_ONLY_bank_statement_2026-11-16.pdf',
+            fileSize: 1693,
+            fileType: 'application/pdf',
+            storagePath: `applications/ff/${appId}/documents/bank_statement/1794845424226_TEST_ONLY_bank_statement_2026-11-16.pdf`,
+            base64Data: Buffer.from('%PDF-1.4 mock pdf content').toString('base64'),
+          },
+        },
+      });
+      await recordDocumentUploadHandler(recReq, recRes);
+      expect(recRes._getStatusCode()).toBe(200);
+      expect(mockSave).toHaveBeenCalledTimes(1);
+
+      // Complete upload
+      const { req: compReq, res: compRes } = createMockReqRes({ body: { token } });
+      await completeDocumentUploadHandler(compReq, compRes);
+      expect(compRes._getStatusCode()).toBe(200);
+      expect(compRes._getData().crmStatus).toBe('delivered');
+
+      expect(dispatchedPayloads.length).toBe(1);
+      const webhook = dispatchedPayloads[0];
+      expect(webhook.event).toBe('documents_uploaded');
+      expect(webhook.reference).toBe(ref);
+      expect(webhook.data.leadReference).toBe('MON-LEAD-3309505102');
+      // Only the supporting bank_statement is sent in documents_uploaded, not the completed_application PDF
+      expect(webhook.data.documents.length).toBe(1);
+      expect(webhook.data.documents[0].documentType).toBe('bank_statement');
+      expect(webhook.data.documents[0].fileName).toBe('TEST_ONLY_bank_statement_2026-11-16.pdf');
+      expect(webhook.data.documents[0].documentVersion).toBe('1794845429088039');
     } finally {
       delete process.env.MONDAY_WEBHOOK_URL;
       global.fetch = originalFetch;

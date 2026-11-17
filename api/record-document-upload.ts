@@ -103,17 +103,21 @@ export default async function handler(req: any, res: any) {
     if (document.base64Data && isFirebaseConfigured()) {
       try {
         const storage = getAdminStorage();
-        if (storage) {
-          const bucket = storage.bucket();
-          const file = bucket.file(sanitizedDoc.storagePath);
-          const buffer = Buffer.from(document.base64Data, 'base64');
-          await file.save(buffer, {
-            metadata: { contentType: document.fileType || 'application/pdf' },
-            resumable: false,
-          });
+        if (!storage) {
+          res.status(500).json({ error: 'Storage service unavailable for server-side upload fallback.' });
+          return;
         }
+        const bucket = storage.bucket();
+        const file = bucket.file(sanitizedDoc.storagePath);
+        const buffer = Buffer.from(document.base64Data, 'base64');
+        await file.save(buffer, {
+          metadata: { contentType: document.fileType || 'application/pdf' },
+          resumable: false,
+        });
       } catch (storageErr: any) {
         console.error('[RecordDocumentUploadAPI] Direct storage fallback save error:', storageErr?.message || storageErr);
+        res.status(500).json({ error: 'Failed to save document via server-side storage fallback.' });
+        return;
       }
     }
 

@@ -216,7 +216,9 @@ export default async function handler(req: any, res: any) {
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
     if (replayWebhook && mondayWebhookUrl) {
       const currentApp = await getApplicationById(applicationId);
-      const resolvedEventId = currentApp?.submissionEventId || currentApp?.crmEventId || app.submissionEventId || app.crmEventId || `evt_renew_${applicationId}_${Date.now()}`;
+      const resolvedEventId = isApplicationPdf
+        ? (currentApp?.submissionEventId || app.submissionEventId || `evt_sub_${applicationId}`)
+        : (currentApp?.lastUploadBatchEventId || app.lastUploadBatchEventId || currentApp?.crmEventId || app.crmEventId || `evt_renew_${applicationId}_${Date.now()}`);
       const effectiveLeadRef = currentApp?.leadReference || (app as any)?.leadReference;
       const allDocs = Array.isArray(currentApp?.documentMetadata)
         ? currentApp!.documentMetadata

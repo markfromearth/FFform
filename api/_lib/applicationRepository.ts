@@ -301,6 +301,7 @@ export interface FFApplicationRecord {
   crmStatus?: string;
   crmMessage?: string;
   crmEventId?: string;
+  draftEventId?: string;
   submissionEventId?: string;
   lastUploadBatchEventId?: string;
   webhook_failures?: any[];
@@ -415,7 +416,7 @@ export async function updateEmailStatus(
 
 export async function updateCrmStatus(
   applicationId: string,
-  update: { crmStatus: string; crmMessage?: string; crmEventId?: string; submissionEventId?: string }
+  update: { crmStatus: string; crmMessage?: string; crmEventId?: string; draftEventId?: string; submissionEventId?: string }
 ) {
   const db = getAdminFirestore();
   if (!db) {
@@ -433,31 +434,49 @@ export async function updateDocumentMetadata(
   applicationId: string,
   documentMetadata: any
 ) {
+  const now = new Date().toISOString();
+  const normalizeDocs = (existing: any, incoming: any): any[] => {
+    if (Array.isArray(incoming)) {
+      return incoming;
+    }
+    const existingArray = Array.isArray(existing)
+      ? existing
+      : existing && typeof existing === 'object'
+      ? [existing]
+      : [];
+    return [
+      ...existingArray.filter((d: any) =>
+        incoming.documentId
+          ? d.documentId !== incoming.documentId
+          : d.documentType !== 'completed_application' && d.generatedPdfPath !== incoming.generatedPdfPath
+      ),
+      incoming,
+    ];
+  };
+
   const db = getAdminFirestore();
   if (!db) {
     const record = inMemoryApplicationStore.get(applicationId);
     if (record) {
-      if (Array.isArray(documentMetadata)) {
-        record.documentMetadata = documentMetadata;
-      } else if (Array.isArray(record.documentMetadata)) {
-        record.documentMetadata = [
-          ...record.documentMetadata.filter((d: any) => 
-            documentMetadata.documentId 
-              ? d.documentId !== documentMetadata.documentId 
-              : (d.documentType !== 'completed_application' && d.generatedPdfPath !== documentMetadata.generatedPdfPath)
-          ),
-          documentMetadata
-        ];
-      } else {
-        record.documentMetadata = documentMetadata;
-      }
-      record.updatedAt = new Date().toISOString();
+      record.documentMetadata = normalizeDocs(record.documentMetadata, documentMetadata);
+      record.updatedAt = now;
     }
     return;
   }
-  await db.collection(APPLICATION_COLLECTION).doc(applicationId).update({
-    documentMetadata,
-    updatedAt: new Date().toISOString(),
+
+  const docRef = db.collection(APPLICATION_COLLECTION).doc(applicationId);
+  await db.runTransaction(async (t) => {
+    const snap = await t.get(docRef);
+    const existing = snap.exists ? (snap.data() as FFApplicationRecord).documentMetadata : [];
+    const normalized = normalizeDocs(existing, documentMetadata);
+    t.set(
+      docRef,
+      {
+        documentMetadata: normalized,
+        updatedAt: now,
+      },
+      { merge: true }
+    );
   }).catch(e => console.error('[Firestore DAL] Failed to update document metadata', e.message));
 }
 
@@ -595,7 +614,8 @@ export async function updateApplicationDocumentRequest(
 
 export async function updateApplicationUploadStatus(
   applicationId: string,
-  uploadStatus: string
+  uploadStatus: string,
+  lastUploadBatchEventId?: string
 ): Promise<void> {
   const now = new Date().toISOString();
   const db = getAdminFirestore();
@@ -604,6 +624,9 @@ export async function updateApplicationUploadStatus(
     if (record) {
       record.uploadStatus = uploadStatus;
       record.updatedAt = now;
+      if (lastUploadBatchEventId) {
+        record.lastUploadBatchEventId = lastUploadBatchEventId;
+      }
       if (uploadStatus === 'uploaded') {
         if (!record.documentRequest) {
           record.documentRequest = { status: 'COMPLETED', requestedAt: now };
@@ -618,6 +641,7 @@ export async function updateApplicationUploadStatus(
     {
       uploadStatus,
       documentsUploadedAt: now,
+      ...(lastUploadBatchEventId ? { lastUploadBatchEventId } : {}),
       'documentRequest.status': uploadStatus === 'uploaded' ? 'COMPLETED' : uploadStatus,
       updatedAt: now,
     },

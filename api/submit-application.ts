@@ -335,16 +335,23 @@ export default async function handler(req: any, res: any) {
     // 4. CRM Routing to Monday.com
     let crmStatus = 'pending';
     const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
-    const eventId = dbRecord?.submissionEventId || dbRecord?.crmEventId || `evt_sub_${id}`;
-    await updateCrmStatus(id, { crmStatus: 'pending', crmEventId: eventId, submissionEventId: eventId });
+    const eventId = isPartial
+      ? (dbRecord?.draftEventId || `evt_draft_${id}`)
+      : (dbRecord?.submissionEventId || `evt_sub_${id}`);
+    const crmIdUpdate = isPartial
+      ? { crmEventId: eventId, draftEventId: eventId }
+      : { crmEventId: eventId, submissionEventId: eventId };
+    await updateCrmStatus(id, { crmStatus: 'pending', ...crmIdUpdate });
     
     const submitPayload = {
       event: 'new_factoring_enquiry',
       eventId,
+      stage: appStatus,
       reference: submissionRef,
       data: {
         ...docToSave,
         eventId,
+        stage: appStatus,
       }
     };
 
@@ -365,18 +372,18 @@ export default async function handler(req: any, res: any) {
         }
         
         crmStatus = 'delivered';
-        await updateCrmStatus(id, { crmStatus, crmEventId: eventId, submissionEventId: eventId });
+        await updateCrmStatus(id, { crmStatus, ...crmIdUpdate });
       } catch (crmError: any) {
         console.error('[SubmitAPI] Monday.com routing failed. Queuing for retry.', crmError.message);
         crmStatus = 'queued_for_retry';
-        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message, crmEventId: eventId, submissionEventId: eventId });
+        await updateCrmStatus(id, { crmStatus, crmMessage: crmError.message, ...crmIdUpdate });
         await logFailedWebhook(id, submitPayload, crmError.message || 'Monday.com routing failed');
       }
     } else {
       // Mocking successful CRM delivery if URL is not set (e.g., local dev)
       console.log('[SubmitAPI] MONDAY_WEBHOOK_URL not configured. Mocking successful CRM routing.');
       crmStatus = 'delivered';
-      await updateCrmStatus(id, { crmStatus, crmEventId: eventId, submissionEventId: eventId });
+      await updateCrmStatus(id, { crmStatus, ...crmIdUpdate });
     }
 
     // 5. Generate Upload Token for Immediate & Post-Submission Uploads (7 days validity)

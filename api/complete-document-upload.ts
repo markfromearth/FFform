@@ -62,6 +62,9 @@ export default async function handler(req: any, res: any) {
     // Mark token as completed
     await completeUploadToken(token);
 
+    let crmDeliveryStatus: 'delivered' | 'queued_for_retry' | 'skipped' = 'skipped';
+    let batchEventIdUsed: string | undefined;
+
     // Retrieve application details and documents for CRM webhook update event
     try {
       const app = await getApplicationById(applicationId);
@@ -72,6 +75,8 @@ export default async function handler(req: any, res: any) {
 
       const rawDocs = Array.isArray(app?.documentMetadata)
         ? app!.documentMetadata
+        : app?.documentMetadata && typeof app.documentMetadata === 'object'
+        ? [app.documentMetadata]
         : Array.isArray(tokenValidation.record?.metadata?.uploadedDocuments)
         ? tokenValidation.record!.metadata!.uploadedDocuments
         : [];
@@ -146,8 +151,13 @@ export default async function handler(req: any, res: any) {
         })
       );
 
+      // Exclude the auto-generated application summary PDF when supporting documents are present,
+      // so documents_uploaded carries the uploaded supporting documents (falling back to all docs if only PDF exists).
+      const supportingDocs = documentsWithUrls.filter((d: any) => d.documentType !== 'completed_application');
+      const docsToDispatch = supportingDocs.length > 0 ? supportingDocs : documentsWithUrls;
+
       const mondayWebhookUrl = process.env.MONDAY_WEBHOOK_URL;
-      if (mondayWebhookUrl && documentsWithUrls.length > 0) {
+      if (mondayWebhookUrl && docsToDispatch.length > 0) {
         // Each new upload batch gets its own persistent event ID; retries retain that batch's ID
         let batchEventId = tokenValidation.record?.metadata?.uploadBatchEventId || (app as any)?.lastUploadBatchEventId;
         if (!batchEventId) {
@@ -155,6 +165,7 @@ export default async function handler(req: any, res: any) {
           await updateUploadTokenMetadata(token, { uploadBatchEventId: batchEventId });
           await updateApplicationUploadStatus(applicationId, 'uploaded', batchEventId);
         }
+        batchEventIdUsed = batchEventId;
 
         const effectiveLeadRef = (app as any)?.leadReference || tokenValidation.record?.metadata?.leadReference;
 
@@ -171,7 +182,7 @@ export default async function handler(req: any, res: any) {
             applicantEmail: contactEmail,
             status: 'documents_received',
             uploadedAt: new Date().toISOString(),
-            documents: documentsWithUrls,
+            documents: docsToDispatch,
             ...(effectiveLeadRef ? { leadReference: effectiveLeadRef } : {}),
           },
         };
@@ -186,13 +197,16 @@ export default async function handler(req: any, res: any) {
           if (!mondayResponse.ok) {
             const errMsg = `Monday webhook returned status: ${mondayResponse.status}`;
             console.error('[CompleteUploadAPI]', errMsg);
+            crmDeliveryStatus = 'queued_for_retry';
             await logFailedWebhook(applicationId, updatePayload, errMsg);
           } else {
+            crmDeliveryStatus = 'delivered';
             console.log('[CompleteUploadAPI] Successfully notified CRM of uploaded documents for ref:', submissionRef);
           }
         } catch (fetchErr: any) {
           const errMsg = fetchErr?.message || String(fetchErr);
           console.error('[CompleteUploadAPI] Monday webhook network error:', errMsg);
+          crmDeliveryStatus = 'queued_for_retry';
           await logFailedWebhook(applicationId, updatePayload, errMsg);
         }
       }
@@ -203,6 +217,8 @@ export default async function handler(req: any, res: any) {
     res.status(200).json({
       success: true,
       message: 'Uploads successfully recorded.',
+      crmStatus: crmDeliveryStatus,
+      ...(batchEventIdUsed ? { eventId: batchEventIdUsed } : {}),
     });
   } catch (error: any) {
     console.error('[CompleteUploadAPI] Error completing uploads:', error?.message || error);

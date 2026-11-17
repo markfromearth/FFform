@@ -80,6 +80,7 @@ export const Step6Uploads: React.FC = () => {
   const [uploadTasks, setUploadTasks] = useState<UploadTask[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
 
   // Validate upload token on load if present
   useEffect(() => {
@@ -385,16 +386,25 @@ export const Step6Uploads: React.FC = () => {
       return;
     }
 
+    setCompletionError(null);
+
     if (activeToken) {
       setIsCompleting(true);
       try {
-        await fetch('/api/complete-document-upload', {
+        const res = await fetch('/api/complete-document-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: activeToken }),
         });
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          setCompletionError(errJson.error || 'Unable to confirm document completion. Please try again.');
+          return;
+        }
       } catch (err) {
         console.warn('Failed to complete upload session:', err);
+        setCompletionError('Network error while confirming document uploads. Please try again.');
+        return;
       } finally {
         setIsCompleting(false);
       }
@@ -587,6 +597,12 @@ export const Step6Uploads: React.FC = () => {
 
         {/* Submission Action Bar */}
         <div className="mt-8 flex flex-col items-center justify-center border-t border-outline-variant pt-8 gap-3">
+          {completionError && (
+            <div className="flex items-center gap-2 text-body-s text-error bg-error/10 border border-error/30 px-4 py-2.5 rounded-xl mb-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{completionError}</span>
+            </div>
+          )}
           <button
             onClick={handleCompleteUploads}
             disabled={isCompleting || isUploadingAny}
